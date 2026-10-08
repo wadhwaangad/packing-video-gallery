@@ -1,7 +1,3 @@
-# Keep the packing reference links and evidence, but avoid committing the
-# duplicated assembly gallery media stored beside them.
-/packing/assembly-reference/*
-!/packing/assembly-reference/assembly-events.json
-!/packing/assembly-reference/mechanics/
-/packing/assembly-reference/mechanics/*
-!/packing/assembly-reference/mechanics/full-mechanics-validation.json
+# This local reference copy is a nested Git repository and duplicates gallery
+# media. The small evidence file used by the packing page lives in packing/evidence/.
+/packing/assembly-reference/

@@ -1,0 +1,158 @@
+{
+  "final_head_loads_N": {
+    "10044407_01": 2.658084864809944,
+    "10044407_07": 8.212436412539079,
+    "10044407_05": 3.9422069899557375,
+    "10044407_08": 14.244942766955813,
+    "105111_01": 12.20628431680252,
+    "105111_02": 14.683178063657468,
+    "105111_03": 5.957098538348976,
+    "10044407_06": 21.593480646324426,
+    "10044407_02": 23.615053227801887,
+    "10044407_04": 32.29426464215702,
+    "10044407_03": 27.48121814146185
+  },
+  "wood_speeds": {
+    "STEP_00169922": {
+      "linear_m_s": 4.64572770389282e-06,
+      "angular_rad_s": 8.328361449681554e-05
+    },
+    "RIGHT SIDE ASSEMBLY": {
+      "linear_m_s": 7.446678016860388e-06,
+      "angular_rad_s": 2.667254046874751e-05
+    },
+    "LEFT SIDE ASSEMBLY": {
+      "linear_m_s": 6.478730814311014e-06,
+      "angular_rad_s": 3.1706025656199405e-05
+    },
+    "TOP RAIL_72935": {
+      "linear_m_s": 1.2695148671501728e-05,
+      "angular_rad_s": 1.998146595026218e-05
+    },
+    "TOP RAIL_72934": {
+      "linear_m_s": 1.3600152958290643e-05,
+      "angular_rad_s": 1.8797253674432937e-05
+    },
+    "TOP_72174": {
+      "linear_m_s": 1.421688541373695e-05,
+      "angular_rad_s": 5.796258298144999e-06
+    },
+    "BACK BOTTOM RAIL_72932": {
+      "linear_m_s": 6.1454132282810995e-06,
+      "angular_rad_s": 0.00017308609368125953
+    },
+    "FRONT BOTTOM RAIL_72933": {
+      "linear_m_s": 5.807913545863691e-06,
+      "angular_rad_s": 6.2396014956799154e-06
+    }
+  },
+  "complete": true,
+  "checks": {
+    "short_threads_started_inside_material": true,
+    "single_model_run": true,
+    "wood_gravity_uncompensated": true,
+    "no_external_wood_forces": true,
+    "no_active_grasp_or_fixture_constraints": true,
+    "all_eleven_screws_clamped": true,
+    "settled": true,
+    "driver_off": true,
+    "no_part_welds": true,
+    "fixtures_released": true,
+    "hands_released": true,
+    "alignment_under_10mm": true,
+    "four_feet": true,
+    "upright": true,
+    "gravity_enabled": true,
+    "hand_joint_limits_under_1deg": true,
+    "hand_environment_penetration_under_2mm": true,
+    "hand_self_penetration_under_2mm": true,
+    "furniture_penetration_under_1mm": true,
+    "furniture_support_penetration_under_2mm": true,
+    "wood_orientation_under_3deg": true
+  },
+  "parts": 21,
+  "fasteners": {
+    "10044407_01": {
+      "turns": 21.106925035715054,
+      "loose": false,
+      "passive_head_load_N": 20.757563440353827
+    },
+    "10044407_07": {
+      "turns": 21.048657090526948,
+      "loose": false,
+      "passive_head_load_N": 27.03529305105689
+    },
+    "10044407_05": {
+      "turns": 20.783902113315474,
+      "loose": false,
+      "passive_head_load_N": 21.340594137252417
+    },
+    "10044407_08": {
+      "turns": 21.13342155946656,
+      "loose": false,
+      "passive_head_load_N": 25.289786450083373
+    },
+    "105111_01": {
+      "turns": 5.281057015899251,
+      "loose": false,
+      "passive_head_load_N": 23.49052251385631
+    },
+    "105111_02": {
+      "turns": 5.502728146609018,
+      "loose": false,
+      "passive_head_load_N": 24.199238184353757
+    },
+    "105111_03": {
+      "turns": 6.2079241559572695,
+      "loose": false,
+      "passive_head_load_N": 24.90540379572133
+    },
+    "10044407_06": {
+      "turns": 21.32909921484123,
+      "loose": false,
+      "passive_head_load_N": 38.267525431167755
+    },
+    "10044407_02": {
+      "turns": 21.155849390817437,
+      "loose": false,
+      "passive_head_load_N": 40.24322277268026
+    },
+    "10044407_04": {
+      "turns": 21.23471990697837,
+      "loose": false,
+      "passive_head_load_N": 37.644794624892064
+    },
+    "10044407_03": {
+      "turns": 21.264569374122484,
+      "loose": false,
+      "passive_head_load_N": 35.47919121617539
+    }
+  },
+  "alignment_m": {
+    "STEP_00169922": 7.648853937883432e-05,
+    "RIGHT SIDE ASSEMBLY": 0.0,
+    "LEFT SIDE ASSEMBLY": 0.00022830140305168812,
+    "105111_03": 0.000211617305370587,
+    "105111_02": 0.0002452898991333641,
+    "105111_01": 0.00020622008166026163,
+    "10044407_08": 0.004173171254843994,
+    "10044407_01": 0.003324621546111884,
+    "10044407_04": 0.002281342840262259,
+    "10044407_07": 0.0022694731594097234,
+    "10044407_06": 0.0032876272661554683,
+    "10044407_03": 0.00378261248393385,
+    "10044407_02": 0.000812666884782776,
+    "10044407_05": 0.0011349879829083765,
+    "TOP RAIL_72935": 0.00020005407288886876,
+    "TOP RAIL_72934": 0.00024272244371036187,
+    "TOP_72174": 0.0022961435391193907,
+    "101350_02": 0.003206720854948291,
+    "101350_01": 0.003949598734876252,
+    "BACK BOTTOM RAIL_72932": 5.619345511288361e-05,
+    "FRONT BOTTOM RAIL_72933": 0.00022701612183892434
+  },
+  "distinct_feet": 4,
+  "tilt_deg": 0.03379266095050049,
+  "seconds": 1414.640000056441,
+  "scope": "Contact-loaded furniture with reduced-order helical threads; assisted anatomical hand and magnetic-bit grasps, reduced-order driver, and ideal workholding fixtures remain. Screw-tip entry precedes short-thread engagement. No wood-to-wood attachment constraints."
+}
