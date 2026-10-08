@@ -1,0 +1,7 @@
+# Keep the packing reference links and evidence, but avoid committing the
+# duplicated assembly gallery media stored beside them.
+/packing/assembly-reference/*
+!/packing/assembly-reference/assembly-events.json
+!/packing/assembly-reference/mechanics/
+/packing/assembly-reference/mechanics/*
+!/packing/assembly-reference/mechanics/full-mechanics-validation.json

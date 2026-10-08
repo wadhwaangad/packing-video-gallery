@@ -1,0 +1,45 @@
+name: Deploy static gallery to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare static site
+        shell: bash
+        run: |
+          mkdir -p _site
+          rsync -a --exclude='/.git/' --exclude='/.github/' --exclude='/packing/assembly-reference/' ./ _site/
+          mkdir -p _site/packing/assembly-reference/mechanics
+          cp packing/assembly-reference/assembly-events.json _site/packing/assembly-reference/
+          cp packing/assembly-reference/mechanics/full-mechanics-validation.json _site/packing/assembly-reference/mechanics/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+          include-hidden-files: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

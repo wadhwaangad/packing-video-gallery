@@ -1,0 +1,63 @@
+{
+  "run_id": "bedroom-suitcase-pack-v1",
+  "simulation_type": "deterministic hybrid kinematic and rigid-body visual simulation",
+  "validation_status": "seven trips now use explicit reach, grip, lift, carry, align, lower, release, and settle stages; stage-driven body pose added; visual hand mesh and solver checks remain unvalidated",
+  "duration_seconds": 90,
+  "route_length_m": 59.8,
+  "checks": {
+    "all_listed_items_reach_case_regions": null,
+    "item_count": 7,
+    "hands_released_at_end": null,
+    "case_lid_closed_at_end": null,
+    "operator_returns_to_case": null,
+    "overview_and_operator_views_share_timeline": null,
+    "chapter_seek_points": 9,
+    "route_avoids_static_furniture_and_case": null,
+    "carried_items_clear_static_furniture": null,
+    "packed_items_fit_case_interior_and_do_not_overlap": null,
+    "gravity_after_release": true,
+    "static_aabb_contacts": true,
+    "dynamic_item_contacts": true,
+    "yaw_contact_response": true,
+    "balance_controller": true,
+    "headless_solver_check": null
+  },
+  "motion_model": "Each trip is authored as approach, reach, grip, lift, carry, align, lower, release, and settle events. Both views follow one deterministic timeline. Grasped transport follows authored paths; release hands items to the fixed-step AABB contact solver with gravity, friction, and limited yaw rotation. The operator uses stage-driven bend poses and a damped inverted-pendulum balance controller.",
+  "items": [
+    "shirts",
+    "trousers",
+    "sweater",
+    "socks",
+    "wash kit",
+    "book",
+    "passport"
+  ],
+  "assumptions": [
+    "Object transport follows authored task paths.",
+    "Pickup and release are scripted grasp events.",
+    "The room geometry and object dimensions are illustrative rather than measured.",
+    "Suitcase dimensions are illustrative; layout checks only test the authored model bounds."
+  ],
+  "not_validated": [
+    "Full musculoskeletal human balance and joint forces",
+    "Six-degree-of-freedom tumbling for objects",
+    "Soft-body cloth folding",
+    "Bottle stability or liquid containment",
+    "Real-world suitcase fit or transfer"
+  ],
+  "authored_task_stages": [
+    "approach",
+    "reach",
+    "grip",
+    "lift",
+    "carry",
+    "align",
+    "lower",
+    "release",
+    "settle"
+  ],
+  "asset_limitations": [
+    "The reference repository does not publish the main assembly avatar generator or a reusable figure mesh.",
+    "Its anatomical hand experiment is separate from the full assembly avatar and is not integrated into this two-view packing playback."
+  ]
+}

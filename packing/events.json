@@ -1,0 +1,464 @@
+[
+  {
+    "time": 0,
+    "event": "task_start",
+    "location": "suitcase approach",
+    "action": "survey",
+    "state": "suitcase open; seven items staged"
+  },
+  {
+    "time": 3.0,
+    "event": "approach",
+    "location": "bed",
+    "item": "shirts",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 4.0,
+    "event": "reach",
+    "location": "bed",
+    "item": "shirts",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 4.3,
+    "event": "grip",
+    "location": "bed",
+    "item": "shirts",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 4.6,
+    "event": "lift",
+    "location": "bed",
+    "item": "shirts",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 5.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "shirts",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 8.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "shirts",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 8.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "shirts",
+    "action": "lower into case"
+  },
+  {
+    "time": 9.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "shirts",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 10.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "shirts",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 15.0,
+    "event": "approach",
+    "location": "bed",
+    "item": "trousers",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 16.0,
+    "event": "reach",
+    "location": "bed",
+    "item": "trousers",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 16.3,
+    "event": "grip",
+    "location": "bed",
+    "item": "trousers",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 16.6,
+    "event": "lift",
+    "location": "bed",
+    "item": "trousers",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 17.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "trousers",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 20.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "trousers",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 20.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "trousers",
+    "action": "lower into case"
+  },
+  {
+    "time": 21.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "trousers",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 22.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "trousers",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 27.0,
+    "event": "approach",
+    "location": "bed",
+    "item": "sweater",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 28.0,
+    "event": "reach",
+    "location": "bed",
+    "item": "sweater",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 28.3,
+    "event": "grip",
+    "location": "bed",
+    "item": "sweater",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 28.6,
+    "event": "lift",
+    "location": "bed",
+    "item": "sweater",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 29.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "sweater",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 32.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "sweater",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 32.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "sweater",
+    "action": "lower into case"
+  },
+  {
+    "time": 33.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "sweater",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 34.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "sweater",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 39.0,
+    "event": "approach",
+    "location": "bed",
+    "item": "socks",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 40.0,
+    "event": "reach",
+    "location": "bed",
+    "item": "socks",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 40.3,
+    "event": "grip",
+    "location": "bed",
+    "item": "socks",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 40.6,
+    "event": "lift",
+    "location": "bed",
+    "item": "socks",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 41.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "socks",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 44.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "socks",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 44.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "socks",
+    "action": "lower into case"
+  },
+  {
+    "time": 45.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "socks",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 46.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "socks",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 51.0,
+    "event": "approach",
+    "location": "dresser",
+    "item": "wash kit",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 52.0,
+    "event": "reach",
+    "location": "dresser",
+    "item": "wash kit",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 52.3,
+    "event": "grip",
+    "location": "dresser",
+    "item": "wash kit",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 52.6,
+    "event": "lift",
+    "location": "dresser",
+    "item": "wash kit",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 53.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "wash kit",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 56.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "wash kit",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 56.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "wash kit",
+    "action": "lower into case"
+  },
+  {
+    "time": 57.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "wash kit",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 58.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "wash kit",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 63.0,
+    "event": "approach",
+    "location": "nightstand",
+    "item": "book",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 64.0,
+    "event": "reach",
+    "location": "nightstand",
+    "item": "book",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 64.3,
+    "event": "grip",
+    "location": "nightstand",
+    "item": "book",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 64.6,
+    "event": "lift",
+    "location": "nightstand",
+    "item": "book",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 65.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "book",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 68.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "book",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 68.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "book",
+    "action": "lower into case"
+  },
+  {
+    "time": 69.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "book",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 70.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "book",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 75.0,
+    "event": "approach",
+    "location": "nightstand",
+    "item": "passport",
+    "action": "walk to staged item"
+  },
+  {
+    "time": 76.0,
+    "event": "reach",
+    "location": "nightstand",
+    "item": "passport",
+    "action": "bend and reach with both hands"
+  },
+  {
+    "time": 76.3,
+    "event": "grip",
+    "location": "nightstand",
+    "item": "passport",
+    "action": "settle both hands on the item sides and stabilize"
+  },
+  {
+    "time": 76.6,
+    "event": "lift",
+    "location": "nightstand",
+    "item": "passport",
+    "action": "lift clear and orient"
+  },
+  {
+    "time": 77.02,
+    "event": "carry",
+    "location": "room route",
+    "item": "passport",
+    "action": "carry to suitcase with clear path"
+  },
+  {
+    "time": 80.08,
+    "event": "align",
+    "location": "suitcase",
+    "item": "passport",
+    "action": "center over assigned case region"
+  },
+  {
+    "time": 80.8,
+    "event": "lower",
+    "location": "suitcase",
+    "item": "passport",
+    "action": "lower into case"
+  },
+  {
+    "time": 81.76,
+    "event": "release",
+    "location": "suitcase",
+    "item": "passport",
+    "action": "open hands and release to gravity"
+  },
+  {
+    "time": 82.2,
+    "event": "settle",
+    "location": "suitcase",
+    "item": "passport",
+    "action": "confirm item settled before next trip"
+  },
+  {
+    "time": 84,
+    "event": "close_case",
+    "location": "suitcase",
+    "action": "hinged lid closes after the final item",
+    "result": "seven items packed"
+  },
+  {
+    "time": 88,
+    "event": "task_complete",
+    "location": "suitcase",
+    "action": "operator pauses beside packed case",
+    "result": "packing run complete"
+  }
+]
