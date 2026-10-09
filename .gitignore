@@ -1,3 +1,4 @@
 # This local reference copy is a nested Git repository and duplicates gallery
 # media. The small evidence file used by the packing page lives in packing/evidence/.
 /packing/assembly-reference/
+/.worktree-main/

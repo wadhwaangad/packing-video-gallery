@@ -1,7 +1,7 @@
 {
-  "run_id": "bedroom-suitcase-pack-v1",
+  "run_id": "bedroom-suitcase-pack-v2",
   "simulation_type": "deterministic hybrid kinematic and rigid-body visual simulation",
-  "validation_status": "seven trips now use explicit reach, grip, lift, carry, align, lower, release, and settle stages; stage-driven body pose added; visual hand mesh and solver checks remain unvalidated",
+  "validation_status": "the room and operator views share a staged deterministic replay; clothing GLB index decoding, staged support heights, and per-item masses are corrected; path-clearance and released-body end-state checks remain pending",
   "duration_seconds": 90,
   "route_length_m": 59.8,
   "checks": {
@@ -22,7 +22,7 @@
     "balance_controller": true,
     "headless_solver_check": null
   },
-  "motion_model": "Each trip is authored as approach, reach, grip, lift, carry, align, lower, release, and settle events. Both views follow one deterministic timeline. Grasped transport follows authored paths; release hands items to the fixed-step AABB contact solver with gravity, friction, and limited yaw rotation. The operator uses stage-driven bend poses and a damped inverted-pendulum balance controller.",
+  "motion_model": "Each trip is authored as approach, reach, grip, lift, carry, align, lower, release, and settle events. Both views follow one deterministic timeline. Items start supported on their staging surfaces and use individual illustrative masses. Grasped transport follows authored paths; release hands items to the fixed-step AABB contact solver with gravity, friction, and limited yaw rotation. The operator uses stage-driven bend poses and a damped inverted-pendulum balance controller.",
   "items": [
     "shirts",
     "trousers",
@@ -35,6 +35,7 @@
   "assumptions": [
     "Object transport follows authored task paths.",
     "Pickup and release are scripted grasp events.",
+    "Per-item masses are illustrative household estimates, not measured values.",
     "The room geometry and object dimensions are illustrative rather than measured.",
     "Suitcase dimensions are illustrative; layout checks only test the authored model bounds."
   ],
@@ -57,7 +58,7 @@
     "settle"
   ],
   "asset_limitations": [
-    "The reference repository does not publish the main assembly avatar generator or a reusable figure mesh.",
-    "Its anatomical hand experiment is separate from the full assembly avatar and is not integrated into this two-view packing playback."
+    "Full human biomechanics are not represented.",
+    "The separate assembly run's MuJoCo and Blender implementation scripts are unavailable and are not used by this packing replay."
   ]
 }

@@ -12,19 +12,17 @@ if (-not $pythonPath) { throw 'Python was not found. Install Python 3, then run 
 
 $port = 8011
 $url = "http://127.0.0.1:$port/packing/"
-$sceneUrl = "${url}immersive/"
 $serverReady = $false
 try {
-    $response = Invoke-WebRequest -Uri $sceneUrl -UseBasicParsing
+    $response = Invoke-WebRequest -Uri $url -UseBasicParsing
     $serverReady = $response.StatusCode -eq 200
 } catch {
     Start-Process -FilePath $pythonPath -ArgumentList @('-m','http.server',"$port",'--directory',"`"$projectRoot`"") -WindowStyle Hidden
     for ($attempt = 0; $attempt -lt 30; $attempt++) {
-        try { Invoke-WebRequest -Uri $sceneUrl -UseBasicParsing | Out-Null; $serverReady = $true; break }
+        try { Invoke-WebRequest -Uri $url -UseBasicParsing | Out-Null; $serverReady = $true; break }
         catch { Start-Sleep -Milliseconds 200 }
     }
 }
 if (-not $serverReady) { throw "Could not start the local server. Open $projectRoot manually and check port $port." }
 try { Start-Process $url } catch { Write-Output "Open this URL in your browser: $url" }
 Write-Output "Packing gallery: $url"
-Write-Output "Detailed 3D room: $sceneUrl"
