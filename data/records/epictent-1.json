@@ -1,9 +1,0 @@
-{
-  "record": {
-    "source": "epictent",
-    "file": "raw/epictent/data/02/02.tent.120617.smi.avi",
-    "bytes": 652815840
-  },
-  "annotation_source": "Synchronised_action_label.txt",
-  "original_lines": []
-}

@@ -1,19 +1,15 @@
-# Assembly video journal
+# Packing Field Notes — GitHub Pages
 
-Live site: [wadhwaangad.github.io/packing-video-gallery](https://wadhwaangad.github.io/packing-video-gallery/). GitHub Pages deploys the static gallery from the `main` branch.
+This `docs` branch contains the packing-only static website. It includes the room-scale simulation at [`/packing/`](packing/index.html), its interactive 3D bedroom and assets, and the human packing video/data index at [`/packing-data/`](packing-data/index.html). The home page links to both.
 
-The newest pair shows one continuous BEKVÄM assembly run from loose parts to a released stool: eight wooden components, two dowels, and eleven fasteners. The operator view uses a moving head-position camera and connected arms with finite reach. The outside view shows the same recorded run. The previews play at four times simulation speed. A separate operator video preserves every recorded frame at 25 fps and original movement speed. The page includes operation chapters.
+## Enable GitHub Pages
 
-`run-evidence.json` records the completion checks, avatar reach checks, and source hashes. `assembly-events.json` contains the recorded assembly milestones. These are simulation checks, not evidence of real-world transfer.
+In the repository on GitHub, open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, select branch **`docs`** and folder **`/(root)`**, then save. This branch has no Actions workflow; Pages serves its committed files directly. The current `main` branch retains the source repository and existing Actions workflow.
 
-Limitations: the human avatar is kinematic, without balance, foot-contact, or whole-body collision simulation. Grasps and bore/thread engagement use idealized connectors. Material and contact properties are assumed. The rebate collision profiles include explicit clearance for overlap in the source CAD; this has not been calibrated against real furniture. Fingers are visual geometry, not an independently controlled contact model. The footage is simulated, not photoreal human capture.
+The published URLs will be:
 
-Furniture geometry and derived videos: [IKEA3DAssemblyDataset](https://github.com/IKEA/IKEA3DAssemblyDataset), [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Older supported-human-lift media uses [Assistive Gym](https://github.com/Healthcare-Robotics/assistive-gym), MIT. The new operator avatar is procedural.
+- `https://wadhwaangad.github.io/packing-video-gallery/`
+- `https://wadhwaangad.github.io/packing-video-gallery/packing/`
+- `https://wadhwaangad.github.io/packing-video-gallery/packing-data/`
 
-## Assembly data explorer
-
-[Browse the collected data samples](https://hellomuffin.github.io/assembly-video-gallery/data/index.html): 24 playable excerpts from 15 datasets, original annotation timelines and records, part-mask stills, a 36-source assembly registry, and the complete 124-row slide-linked training-catalog audit. Filter by dataset, assembly type, and annotation. Acquisition counts are a dated local snapshot; source licenses and original-video rights remain separate.
-
-## Bedroom packing simulation
-
-[Explore the room-scale suitcase-packing simulation](packing/index.html): a procedural 3D room, operator and overview cameras, synchronized chapter seeking, a seven-item packing sequence, and linked run evidence. The task motion and grasps are scripted; the page documents the physics and transfer limits.
+After Pages is enabled, push future site updates to `docs` to publish them.
