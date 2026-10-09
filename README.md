@@ -10,9 +10,9 @@ This branch contains a suitcase-packing simulation and video research site. The 
 
 ## Simulation and generated videos
 
-The browser simulation replays a deterministic 90-second run. Seven items travel from room surfaces to an open suitcase through named reach, grip, lift, carry, align, lower, release, and settle phases. Room and operator cameras share the same timeline. Carried motion is authored; released items use the reduced contact solver documented on the simulation page.
+The browser simulation replays a deterministic 90-second run. Seven items travel from room surfaces to an open suitcase through named reach, grip, lift, carry, align, lower, release, and settle phases. The room overview, operator follow camera, and first-person egocentric camera share the same timeline. The egocentric view adds enlarged, camera-relative 3D forearms and hands as a first-person view model so they remain visible while reaching across the scene. Carried motion is authored; released items use the reduced contact solver documented on the simulation page.
 
-The MP4 previews in `packing/media/` are rendered from those simulation cameras, not captured human footage. The home page plays both previews before the embedded interactive simulation.
+The MP4 previews in `packing/media/` are rendered from those simulation cameras at 2560×1440, not captured human footage. The home page plays the overview, operator, and egocentric recordings before the embedded interactive simulation. To regenerate all three, run `node render-packing-video.cjs 8`; to update only the egocentric clip, run `node render-packing-video.cjs 8 --egocentric-only`. Both commands require Chrome, Playwright, and FFmpeg locally.
 
 ## GitHub Pages
 
