@@ -1,0 +1,103 @@
+{
+ "views": [
+  "ego",
+  "overview"
+ ],
+ "source_frames": 7935,
+ "video_fps": 25,
+ "sim_seconds": 317.43,
+ "chapters": [
+  {
+   "title": "Jeans",
+   "time": 0.75,
+   "sim_time": 3.0
+  },
+  {
+   "title": "T-shirts",
+   "time": 5.92,
+   "sim_time": 23.69
+  },
+  {
+   "title": "Sweater",
+   "time": 11.38,
+   "sim_time": 45.5
+  },
+  {
+   "title": "Towel",
+   "time": 15.95,
+   "sim_time": 63.78
+  },
+  {
+   "title": "Toiletry bag",
+   "time": 25.23,
+   "sim_time": 100.91
+  },
+  {
+   "title": "Water bottle",
+   "time": 34.69,
+   "sim_time": 138.78
+  },
+  {
+   "title": "Notebook",
+   "time": 45.72,
+   "sim_time": 182.88
+  },
+  {
+   "title": "Camera",
+   "time": 53.85,
+   "sim_time": 215.4
+  },
+  {
+   "title": "Close the lid",
+   "time": 61.69,
+   "sim_time": 246.78
+  },
+  {
+   "title": "Zip",
+   "time": 67.77,
+   "sim_time": 271.07
+  },
+  {
+   "title": "Lift and stand",
+   "time": 71.37,
+   "sim_time": 285.47
+  },
+  {
+   "title": "Ready",
+   "time": 78.11,
+   "sim_time": 312.43
+  }
+ ],
+ "artifacts": [
+  {
+   "file": "packing-ego.mp4",
+   "playback_speed": 4,
+   "encoded_frames": 2059,
+   "fps": 25,
+   "duration_seconds": 82.36,
+   "dimensions": [
+    1280,
+    720
+   ],
+   "bytes": 36798734,
+   "sha256": "bd79d080c6f619303221c6a1639341ce240b2d3b4cde444ed8254a26785d11e6",
+   "source_frames": 1984,
+   "view": "ego"
+  },
+  {
+   "file": "packing-overview.mp4",
+   "playback_speed": 4,
+   "encoded_frames": 2059,
+   "fps": 25,
+   "duration_seconds": 82.36,
+   "dimensions": [
+    1280,
+    720
+   ],
+   "bytes": 8829077,
+   "sha256": "2422b1b150cff57293461521b4a0f75673c3128145e136a8af1af660f92b7320",
+   "source_frames": 1984,
+   "view": "overview"
+  }
+ ]
+}

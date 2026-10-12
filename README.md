@@ -1,5 +1,9 @@
 # Assembly video journal
 
+## New: packing a suitcase for a trip
+
+[`packing.html`](packing.html) shows one continuous simulated run in a two-room apartment. A person collects eight items from the dresser, the bed, the bathroom, the kitchen and the living room, and packs them into a hard-shell suitcase lying on the bed. They then close and zip it and stand it on its wheels. All grasps are contact-only (no hand-object welds), using MyoHand hands in MuJoCo. The page has a moving head-camera view and room cameras rendered with Blender Cycles, plus completion checks in [`trip/validation.json`](trip/validation.json). Source and pipeline: [`packing/`](packing/README.md). Assets: Poly Haven (CC0). Hands: MyoHub/myo_sim (Apache-2.0).
+
 Watch the videos at https://hellomuffin.github.io/assembly-video-gallery/ .
 
 The newest pair shows one continuous BEKVÄM assembly run from loose parts to a released stool: eight wooden components, two dowels, and eleven fasteners. The operator view uses a moving head-position camera and connected arms with finite reach. The outside view shows the same recorded run. The previews play at four times simulation speed. A separate operator video preserves every recorded frame at 25 fps and original movement speed. The page includes operation chapters.

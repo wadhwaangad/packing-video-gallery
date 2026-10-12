@@ -1,0 +1,4 @@
+.venv/
+packing/assets/
+packing/build/
+__pycache__/

@@ -1,0 +1,326 @@
+[
+ {
+  "t": 0.0,
+  "title": "Start beside the open suitcase"
+ },
+ {
+  "t": 3.0,
+  "title": "Walk to the bedroom"
+ },
+ {
+  "t": 6.742,
+  "title": "Reach for folded jeans"
+ },
+ {
+  "t": 9.442,
+  "title": "Grip folded jeans"
+ },
+ {
+  "t": 10.392,
+  "title": "Lift folded jeans"
+ },
+ {
+  "t": 11.592,
+  "title": "Carry folded jeans"
+ },
+ {
+  "t": 17.19,
+  "title": "Bring folded jeans over the suitcase"
+ },
+ {
+  "t": 18.79,
+  "title": "Lower folded jeans into place"
+ },
+ {
+  "t": 20.19,
+  "title": "Release folded jeans"
+ },
+ {
+  "t": 23.69,
+  "title": "Walk to the bedroom"
+ },
+ {
+  "t": 28.142,
+  "title": "Reach for white T-shirt and navy T-shirt"
+ },
+ {
+  "t": 30.842,
+  "title": "Grip white T-shirt and navy T-shirt"
+ },
+ {
+  "t": 31.792,
+  "title": "Lift white T-shirt and navy T-shirt"
+ },
+ {
+  "t": 32.992,
+  "title": "Carry white T-shirt and navy T-shirt"
+ },
+ {
+  "t": 39.001,
+  "title": "Bring white T-shirt and navy T-shirt over the suitcase"
+ },
+ {
+  "t": 40.601,
+  "title": "Lower white T-shirt and navy T-shirt into place"
+ },
+ {
+  "t": 42.001,
+  "title": "Release white T-shirt and navy T-shirt"
+ },
+ {
+  "t": 45.501,
+  "title": "Walk to the bedroom"
+ },
+ {
+  "t": 48.774,
+  "title": "Reach for knit sweater"
+ },
+ {
+  "t": 51.474,
+  "title": "Grip knit sweater"
+ },
+ {
+  "t": 52.424,
+  "title": "Lift knit sweater"
+ },
+ {
+  "t": 53.624,
+  "title": "Carry knit sweater"
+ },
+ {
+  "t": 57.283,
+  "title": "Bring knit sweater over the suitcase"
+ },
+ {
+  "t": 58.883,
+  "title": "Lower knit sweater into place"
+ },
+ {
+  "t": 60.283,
+  "title": "Release knit sweater"
+ },
+ {
+  "t": 63.783,
+  "title": "Walk to the bathroom"
+ },
+ {
+  "t": 75.493,
+  "title": "Reach for folded towel"
+ },
+ {
+  "t": 78.193,
+  "title": "Grip folded towel"
+ },
+ {
+  "t": 79.143,
+  "title": "Lift folded towel"
+ },
+ {
+  "t": 80.343,
+  "title": "Carry folded towel"
+ },
+ {
+  "t": 94.414,
+  "title": "Bring folded towel over the suitcase"
+ },
+ {
+  "t": 96.014,
+  "title": "Lower folded towel into place"
+ },
+ {
+  "t": 97.414,
+  "title": "Release folded towel"
+ },
+ {
+  "t": 100.914,
+  "title": "Walk to the bathroom"
+ },
+ {
+  "t": 113.137,
+  "title": "Reach for toiletry bag"
+ },
+ {
+  "t": 115.837,
+  "title": "Grip toiletry bag"
+ },
+ {
+  "t": 116.787,
+  "title": "Lift toiletry bag"
+ },
+ {
+  "t": 117.987,
+  "title": "Carry toiletry bag"
+ },
+ {
+  "t": 132.277,
+  "title": "Bring toiletry bag over the suitcase"
+ },
+ {
+  "t": 133.877,
+  "title": "Lower toiletry bag into place"
+ },
+ {
+  "t": 135.277,
+  "title": "Release toiletry bag"
+ },
+ {
+  "t": 138.777,
+  "title": "Walk to the kitchen"
+ },
+ {
+  "t": 151.867,
+  "title": "Reach for the water bottle"
+ },
+ {
+  "t": 154.767,
+  "title": "Wrap fingers around the water bottle"
+ },
+ {
+  "t": 156.867,
+  "title": "Lift the water bottle"
+ },
+ {
+  "t": 157.967,
+  "title": "Carry the water bottle"
+ },
+ {
+  "t": 175.68,
+  "title": "Bring the water bottle over the suitcase"
+ },
+ {
+  "t": 177.88,
+  "title": "Stand the water bottle in the suitcase"
+ },
+ {
+  "t": 179.28,
+  "title": "Release the water bottle"
+ },
+ {
+  "t": 182.88,
+  "title": "Walk to the living"
+ },
+ {
+  "t": 192.889,
+  "title": "Reach for leather notebook"
+ },
+ {
+  "t": 195.589,
+  "title": "Grip leather notebook"
+ },
+ {
+  "t": 196.539,
+  "title": "Lift leather notebook"
+ },
+ {
+  "t": 197.739,
+  "title": "Carry leather notebook"
+ },
+ {
+  "t": 208.899,
+  "title": "Bring leather notebook over the suitcase"
+ },
+ {
+  "t": 210.499,
+  "title": "Lower leather notebook into place"
+ },
+ {
+  "t": 211.899,
+  "title": "Release leather notebook"
+ },
+ {
+  "t": 215.399,
+  "title": "Walk to the living"
+ },
+ {
+  "t": 224.824,
+  "title": "Reach for camera"
+ },
+ {
+  "t": 227.524,
+  "title": "Grip camera"
+ },
+ {
+  "t": 228.474,
+  "title": "Lift camera"
+ },
+ {
+  "t": 229.674,
+  "title": "Carry camera"
+ },
+ {
+  "t": 240.279,
+  "title": "Bring camera over the suitcase"
+ },
+ {
+  "t": 241.879,
+  "title": "Lower camera into place"
+ },
+ {
+  "t": 243.279,
+  "title": "Release camera"
+ },
+ {
+  "t": 246.779,
+  "title": "Walk to the foot of the bed"
+ },
+ {
+  "t": 250.733,
+  "title": "Hook the lid edge"
+ },
+ {
+  "t": 254.383,
+  "title": "Swing the lid over"
+ },
+ {
+  "t": 258.583,
+  "title": "Let the lid fall closed"
+ },
+ {
+  "t": 262.933,
+  "title": "Walk back beside the suitcase"
+ },
+ {
+  "t": 267.768,
+  "title": "Press the lid down"
+ },
+ {
+  "t": 271.068,
+  "title": "Run the zipper along the case"
+ },
+ {
+  "t": 282.468,
+  "title": "Zipped shut"
+ },
+ {
+  "t": 285.468,
+  "title": "Walk to the foot of the bed"
+ },
+ {
+  "t": 289.13,
+  "title": "Hook the top handle"
+ },
+ {
+  "t": 294.13,
+  "title": "Stand it up by the handle"
+ },
+ {
+  "t": 298.13,
+  "title": "Lift it off the bed"
+ },
+ {
+  "t": 299.33,
+  "title": "Carry it past the end of the bed"
+ },
+ {
+  "t": 303.13,
+  "title": "Set it down on its wheels"
+ },
+ {
+  "t": 308.43,
+  "title": "Let go of the handle"
+ },
+ {
+  "t": 312.43,
+  "title": "Packed and ready"
+ }
+]
