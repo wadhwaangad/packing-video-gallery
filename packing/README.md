@@ -32,6 +32,7 @@ After the trips, the person:
 
 ```
 python packing/fetch_assets.py            # CC0 Poly Haven models, textures and HDRI (+ hashes)
+python packing/make_knit_textures.py      # procedural stockinette and rib knit maps for the sweater
 python packing/run_full.py RUN            # one continuous simulation (about 12 min on a laptop CPU)
 python packing/export_poses.py RUN        # body solved around the simulated forearms
 python packing/verify.py RUN              # completion and quality checks -> RUN/validation.json
@@ -58,6 +59,17 @@ install is needed. Cycles renders on OptiX or CUDA when available.
   are computed from the live simulation state.
 - `operator_model.py`, `export_poses.py`: torso least-squares solve (upper arms reach the
   simulated elbows), two-bone legs, look-ahead footsteps, head camera.
+- `item_assets.py`: the packed items, modelled for the renders. Garments are real folded
+  stacks: one continuous ply of cloth snakes through the stack with rounded fold ends,
+  rolled side edges, uneven edges, wrinkles and creases. Details are separate draped
+  geometry: the jeans' waistband, belt loops, back pocket, arcuate and seam topstitching,
+  rivets and leather patch; rib collars and neck recesses on the T-shirts and the sweater;
+  the towel's woven border and terry pile; the toiletry bag's coil zip, slider, leather pull,
+  piping and carry loop; the bottle's lathe-turned steel foot, powder-coated body, lip ring,
+  ribbed cap and carry loop. Every model stays inside its item's collision box, so the
+  physics is unchanged.
+- `make_knit_textures.py`: tileable knit-stitch maps (Poly Haven has no knit scan).
+- `preview_items.py`: close-up turntable-style preview of the items (development aid).
 - `render_blender.py`, `encode.py`, `render_all.py`, `publish.py`: rendering and publishing.
 - `dbg_*.py`: the diagnostic scripts used while developing each skill (kept for reference).
 
@@ -91,4 +103,7 @@ The run passes only if all of these hold:
 - MyoHand model: Apache-2.0 (`hand/LICENSE-myosim.txt`).
 - Poly Haven assets: CC0, listed with hashes in `assets/asset-manifest.json` (fetched, not
   committed).
-- Suitcase, garments, toiletry bag, bottle, bed, cabinets and apartment shell: procedural.
+- Suitcase, garments, toiletry bag, bottle, bed, cabinets and apartment shell: procedural
+  (`item_assets.py`, `render_blender.py`), surfaced with Poly Haven fabric, leather and
+  scans (denim, cotton jersey, terry cloth, scuba suede, brown leather) and the
+  generated knit maps.

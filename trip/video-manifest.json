@@ -79,8 +79,8 @@
     1280,
     720
    ],
-   "bytes": 36798734,
-   "sha256": "bd79d080c6f619303221c6a1639341ce240b2d3b4cde444ed8254a26785d11e6",
+   "bytes": 37879098,
+   "sha256": "229b33ad4d0e557bd2a8fd426c34137fa5b17781d12b6f321e91726e18a0aa15",
    "source_frames": 1984,
    "view": "ego"
   },
@@ -94,8 +94,8 @@
     1280,
     720
    ],
-   "bytes": 8829077,
-   "sha256": "2422b1b150cff57293461521b4a0f75673c3128145e136a8af1af660f92b7320",
+   "bytes": 8826207,
+   "sha256": "0424e84283318a5d0aa01b9581b8a0fb19fe9bed901a6d38118ba632c6537fb1",
    "source_frames": 1984,
    "view": "overview"
   }

@@ -44,6 +44,15 @@ TEXTURES = {
     "fabric_pattern_07": "toiletry bag",
     "wool_boucle": "rug",
 }
+# Fabrics for the packed items, at 2k because the head camera sees them up close.
+ITEM_TEXTURES = {
+    "denim_fabric_04": "folded jeans",
+    "brown_leather": "jeans waistband patch",
+    "cotton_jersey": "folded t-shirts (2k)",
+    "terry_cloth": "folded towel",
+    "polar_fleece": "sweater fibre fuzz under the knit stitch",
+    "scuba_suede": "toiletry bag shell",
+}
 HDRIS = {"kloofendal_48d_partly_cloudy_puresky": "daylight outside the windows"}
 
 
@@ -71,15 +80,17 @@ def main():
             entry["files"][rel] = fetch(info["url"], folder / rel)
         manifest["assets"].append(entry)
         print("model", name, flush=True)
-    for name, role in TEXTURES.items():
+    jobs = [(n, r, "1k", n) for n, r in TEXTURES.items()] + [(n, r, "2k", f"{n}_2k") for n, r in ITEM_TEXTURES.items()]
+    for name, role, res, dirname in jobs:
         files = get_json(f"{API}/files/{name}")
-        folder = ASSETS / "textures" / name
-        entry = dict(id=name, kind="texture", role=role, page=f"https://polyhaven.com/a/{name}", files={})
+        folder = ASSETS / "textures" / dirname
+        entry = dict(id=name, kind="texture", role=role, resolution=res, folder=dirname,
+                     page=f"https://polyhaven.com/a/{name}", files={})
         for channel, key in [("diff", "Diffuse"), ("nor_gl", "nor_gl"), ("rough", "Rough"), ("arm", "arm")]:
             block = files.get(key)
-            if block and "1k" in block:
-                fmt = "jpg" if "jpg" in block["1k"] else next(iter(block["1k"]))
-                info = block["1k"][fmt]
+            if block and res in block:
+                fmt = "jpg" if "jpg" in block[res] else next(iter(block[res]))
+                info = block[res][fmt]
                 entry["files"][f"{channel}.{fmt}"] = fetch(info["url"], folder / f"{channel}.{fmt}")
         manifest["assets"].append(entry)
         print("texture", name, flush=True)

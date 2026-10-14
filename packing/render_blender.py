@@ -16,6 +16,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import scene as S
 import operator_model as O
+import item_assets as IA
 
 ASSETS = HERE / "assets"
 TEX = ASSETS / "textures"
@@ -402,6 +403,9 @@ def place_zip_pull(base, u):
 def build_items():
     objs = {}
     for it in S.ITEMS:
+        if it.name in IA.BUILDERS:
+            objs[it.name] = IA.build(it)
+            continue
         if it.kind == "asset":
             root, new = import_gltf(it.asset, it.mesh_objects)
             holder = bpy.data.objects.new(f"item_{it.name}", None); link(holder)
