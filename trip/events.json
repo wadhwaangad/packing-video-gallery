@@ -1,336 +1,448 @@
 [
  {
-  "t": 11.592,
-  "stage": "Lift folded jeans",
+  "t": 11.705,
+  "stage": "Lift folded trousers",
   "event": "lift_check",
   "items": [
-   "jeans"
+   "trousers"
   ],
   "rise_m": {
-   "jeans": 0.09136620749885727
+   "trousers": 0.09504917351088005
   },
   "hand_rise_m": {
-   "r": 0.09819866597508942,
-   "l": 0.09074863353970875
+   "r": 0.09745209219042883,
+   "l": 0.09723405975968114
   },
   "contacts": {
    "r": 4,
-   "l": 3
+   "l": 4
   },
   "normal_force_N": {
-   "r": 69.08,
-   "l": 58.51
+   "r": 62.08,
+   "l": 62.09
   }
  },
  {
-  "t": 20.79,
-  "stage": "Release folded jeans",
+  "t": 22.984,
+  "stage": "Release folded trousers",
   "event": "release_contacts",
-  "item": "jeans",
-  "contacts": {
-   "r": 2,
-   "l": 0
-  }
- },
- {
-  "t": 22.69,
-  "stage": "Release folded jeans",
-  "event": "placed",
-  "item": "jeans",
-  "pos": [
-   1.5518224259709095,
-   1.2911936010759215,
-   0.5909040949671719
-  ],
-  "speed": [
-   2.97065645049357e-07,
-   2.277141191553417e-06
-  ]
- },
- {
-  "t": 32.992,
-  "stage": "Lift white T-shirt and navy T-shirt",
-  "event": "lift_check",
-  "items": [
-   "tshirt_white",
-   "tshirt_navy"
-  ],
-  "rise_m": {
-   "tshirt_white": 0.09293794610135853,
-   "tshirt_navy": 0.09246081431070807
-  },
-  "hand_rise_m": {
-   "r": 0.09161536014248373,
-   "l": 0.09515609937880132
-  },
+  "item": "trousers",
   "contacts": {
    "r": 4,
-   "l": 5
-  },
-  "normal_force_N": {
-   "r": 58.31,
-   "l": 86.29
-  }
- },
- {
-  "t": 42.601,
-  "stage": "Release white T-shirt and navy T-shirt",
-  "event": "release_contacts",
-  "item": "tshirt_white",
-  "contacts": {
-   "r": 0,
-   "l": 1
-  }
- },
- {
-  "t": 42.601,
-  "stage": "Release white T-shirt and navy T-shirt",
-  "event": "release_contacts",
-  "item": "tshirt_navy",
-  "contacts": {
-   "r": 1,
    "l": 3
   }
  },
  {
-  "t": 44.501,
-  "stage": "Release white T-shirt and navy T-shirt",
+  "t": 24.884,
+  "stage": "Release folded trousers",
   "event": "placed",
-  "item": "tshirt_white",
+  "item": "trousers",
   "pos": [
-   1.545485680837254,
-   1.302504011774824,
-   0.6303744298500843
+   1.3941178800550404,
+   1.3411577114236206,
+   0.5688428516868007
   ],
   "speed": [
-   1.5216915991410004e-06,
-   8.726923288810063e-07
+   7.410026575775495e-08,
+   2.10125689075735e-07
   ]
  },
  {
-  "t": 44.501,
-  "stage": "Release white T-shirt and navy T-shirt",
-  "event": "placed",
-  "item": "tshirt_navy",
-  "pos": [
-   1.5404701995283976,
-   1.2984056199168408,
-   0.6599791161449139
+  "t": 24.884,
+  "stage": "Release folded trousers",
+  "event": "placed_check",
+  "item": "trousers",
+  "region": "wheel_end",
+  "local_m": [
+   -0.081,
+   -0.1559,
+   0.0688
   ],
-  "speed": [
-   1.5191717798271461e-06,
-   8.717335453829176e-07
-  ]
+  "ok": true
  },
  {
-  "t": 53.624,
-  "stage": "Lift knit sweater",
-  "event": "lift_check",
-  "items": [
-   "sweater"
-  ],
-  "rise_m": {
-   "sweater": 0.09262998101115072
-  },
-  "hand_rise_m": {
-   "r": 0.09390198726662335,
-   "l": 0.09315363048401981
-  },
-  "contacts": {
-   "r": 3,
-   "l": 3
-  },
-  "normal_force_N": {
-   "r": 63.08,
-   "l": 63.09
-  }
- },
- {
-  "t": 60.883,
-  "stage": "Release knit sweater",
-  "event": "release_contacts",
-  "item": "sweater",
-  "contacts": {
-   "r": 0,
-   "l": 0
-  }
- },
- {
-  "t": 62.783,
-  "stage": "Release knit sweater",
-  "event": "placed",
-  "item": "sweater",
-  "pos": [
-   1.5509435783065204,
-   1.2988210608044581,
-   0.7010347046918195
-  ],
-  "speed": [
-   1.0610540590809027e-06,
-   2.005899572423414e-06
-  ]
- },
- {
-  "t": 80.343,
-  "stage": "Lift folded towel",
-  "event": "lift_check",
-  "items": [
-   "towel"
-  ],
-  "rise_m": {
-   "towel": 0.08889578512713936
-  },
-  "hand_rise_m": {
-   "r": 0.0902806229018489,
-   "l": 0.09046306054279052
-  },
-  "contacts": {
-   "r": 3,
-   "l": 3
-  },
-  "normal_force_N": {
-   "r": 65.84,
-   "l": 62.03
-  }
- },
- {
-  "t": 98.014,
-  "stage": "Release folded towel",
-  "event": "release_contacts",
-  "item": "towel",
-  "contacts": {
-   "r": 1,
-   "l": 0
-  }
- },
- {
-  "t": 99.914,
-  "stage": "Release folded towel",
-  "event": "placed",
-  "item": "towel",
-  "pos": [
-   1.5517187192047122,
-   1.3043023050010765,
-   0.7485129612130276
-  ],
-  "speed": [
-   3.654173025477402e-06,
-   2.4482686776326825e-06
-  ]
- },
- {
-  "t": 117.987,
+  "t": 45.21,
   "stage": "Lift toiletry bag",
   "event": "lift_check",
   "items": [
    "toiletry_bag"
   ],
   "rise_m": {
-   "toiletry_bag": 0.0962857255546321
+   "toiletry_bag": 0.0975343673701522
   },
   "hand_rise_m": {
-   "r": 0.09529464646053598,
-   "l": 0.0954590987218299
+   "r": 0.09635920756947325,
+   "l": 0.09583643916064533
   },
   "contacts": {
    "r": 3,
-   "l": 3
+   "l": 4
   },
   "normal_force_N": {
-   "r": 24.2,
-   "l": 24.65
+   "r": 23.49,
+   "l": 24.63
   }
  },
  {
-  "t": 135.877,
+  "t": 66.136,
   "stage": "Release toiletry bag",
   "event": "release_contacts",
   "item": "toiletry_bag",
   "contacts": {
-   "r": 0,
-   "l": 0
+   "r": 3,
+   "l": 2
   }
  },
  {
-  "t": 137.777,
+  "t": 68.036,
   "stage": "Release toiletry bag",
   "event": "placed",
   "item": "toiletry_bag",
   "pos": [
-   1.6666671391480614,
-   1.075792571488641,
-   0.6109517288001088
+   1.6785515086207006,
+   1.0967897762513454,
+   0.5629961844596908
   ],
   "speed": [
-   3.539100984402724e-07,
-   3.971525044369241e-06
+   2.37708200065925e-07,
+   1.3484052302670763e-06
   ]
  },
  {
-  "t": 157.967,
+  "t": 68.036,
+  "stage": "Release toiletry bag",
+  "event": "placed_check",
+  "item": "toiletry_bag",
+  "region": "front_strip",
+  "local_m": [
+   0.1635,
+   0.1287,
+   0.063
+  ],
+  "ok": true
+ },
+ {
+  "t": 90.377,
   "stage": "Lift the water bottle",
   "event": "lift_check",
   "items": [
    "bottle"
   ],
   "rise_m": {
-   "bottle": 0.11337639802943311
+   "bottle": 0.11339679194928931
   },
   "contacts": {
    "r": 7,
    "l": 0
   },
   "normal_force_N": {
-   "r": 241.47,
+   "r": 241.77,
    "l": 0.0
   }
  },
  {
-  "t": 175.68,
-  "stage": "Carry the water bottle",
+  "t": 110.421,
+  "stage": "Walk to the suitcase",
   "event": "bottle_tilt_before_place_deg",
-  "value": 13.991965052425046
+  "value": 13.696152114262958
  },
  {
-  "t": 181.88,
+  "t": 114.671,
+  "stage": "Stand the water bottle in the suitcase",
+  "event": "bottle_tilt_at_release_deg",
+  "value": 0.06122823299174333
+ },
+ {
+  "t": 117.571,
   "stage": "Release the water bottle",
   "event": "placed",
   "item": "bottle",
   "pos": [
-   1.366805204339515,
-   1.0589136076979093,
-   0.6809531052151155
+   1.3597734322354293,
+   1.1021343295249268,
+   0.6329958251509378
   ],
   "speed": [
-   0.026626064545988867,
-   0.24789936858067924
+   2.2673543347594247e-07,
+   9.57863586118537e-08
   ]
  },
  {
-  "t": 197.739,
-  "stage": "Lift leather notebook",
+  "t": 117.571,
+  "stage": "Release the water bottle",
+  "event": "placed_check",
+  "item": "bottle",
+  "region": "bottle_corner",
+  "local_m": [
+   0.1581,
+   -0.1901,
+   0.133
+  ],
+  "ok": true
+ },
+ {
+  "t": 132.572,
+  "stage": "Lift striped shirts",
   "event": "lift_check",
   "items": [
-   "notebook"
+   "striped_shirts"
   ],
   "rise_m": {
-   "notebook": 0.08916095532725221
+   "striped_shirts": 0.09572163659780175
   },
   "hand_rise_m": {
-   "r": 0.0906406633893223,
-   "l": 0.09064587822996495
+   "r": 0.09783854153328364,
+   "l": 0.09773780848948466
+  },
+  "contacts": {
+   "r": 4,
+   "l": 4
+  },
+  "normal_force_N": {
+   "r": 61.74,
+   "l": 61.75
+  }
+ },
+ {
+  "t": 137.772,
+  "stage": "Release striped shirts",
+  "event": "release_contacts",
+  "item": "striped_shirts",
+  "contacts": {
+   "r": 3,
+   "l": 3
+  }
+ },
+ {
+  "t": 139.672,
+  "stage": "Release striped shirts",
+  "event": "placed",
+  "item": "striped_shirts",
+  "pos": [
+   0.9498248520208676,
+   2.1300921366470225,
+   0.5650007829126473
+  ],
+  "speed": [
+   2.9881642335612587e-11,
+   1.6168708624320503e-10
+  ]
+ },
+ {
+  "t": 139.672,
+  "stage": "Release striped shirts",
+  "event": "put_back_check",
+  "item": "striped_shirts",
+  "offset_m": 0.019908633807858758
+ },
+ {
+  "t": 149.641,
+  "stage": "Lift sweatshirts",
+  "event": "lift_check",
+  "items": [
+   "sweatshirts"
+  ],
+  "rise_m": {
+   "sweatshirts": 0.0947693108301636
+  },
+  "hand_rise_m": {
+   "r": 0.09778056619844255,
+   "l": 0.09749837625537772
+  },
+  "contacts": {
+   "r": 4,
+   "l": 4
+  },
+  "normal_force_N": {
+   "r": 61.59,
+   "l": 61.62
+  }
+ },
+ {
+  "t": 165.646,
+  "stage": "Release sweatshirts",
+  "event": "release_contacts",
+  "item": "sweatshirts",
+  "contacts": {
+   "r": 3,
+   "l": 3
+  }
+ },
+ {
+  "t": 167.546,
+  "stage": "Release sweatshirts",
+  "event": "placed",
+  "item": "sweatshirts",
+  "pos": [
+   1.7029297351711508,
+   1.3425131710747733,
+   0.5813924017059311
+  ],
+  "speed": [
+   1.0565014923159514e-06,
+   4.455226966838918e-06
+  ]
+ },
+ {
+  "t": 167.546,
+  "stage": "Release sweatshirts",
+  "event": "placed_check",
+  "item": "sweatshirts",
+  "region": "handle_end",
+  "local_m": [
+   -0.0822,
+   0.1531,
+   0.0814
+  ],
+  "ok": true
+ },
+ {
+  "t": 179.401,
+  "stage": "Lift T-shirt pile",
+  "event": "lift_check",
+  "items": [
+   "tshirts"
+  ],
+  "rise_m": {
+   "tshirts": 0.09536115427196956
+  },
+  "hand_rise_m": {
+   "r": 0.09794320263874401,
+   "l": 0.09781474110285959
+  },
+  "contacts": {
+   "r": 4,
+   "l": 4
+  },
+  "normal_force_N": {
+   "r": 61.71,
+   "l": 61.7
+  }
+ },
+ {
+  "t": 190.902,
+  "stage": "Release T-shirt pile",
+  "event": "release_contacts",
+  "item": "tshirts",
+  "contacts": {
+   "r": 3,
+   "l": 3
+  }
+ },
+ {
+  "t": 192.802,
+  "stage": "Release T-shirt pile",
+  "event": "placed",
+  "item": "tshirts",
+  "pos": [
+   1.3944636088554891,
+   1.3534974508614301,
+   0.6765539560249217
+  ],
+  "speed": [
+   7.751477744877022e-07,
+   5.135202195385139e-07
+  ]
+ },
+ {
+  "t": 192.802,
+  "stage": "Release T-shirt pile",
+  "event": "placed_check",
+  "item": "tshirts",
+  "region": "wheel_end",
+  "local_m": [
+   -0.0933,
+   -0.1554,
+   0.1766
+  ],
+  "ok": true
+ },
+ {
+  "t": 212.508,
+  "stage": "Lift folded towel",
+  "event": "lift_check",
+  "items": [
+   "towel"
+  ],
+  "rise_m": {
+   "towel": 0.08911732186116261
+  },
+  "hand_rise_m": {
+   "r": 0.09063068027597065,
+   "l": 0.09028924129358828
   },
   "contacts": {
    "r": 3,
    "l": 3
   },
   "normal_force_N": {
-   "r": 65.9,
-   "l": 65.64
+   "r": 63.1,
+   "l": 63.11
   }
  },
  {
-  "t": 212.499,
+  "t": 232.513,
+  "stage": "Release folded towel",
+  "event": "release_contacts",
+  "item": "towel",
+  "contacts": {
+   "r": 0,
+   "l": 0
+  }
+ },
+ {
+  "t": 234.413,
+  "stage": "Release folded towel",
+  "event": "placed",
+  "item": "towel",
+  "pos": [
+   1.7061678329517702,
+   1.3415552447255297,
+   0.6651577004623481
+  ],
+  "speed": [
+   5.721051571583424e-07,
+   1.2011819766123325e-06
+  ]
+ },
+ {
+  "t": 234.413,
+  "stage": "Release folded towel",
+  "event": "placed_check",
+  "item": "towel",
+  "region": "handle_end",
+  "local_m": [
+   -0.0813,
+   0.1563,
+   0.1652
+  ],
+  "ok": true
+ },
+ {
+  "t": 252.164,
+  "stage": "Lift leather notebook",
+  "event": "lift_check",
+  "items": [
+   "notebook"
+  ],
+  "rise_m": {
+   "notebook": 0.08916957968169581
+  },
+  "hand_rise_m": {
+   "r": 0.09057258450904576,
+   "l": 0.09060793542411938
+  },
+  "contacts": {
+   "r": 3,
+   "l": 3
+  },
+  "normal_force_N": {
+   "r": 65.03,
+   "l": 64.32
+  }
+ },
+ {
+  "t": 268.802,
   "stage": "Release leather notebook",
   "event": "release_contacts",
   "item": "notebook",
@@ -340,45 +452,58 @@
   }
  },
  {
-  "t": 214.399,
+  "t": 270.702,
   "stage": "Release leather notebook",
   "event": "placed",
   "item": "notebook",
   "pos": [
-   1.5487884499149631,
-   1.300275070444982,
-   0.7836859934244219
+   1.7037063388214895,
+   1.3415671936771651,
+   0.6979410907567613
   ],
   "speed": [
-   1.3122498316783543e-06,
-   2.6099004181988793e-06
+   6.801226437793987e-07,
+   6.664852457890885e-07
   ]
  },
  {
-  "t": 229.674,
+  "t": 270.702,
+  "stage": "Release leather notebook",
+  "event": "placed_check",
+  "item": "notebook",
+  "region": "handle_end",
+  "local_m": [
+   -0.0813,
+   0.1539,
+   0.1979
+  ],
+  "ok": true
+ },
+ {
+  "t": 287.492,
   "stage": "Lift camera",
   "event": "lift_check",
   "items": [
    "camera"
   ],
   "rise_m": {
-   "camera": 0.09108885384372345
+   "camera": 0.09102976987447536
   },
   "hand_rise_m": {
-   "r": 0.09151023768742195,
-   "l": 0.09161141778770598
+   "r": 0.09156393934525331,
+   "l": 0.09146354467176804
   },
   "contacts": {
    "r": 1,
    "l": 1
   },
   "normal_force_N": {
-   "r": 32.1,
-   "l": 32.09
+   "r": 32.07,
+   "l": 32.08
   }
  },
  {
-  "t": 243.879,
+  "t": 303.555,
   "stage": "Release camera",
   "event": "release_contacts",
   "item": "camera",
@@ -388,73 +513,279 @@
   }
  },
  {
-  "t": 245.779,
+  "t": 305.455,
   "stage": "Release camera",
   "event": "placed",
   "item": "camera",
   "pos": [
-   1.68113097872819,
-   1.0750034594982811,
-   0.6949140069661487
+   1.6698897735399456,
+   1.088574776677326,
+   0.6469794623267769
   ],
   "speed": [
-   9.930241990548973e-07,
-   1.4631632306662315e-06
+   1.227407927685058e-07,
+   1.1118922302062576e-07
   ]
  },
  {
-  "t": 258.583,
-  "stage": "Swing the lid over",
-  "event": "lid_swung",
-  "lid_angle_deg": 48.953353375309476
+  "t": 305.455,
+  "stage": "Release camera",
+  "event": "placed_check",
+  "item": "camera",
+  "region": "front_strip",
+  "local_m": [
+   0.1717,
+   0.1201,
+   0.147
+  ],
+  "ok": true
  },
  {
-  "t": 261.933,
-  "stage": "Let the lid fall closed",
-  "event": "lid_released",
-  "lid_angle_deg": -0.0035493719115439683
- },
- {
-  "t": 271.068,
-  "stage": "Press the lid down",
-  "event": "lid_press",
-  "contacts": 2,
-  "force_N": 44.2,
-  "lid_angle_deg": -0.016723447289803774
- },
- {
-  "t": 282.468,
-  "stage": "Run the zipper along the case",
-  "event": "zip_check",
-  "lid_angle_deg": -0.010672278533270706,
-  "closed": true
- },
- {
-  "t": 282.468,
-  "stage": "Run the zipper along the case",
-  "event": "zipper_engaged",
-  "lid_angle_deg": -0.010672278533270706
- },
- {
-  "t": 298.13,
-  "stage": "Stand it up by the handle",
-  "event": "suitcase_lift_check",
-  "rise_m": 0.3596332276237093,
-  "handle_end_up_deg": 16.779140424099285,
-  "contacts": {
-   "r": 7
+  "t": 312.171,
+  "stage": "Walk to the foot of the bed",
+  "event": "action_retry",
+  "action": {
+   "verb": "close_lid",
+   "target": "",
+   "arg": "",
+   "text": "close the lid"
+  },
+  "attempt": 1,
+  "reason": "close_lid: could not swing the lid over",
+  "jitter": {
+   "stand": [
+    -0.03830146328067276,
+    -0.03402900775522169
+   ],
+   "time": 0.9502968245100005,
+   "place": [
+    0.005024320689788779,
+    0.0038471980452751825
+   ]
   }
  },
  {
-  "t": 303.13,
-  "stage": "Carry it past the end of the bed",
-  "event": "hanging_check",
-  "handle_end_up_deg": 4.669905114140712
+  "t": 312.171,
+  "stage": "Walk to the foot of the bed",
+  "event": "action_retry",
+  "action": {
+   "verb": "close_lid",
+   "target": "",
+   "arg": "",
+   "text": "close the lid"
+  },
+  "attempt": 2,
+  "reason": "close_lid: could not swing the lid over",
+  "jitter": {
+   "stand": [
+    -0.0022524905052379376,
+    -0.0036249308970792496
+   ],
+   "time": 0.9311106980641484,
+   "place": [
+    -0.0018019092999082796,
+    0.008535114642161308
+   ]
+  }
  },
  {
-  "t": 308.43,
+  "t": 317.321,
+  "stage": "Hook the lid edge",
+  "event": "lid_hook_check",
+  "attempt": 0,
+  "lid_rise_deg": 3.2845581724574426
+ },
+ {
+  "t": 318.221,
+  "stage": "Swing the lid over",
+  "event": "lid_slipped",
+  "lid_angle_deg": 147.7762653306972,
+  "hand_deg": 126.59346236519593
+ },
+ {
+  "t": 323.771,
+  "stage": "Re-hook the lid edge",
+  "event": "lid_hook_check",
+  "attempt": 1,
+  "lid_rise_deg": 2.964670003873419
+ },
+ {
+  "t": 325.912,
+  "stage": "Swing the lid over",
+  "event": "lid_swung",
+  "lid_angle_deg": 33.76849986603775
+ },
+ {
+  "t": 329.262,
+  "stage": "Let the lid fall closed",
+  "event": "lid_released",
+  "lid_angle_deg": -0.003819127072000698
+ },
+ {
+  "t": 339.79,
+  "stage": "Press the lid down",
+  "event": "lid_press",
+  "contacts": 2,
+  "force_N": 44.6,
+  "lid_angle_deg": -0.013919059189024736
+ },
+ {
+  "t": 351.19,
+  "stage": "Run the zipper along the case",
+  "event": "zip_check",
+  "lid_angle_deg": -0.009314603353791561,
+  "closed": true
+ },
+ {
+  "t": 351.19,
+  "stage": "Run the zipper along the case",
+  "event": "zipper_engaged",
+  "lid_angle_deg": -0.009314603353791561
+ },
+ {
+  "t": 368.589,
+  "stage": "Hook the trolley handle",
+  "event": "hook_check",
+  "pitch_deg": 15,
+  "bar_rise_m": 0.050545092857370855,
+  "contacts": {
+   "r": 6,
+   "l": 6
+  }
+ },
+ {
+  "t": 371.789,
+  "stage": "Stand it up by the handle",
+  "event": "stand_trace",
+  "trace": [
+   {
+    "u": 0.02,
+    "bar": [
+     2.003,
+     1.253,
+     0.62
+    ],
+    "contacts": {
+     "r": 6,
+     "l": 6
+    }
+   },
+   {
+    "u": 0.1,
+    "bar": [
+     2.011,
+     1.253,
+     0.679
+    ],
+    "contacts": {
+     "r": 6,
+     "l": 6
+    }
+   },
+   {
+    "u": 0.28,
+    "bar": [
+     2.027,
+     1.253,
+     0.804
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 6
+    }
+   },
+   {
+    "u": 0.5,
+    "bar": [
+     2.048,
+     1.252,
+     0.973
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 5
+    }
+   },
+   {
+    "u": 0.72,
+    "bar": [
+     2.07,
+     1.252,
+     1.148
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 5
+    }
+   },
+   {
+    "u": 0.9,
+    "bar": [
+     2.088,
+     1.251,
+     1.281
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 4
+    }
+   },
+   {
+    "u": 0.98,
+    "bar": [
+     2.098,
+     1.251,
+     1.355
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 6
+    }
+   },
+   {
+    "u": 1.0,
+    "bar": [
+     2.099,
+     1.252,
+     1.373
+    ],
+    "contacts": {
+     "r": 5,
+     "l": 6
+    }
+   }
+  ]
+ },
+ {
+  "t": 372.589,
+  "stage": "Stand it up by the handle",
+  "event": "suitcase_lift_check",
+  "rise_m": 0.44121843004391836,
+  "handle_end_up_deg": 1.2596420178876342,
+  "contacts": {
+   "r": 5,
+   "l": 6
+  }
+ },
+ {
+  "t": 377.589,
+  "stage": "Carry it past the end of the bed",
+  "event": "hanging_check",
+  "handle_end_up_deg": 6.761283280542392
+ },
+ {
+  "t": 382.889,
   "stage": "Set it down on its wheels",
   "event": "touchdown_tilt_deg",
-  "value": 3.483895214592028
+  "value": 0.04877843408061437
+ },
+ {
+  "t": 386.289,
+  "stage": "Let go of the handle",
+  "event": "release_contacts",
+  "contacts": {
+   "r": 0,
+   "l": 0
+  }
  }
 ]

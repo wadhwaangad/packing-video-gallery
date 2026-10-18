@@ -105,25 +105,6 @@ def skin_material():
     return m
 
 
-def suitcase_shell_material():
-    """Polycarbonate shell with moulded ribs along the length."""
-    if "shell" in _mat_cache:
-        return _mat_cache["shell"]
-    c = S.SUITCASE["color"]
-    m = principled("shell", c, 0.32, 0.0, **{"Coat Weight": 0.35, "Coat Roughness": 0.15})
-    nt = m.node_tree; bs = nt.nodes["Principled BSDF"]
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    wave = nt.nodes.new("ShaderNodeTexWave"); wave.wave_type = "BANDS"; wave.bands_direction = "X"
-    wave.inputs["Scale"].default_value = 1.6; wave.inputs["Distortion"].default_value = 0.0
-    nt.links.new(tc.outputs["Object"], wave.inputs["Vector"])
-    ramp = nt.nodes.new("ShaderNodeMapRange"); ramp.inputs["From Min"].default_value = 0.85; ramp.inputs["From Max"].default_value = 1.0
-    nt.links.new(wave.outputs["Fac"], ramp.inputs["Value"])
-    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.35; bump.inputs["Distance"].default_value = 0.002
-    nt.links.new(ramp.outputs["Result"], bump.inputs["Height"]); nt.links.new(bump.outputs["Normal"], bs.inputs["Normal"])
-    _mat_cache["shell"] = m
-    return m
-
-
 # ------------------------------------------------------------------ geometry helpers
 def link(obj, coll=None):
     (coll or bpy.context.scene.collection).objects.link(obj)
@@ -242,7 +223,6 @@ def build_apartment(view):
 
 def build_furniture():
     linen = textured("sheet", "cotton_jersey", scale=0.35, tint=(1.0, 0.97, 0.92), bump=0.35)
-    duvet_m = textured("duvet", "rough_linen", scale=0.6, tint=(0.72, 0.52, 0.40), bump=0.6)
     upholstery = textured("headboard fabric", "wool_boucle", scale=0.4, tint=(0.55, 0.52, 0.47), bump=0.8)
     walnut = principled("walnut", (0.20, 0.11, 0.06), 0.45)
     oak = principled("light oak", (0.55, 0.40, 0.25), 0.5)
@@ -262,15 +242,10 @@ def build_furniture():
         bev = 0.04 if b.name == "mattress" else 0.03 if b.name == "headboard" else 0.006
         ob = box_mesh(b.name, b.size, bevel=bev, segments=5 if b.name == "mattress" else 2, material=mat)
         place(ob, b.center, b.yaw)
-    # Duvet folded at the head end, pillows
-    # Throw blanket folded over the foot end of the bed
-    duvet = box_mesh("throw", (0.20, 1.60, 0.035), bevel=0.015, segments=4, material=duvet_m, subdiv=1)
-    place(duvet, (2.05, 1.75, 0.575))
-    drape = box_mesh("throw_drape", (0.03, 1.60, 0.22), bevel=0.012, segments=3, material=duvet_m, subdiv=1)
-    place(drape, (2.165, 1.75, 0.47))
+    # Pillows at the head end
     for y in (1.35, 2.15):
         p = box_mesh(f"pillow_{y}", (0.36, 0.62, 0.14), bevel=0.06, segments=5, material=linen, subdiv=1)
-        place(p, (0.30, y, 0.66), yaw=0.0)
+        place(p, (0.30, y, S.BED["mattress_top"] + 0.10), yaw=0.0)
     # Bathroom: sink basin, tap and mirror
     basin = box_mesh("basin", (0.42, 0.32, 0.02), bevel=0.008, material=principled("ceramic", (0.95, 0.95, 0.95), 0.08))
     place(basin, (4.95, 0.27, 0.872))
@@ -288,101 +263,69 @@ def build_furniture():
 
 
 # ------------------------------------------------------------------ suitcase
-def shell_object(name, W, L, D, t, open_top=True):
-    """Open rounded box: outer W x L x D (z 0..D), wall thickness t, lining inside."""
+def append_scan(name):
+    """Objects of one prepared scan (prepare_assets.py), linked into the scene."""
+    with bpy.data.libraries.load(str(ASSETS / "scans" / f"{name}.blend")) as (src, dst):
+        dst.objects = list(src.objects)
+    out = [o for o in dst.objects if o is not None]
+    for o in out:
+        link(o)
+    return out
+
+
+def liner(name, x0, x1, L, z0, z1, open_low, r=0.045, mat=None):
+    """Fabric lining: an open rounded tub spanning x0..x1, +-L/2, z0..z1, open at z0 or z1."""
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     for v in bm.verts:
-        v.co = Vector((v.co.x * W, v.co.y * L, v.co.z * D + D / 2))
-    top = [f for f in bm.faces if f.normal.z > 0.9]
-    bmesh.ops.delete(bm, geom=top, context="FACES")
-    edges = [e for e in bm.edges if not (abs(e.verts[0].co.z - D) < 1e-6 and abs(e.verts[1].co.z - D) < 1e-6)]
-    bmesh.ops.bevel(bm, geom=edges, offset=0.045, segments=8, affect="EDGES", profile=0.5)
-    me = bpy.data.meshes.new(name)
-    bm.to_mesh(me); bm.free()
+        v.co = Vector(((x0 + x1) / 2 + v.co.x * (x1 - x0), v.co.y * L, (z0 + z1) / 2 + v.co.z * (z1 - z0)))
+    zo = z0 if open_low else z1
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.calc_center_median().z - zo) < 1e-6], context="FACES")
+    edges = [e for e in bm.edges if not (abs(e.verts[0].co.z - zo) < 1e-6 and abs(e.verts[1].co.z - zo) < 1e-6)]
+    bmesh.ops.bevel(bm, geom=edges, offset=r, segments=10, affect="EDGES", profile=0.5)
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     ob = link(bpy.data.objects.new(name, me))
-    for p in me.polygons:
-        p.use_smooth = True
-    sol = ob.modifiers.new("shell", "SOLIDIFY"); sol.thickness = t; sol.offset = -1; sol.material_offset = 1
-    sol.use_rim = True; sol.material_offset_rim = 2
-    me.materials.append(suitcase_shell_material())
-    me.materials.append(textured("lining", "cotton_jersey", scale=0.25, tint=(0.18, 0.19, 0.21), bump=0.4))
-    me.materials.append(principled("zip tape", (0.03, 0.03, 0.035), 0.6))
-    ob.modifiers.new("wn", "WEIGHTED_NORMAL")
+    for pg in me.polygons:
+        pg.use_smooth = True
+    sub = ob.modifiers.new("seams", "SOLIDIFY"); sub.thickness = 0.002; sub.offset = 1
+    me.materials.append(mat)
     return ob
 
 
+def lining_material():
+    """Matte woven polyester lining, charcoal."""
+    m = textured("lining", "cotton_jersey", scale=0.06, tint=(0.11, 0.115, 0.13), bump=0.5, rough_mul=1.3)
+    return m
+
+
 def build_suitcase():
+    """The scanned spinner, cut at its zip seam: base and lid shells with a fabric lining."""
     c = S.SUITCASE
-    W, L = c["outer"]; D, Dl, t = c["base_depth"], c["lid_depth"], c["shell"]
-    rubber = principled("handle rubber", (0.025, 0.025, 0.027), 0.55)
-    metal = principled("brushed alu", (0.7, 0.72, 0.74), 0.3, 1.0)
-    base = shell_object("suitcase_base", W, L, D, t)
-    lid_shell = shell_object("suitcase_lid_shell", W, L, Dl, t)
-    lid = bpy.data.objects.new("suitcase_lid", None); link(lid)
-    lid_shell.parent = lid
-    lid_shell.location = (W / 2, 0, Dl)
-    lid_shell.rotation_euler = (np.pi, 0, 0)
-    # zipper band on the rims
-    for parent, depth, nm in [(base, D, "b"), (lid_shell, Dl, "l")]:
-        bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0)
-        for v in bm.verts:
-            v.co = Vector((v.co.x * (W + 0.003), v.co.y * (L + 0.003), v.co.z * 0.012))
-        bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.normal.z) > 0.9], context="FACES")
-        bmesh.ops.bevel(bm, geom=[e for e in bm.edges if abs(e.verts[0].co.z - e.verts[1].co.z) > 1e-6],
-                        offset=0.045, segments=8, affect="EDGES")
-        me = bpy.data.meshes.new(f"zip_{nm}"); bm.to_mesh(me); bm.free()
-        z = link(bpy.data.objects.new(f"zip_{nm}", me)); me.materials.append(principled("zip", (0.02, 0.02, 0.02), 0.5))
-        for pg in me.polygons:
-            pg.use_smooth = True
-        z.parent = parent; z.location = (0, 0, depth - 0.006)
-        sol = z.modifiers.new("hollow", "SOLIDIFY"); sol.thickness = 0.003; sol.offset = 1
-    # handles (base)
-    def bar(nm, a, b, r, parent, mat):
-        a, b = Vector(a), Vector(b)
-        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=r, depth=(b - a).length)
-        ob = bpy.context.object; ob.name = nm
-        ob.location = (a + b) / 2
-        ob.rotation_euler = (b - a).to_track_quat("Z", "Y").to_euler()
-        ob.data.materials.append(mat)
-        md = ob.modifiers.new("bevel", "BEVEL"); md.width = r * 0.6; md.segments = 3
-        for p in ob.data.polygons:
-            p.use_smooth = True
-        ob.parent = parent
-        return ob
-    zc = D * 0.55
-    bar("top_handle", (-0.065, L / 2 + 0.045, zc), (0.065, L / 2 + 0.045, zc), 0.012, base, rubber)
-    for sx in (-0.075, 0.075):
-        b = box_mesh(f"top_post_{sx}", (0.026, 0.036, 0.026), bevel=0.008, material=rubber); b.parent = base
-        b.location = (sx, L / 2 + 0.023, zc)
-    bar("side_handle", (W / 2 + 0.045, -0.065, zc), (W / 2 + 0.045, 0.065, zc), 0.012, base, rubber)
-    for sy in (-0.075, 0.075):
-        b = box_mesh(f"side_post_{sy}", (0.036, 0.026, 0.026), bevel=0.008, material=rubber); b.parent = base
-        b.location = (W / 2 + 0.023, sy, zc)
-    # trolley tube caps on the top end
-    for sx in (-0.09, 0.09):
-        b = box_mesh(f"trolley_cap_{sx}", (0.03, 0.02, 0.02), bevel=0.006, material=metal); b.parent = base
-        b.location = (sx, L / 2 + 0.006, 0.03)
-    # spinner wheels
-    # The lid shell is flipped (pi about x) inside the lid frame, so its wheel end is at +y
-    # and its outer panel at z=0 in shell coordinates.
-    for parent, zs, ys in [(base, 0.045, -1), (lid_shell, 0.045, 1)]:
-        for sx in (-W / 2 + 0.045, W / 2 - 0.045):
-            h = box_mesh("wheel_housing", (0.06, 0.03, 0.05), bevel=0.012, material=rubber); h.parent = parent
-            h.location = (sx, ys * (L / 2 + 0.012), zs)
-            for dx in (-0.012, 0.012):
-                bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.026, depth=0.016)
-                w = bpy.context.object; w.parent = parent
-                w.location = (sx + dx, ys * (L / 2 + 0.03), zs); w.rotation_euler = (0, np.pi / 2, 0)
-                w.data.materials.append(rubber)
-                md = w.modifiers.new("bevel", "BEVEL"); md.width = 0.006; md.segments = 3
+    W, L = c["outer"]; D = c["base_depth"]
+    objs = {o.name: o for o in append_scan("suitcase")}
+    base, lid = objs["scan_case_base"], objs["scan_case_lid"]
+    lining = lining_material()
+    tape = principled("zip tape", (0.02, 0.02, 0.022), 0.55)
+    for ob in (base, lid):
+        ob.data.materials.append(lining)
+        ob.data.materials.append(tape)
+        sol = ob.modifiers.new("shell", "SOLIDIFY"); sol.thickness = 0.005; sol.offset = -1
+        sol.material_offset = 1; sol.use_rim = True; sol.material_offset_rim = 2
+        sol.use_even_offset = True
+    # Fabric liners inside each half, matching the physics walls and floors.
+    t, DL = c["shell"], c["lid_depth"]
+    lb = liner("liner_base", -W / 2 + t, W / 2 - t, L - 2 * t, c["floor"], D - 0.002, open_low=False, mat=lining)
+    lb.parent = base
+    zr = D - c["hinge_h"]
+    # the lid is the rounder half (front pocket): its liner sits a little further in
+    ll = liner("liner_lid", t + 0.008, W - t - 0.008, L - 2 * t - 0.016, zr + 0.002, zr + DL - c["lid_floor"],
+               open_low=True, r=0.06, mat=lining)
+    ll.parent = lid
     # zipper pull: driven by the recorded zipper progress along the same rim path the hand traced
+    metal = principled("brushed alu", (0.7, 0.72, 0.74), 0.3, 1.0)
     pull = box_mesh("zip_pull", (0.012, 0.03, 0.006), bevel=0.003, material=metal)
     pull.parent = base
-    base["zip_path"] = [W / 2, -L / 2 + 0.04, D, W / 2, 0.0, D, W / 2, L / 2 - 0.05, D]
-    # brand-free badge
-    badge = box_mesh("badge", (0.07, 0.025, 0.003), bevel=0.004, material=metal); badge.parent = lid_shell
-    badge.location = (0, -0.22, -0.001)
+    base["zip_path"] = [W / 2, -L / 2 + 0.06, D, W / 2, 0.0, D, W / 2, L / 2 - 0.07, D]
     return base, lid
 
 
@@ -400,59 +343,24 @@ def place_zip_pull(base, u):
 
 
 # ------------------------------------------------------------------ items
+def build_item(it):
+    """Visual for one item: an empty at the item's body frame with the model parented to it."""
+    if it.kind == "pile":
+        holder = bpy.data.objects.new(f"item_{it.name}", None); link(holder)
+        for o in append_scan(it.name):
+            o.parent = holder
+        return holder
+    if it.name in IA.BUILDERS:
+        return IA.build(it)
+    root, new = import_gltf(it.asset, it.mesh_objects)
+    holder = bpy.data.objects.new(f"item_{it.name}", None); link(holder)
+    root.parent = holder
+    root.location = Vector(it.mesh_offset)
+    return holder
+
+
 def build_items():
-    objs = {}
-    for it in S.ITEMS:
-        if it.name in IA.BUILDERS:
-            objs[it.name] = IA.build(it)
-            continue
-        if it.kind == "asset":
-            root, new = import_gltf(it.asset, it.mesh_objects)
-            holder = bpy.data.objects.new(f"item_{it.name}", None); link(holder)
-            root.parent = holder
-            root.location = Vector(it.mesh_offset)
-            objs[it.name] = holder
-            continue
-        sx, sy, sz = it.size
-        if it.kind == "bottle":
-            holder = bpy.data.objects.new(f"item_{it.name}", None); link(holder)
-            coat = principled("bottle powder coat", it.tint, 0.55)
-            steel = principled("bottle steel", (0.78, 0.78, 0.80), 0.22, 1.0)
-            bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.036, depth=sz - 0.034, location=(0, 0, -0.017))
-            body_ = bpy.context.object; body_.data.materials.append(coat)
-            md = body_.modifiers.new("bevel", "BEVEL"); md.width = 0.006; md.segments = 4
-            bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.0362, depth=0.012, location=(0, 0, sz / 2 - 0.040))
-            band = bpy.context.object; band.data.materials.append(steel)
-            bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.026, depth=0.034, location=(0, 0, sz / 2 - 0.017))
-            cap = bpy.context.object; cap.data.materials.append(principled("bottle cap", (0.06, 0.06, 0.06), 0.5))
-            md = cap.modifiers.new("bevel", "BEVEL"); md.width = 0.004; md.segments = 3
-            for o in (body_, band, cap):
-                o.parent = holder
-                for pg in o.data.polygons:
-                    pg.use_smooth = True
-            objs[it.name] = holder
-            continue
-        if it.kind == "bag":
-            mat = textured("bag fabric", "denim_fabric", scale=0.15, tint=(0.25, 0.42, 0.36), bump=0.8)
-            ob = box_mesh(f"item_{it.name}", (sx, sy, sz), bevel=0.035, segments=6, material=mat, subdiv=1)
-            zip_ = box_mesh("bag_zip", (sx - 0.03, 0.008, 0.004), bevel=0.002, material=principled("bag zip", (0.05, 0.05, 0.05), 0.4))
-            zip_.parent = ob; zip_.location = (0, 0, sz / 2 + 0.001)
-            pull = box_mesh("bag_pull", (0.025, 0.012, 0.004), bevel=0.002, material=principled("pull", (0.75, 0.75, 0.75), 0.3, 1.0))
-            pull.parent = ob; pull.location = (sx / 2 - 0.035, 0.008, sz / 2 + 0.003)
-        else:
-            mat = textured(f"{it.name} fabric", it.material, scale=0.12 if it.material != "denim_fabric" else 0.18,
-                           tint=it.tint, bump=1.0)
-            ob = box_mesh(f"item_{it.name}", (sx, sy, sz), bevel=min(0.016, sz * 0.32), segments=5, material=mat, subdiv=1)
-            # soft irregular folds
-            tex = bpy.data.textures.new(f"{it.name}_folds", "CLOUDS"); tex.noise_scale = 0.06
-            dm = ob.modifiers.new("folds", "DISPLACE"); dm.texture = tex; dm.strength = 0.003; dm.texture_coords = "LOCAL"
-            sub = ob.modifiers["subd"]; sub.levels = 2; sub.render_levels = 3
-            # move displace after the subdivision
-            bpy.context.view_layer.objects.active = ob
-            while ob.modifiers[-1].name != "folds":
-                bpy.ops.object.modifier_move_down(modifier="folds")
-        objs[it.name] = ob
-    return objs
+    return {it.name: build_item(it) for it in S.ITEMS}
 
 
 # ------------------------------------------------------------------ hands (skin bound to MyoHand bodies)

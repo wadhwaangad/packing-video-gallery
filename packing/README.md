@@ -1,109 +1,98 @@
-# Packing a suitcase: simulation source
+# Packing simulator: source
 
-This folder builds the packing videos on [`packing.html`](../packing.html). It is the
-packing counterpart of the assembly journal in this repository: one continuous MuJoCo
-run, anatomical hands, a kinematic body solved around the simulated forearms, and
-path-traced renders with completion checks.
-
-## The task
-
-A person walks through a two-room apartment and packs a medium hard-shell suitcase
-that lies open on the bed:
-
-| Trip | Item | From | Grasp |
-|---|---|---|---|
-| 1 | folded jeans | bedroom dresser | two-hand side squeeze |
-| 2 | white and navy T-shirts, together | bedroom dresser | two-hand side squeeze |
-| 3 | knit sweater | bed | two-hand side squeeze |
-| 4 | folded towel | bathroom shelf | two-hand side squeeze |
-| 5 | toiletry bag | bathroom vanity | two-hand side squeeze |
-| 6 | insulated water bottle | kitchen counter | one-hand power grip (thumb opposing) |
-| 7 | leather notebook | living-room coffee table | two-hand side squeeze |
-| 8 | camera | living-room coffee table | two-hand side squeeze |
-
-After the trips, the person:
-
-1. Hooks the lid from the foot of the bed, swings it past vertical and lets it fall shut.
-2. Presses the lid down and runs the zipper.
-3. Hooks the top handle and stands the case up.
-4. Lifts it clear of the bed and sets it on its wheels.
+A person packs a large hard-shell suitcase lying open on the bed of a two-room apartment, then closes, zips and stands it on its wheels. Every run is a new trajectory: the case (task, seed, persona, event schedule) decides what happens. Each semantic action runs in a contact-only MuJoCo simulation, and the run is rendered with Blender Cycles.
 
 ## Pipeline
 
 ```
-python packing/fetch_assets.py            # CC0 Poly Haven models, textures and HDRI (+ hashes)
-python packing/make_knit_textures.py      # procedural stockinette and rib knit maps for the sweater
-python packing/run_full.py RUN            # one continuous simulation (about 12 min on a laptop CPU)
-python packing/export_poses.py RUN        # body solved around the simulated forearms
-python packing/verify.py RUN              # completion and quality checks -> RUN/validation.json
-python packing/render_all.py RUN          # Blender Cycles: head camera + room cameras, encode
-python packing/publish.py RUN             # copy videos and evidence to trip/
+python packing/fetch_assets.py        # Poly Haven (CC0) + BlenderKit scans (royalty-free; not committed)
+python packing/prepare_assets.py      # clean / orient / scale the garment scans, cut the suitcase scan
+python packing/generate.py RUN --reference          # the trajectory on the page
+python packing/generate.py RUN --seed 12            # a sampled case (add --task / --events / --persona)
+python packing/generate.py RUN --seed 12 --dry-run  # symbolic plan only, no physics
+python packing/export_poses.py RUN    # body solved around the simulated forearms
+python packing/verify.py RUN          # checks -> RUN/validation.json
+python packing/render_all.py RUN      # Blender Cycles: head camera + room cameras, encoded
+python packing/publish.py RUN         # copy videos and records to trip/
+python packing/export_spec.py         # actions / families / items / events -> trip/spec.json for the page
 ```
 
-Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pillow trimesh`
-and `ffmpeg`. The `bpy` wheel is Blender 4.5 as a Python module, so no separate Blender
-install is needed. Cycles renders on OptiX or CUDA when available.
+Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pillow trimesh` and `ffmpeg`. The `bpy` wheel is Blender 4.5 as a Python module. Cycles renders on OptiX or CUDA when available. One reference trajectory takes about 6 minutes of physics on a laptop CPU. Rendering both views at stride 4 and 48 samples takes about 3 hours on an RTX 4060.
 
-## Files
+## Layers
 
-- `scene.py`: apartment layout, furniture, suitcase dimensions, items, packing slots, trips.
-- `hands.py`: two MyoHand hands (right and mirrored left). Torque-limited joint servos
-  replace the muscles. Each hand sits on a 6-DoF wrist carriage: slides with force caps,
-  plus a ball joint with a torque-capped rotation-vector controller. The forearm colliders
-  are reshaped to a realistic wrist cross-section, with palm and thenar soft-tissue pads.
-- `build_model.py`: MJCF composer. There are no equality constraints anywhere.
-- `runner.py`: online controller. Min-jerk moves, palm-frame targets through a wrist
-  kinematics table, walking with bounded turn rate and acceleration, 25 Hz recording and
-  50 Hz diagnostics.
-- `tasks.py`, `skills_case.py`: grasp, carry, place, lid, zipper and lift skills. Targets
-  are computed from the live simulation state.
-- `operator_model.py`, `export_poses.py`: torso least-squares solve (upper arms reach the
-  simulated elbows), two-bone legs, look-ahead footsteps, head camera.
-- `item_assets.py`: the packed items, modelled for the renders. Garments are real folded
-  stacks: one continuous ply of cloth snakes through the stack with rounded fold ends,
-  rolled side edges, uneven edges, wrinkles and creases. Details are separate draped
-  geometry: the jeans' waistband, belt loops, back pocket, arcuate and seam topstitching,
-  rivets and leather patch; rib collars and neck recesses on the T-shirts and the sweater;
-  the towel's woven border and terry pile; the toiletry bag's coil zip, slider, leather pull,
-  piping and carry loop; the bottle's lathe-turned steel foot, powder-coated body, lip ring,
-  ribbed cap and carry loop. Every model stays inside its item's collision box, so the
-  physics is unchanged.
-- `make_knit_textures.py`: tileable knit-stitch maps (Poly Haven has no knit scan).
-- `preview_items.py`: close-up turntable-style preview of the items (development aid).
-- `render_blender.py`, `encode.py`, `render_all.py`, `publish.py`: rendering and publishing.
-- `dbg_*.py`: the diagnostic scripts used while developing each skill (kept for reference).
+| File | Layer | What it does |
+|---|---|---|
+| `scene.py` | world | Apartment, stations (where you stand to act), walking graph, items with families, case regions, the scanned suitcase's dimensions |
+| `packsim.py` | symbolic | State, the action space, preconditions with feedback, effects, goal predicates, task library, text grounder (`parse("pick up the T-shirt pile")`) |
+| `episodes.py` | user + events | Replanning user policy, progress-conditioned events, personas, case sampling with a symbolic dry run that rejects invalid schedules |
+| `executor.py` | grounding | Runs each accepted action with the physical skills, verifies the outcome, commits it to PackSim; per-action snapshots allow rewinding |
+| `runner.py`, `hands.py`, `build_model.py` | physics | MuJoCo model (no equality constraints), min-jerk targets, walking, 25 Hz recording, rewind snapshots |
+| `tasks.py`, `skills_case.py` | skills | Squeeze pick / carry / place, bottle power grip, lid close and open, zip and unzip, stand the case up |
+| `operator_model.py`, `export_poses.py` | body | Torso least-squares solve, two-bone legs, look-ahead footsteps, head camera |
+| `prepare_assets.py`, `item_assets.py`, `render_blender.py`, `encode.py`, `render_all.py` | rendering | Scans and procedural items, path-traced frames, labelled videos |
+| `verify.py`, `publish.py`, `export_spec.py` | evidence | Checks, publishing, the spec shown on the page |
+| `dbg_*.py`, `test_jeans.py`, `check_packing.py`, `settle_check.py` | development | Diagnostic scripts used while developing the skills. The older `dbg_*` scripts were written against the first, fixed-trip scene and are kept for reference; `dbg_standup.py`, `dbg_contacts.py` and `dbg_lid_contacts.py` retry a failed action from the checkpoint `generate.py` saves |
+
+## Action space
+
+| Class | Action | Grounds to | Refused when |
+|---|---|---|---|
+| navigate | `go_to <station \| item>` | a station, or the stand point in front of an item's current position | unknown target; the item is in your hands |
+| manipulate | `pick_up <item>` | a visible item on the station you face | hands full; not in front of it; item is in the case |
+| | `put_in <region> [upright\|lying]` | a region of the open case (drop height from the piles already there) | not holding; not at the case; lid closed; family not accepted; something fragile underneath; full |
+| | `put_back` | the held item's home spot | not at its home station |
+| | `take_out <item>` | an item in the case | hands full; lid closed; something on top of it |
+| case | `close_lid`, `open_lid`, `stand_up` | from the foot of the bed | hands full; wrong state (open / closed / zipped) |
+| | `zip`, `unzip` | from beside the bed | lid open; not zipped |
+| other | `wait <s>`, `say <text>` | | |
+
+## Object families
+
+| Family | Items | `pick_up` | `put_in` | Constraint |
+|---|---|---|---|---|
+| `folded_pile` | trousers, T-shirts, sweater pile, striped shirts, sweatshirts, towel, towel stack, sweatpants and socks | two-hand side squeeze | lay flat in a garment column | stackable |
+| `rigid_box` | toiletry bag, notebook | two-hand side squeeze | lay flat (bag in the front strip) | the heavy bag must rest on the case floor |
+| `fragile_box` | camera | two-hand side squeeze | lay flat in the front strip | nothing on top |
+| `bottle` | water bottle | one-hand power grip, thumb opposing | stand upright in the front corner | must stay upright |
+
+## Events
+
+`wrong_object`, `omission`, `repetition`, `nav_deviation`, `heavy_on_top`, `bottle_lying`, `premature_close` and `stall` are errors; most have an optional self-recovery. `question` and `plan_change` are non-error channels; a plan change edits the packing list mid-episode. Triggers are semantic ("about to fetch X", "after k items are packed", "about to close the lid"). An active event owns the user's action queue until it completes.
+
+## Outputs per trajectory
+
+`case.json` (task, persona, private schedule, dry-run result), `actions.json` (one record per action: text, label, event id, start/end time and frame, feedback, symbolic state after), `goals.json`, `frames.json` (25 Hz body poses), `events.json` (lift, placement, lid and zip checks), `stages.json` (captions), `model.xml`, `result.json`, `validation.json`, then `operator_poses.json` and `videos/`.
 
 ## Checks (`validation.json`)
 
-The run passes only if all of these hold:
-
-- one continuous run, gravity on, no equality constraints
-- all nine items inside the closed case
-- the lid within 2° of shut, and the zipper engaged only after the closure check
-- the case upright within 5° on four wheels and settled
-- every item lifted by contact, with no drops
-- the case undisturbed during packing
+- one continuous run with gravity on and no equality constraints
+- every scheduled event fired, no refused actions, every placement landed in its region
+- the action log agrees with physics for every item (packed in the log ⇔ inside the closed case)
+- the lid within 2° of shut, the zipper engaged only after the closure check, the case upright within 5° on four wheels and settled
+- every pick lifted by contact, no drops
+- the case undisturbed while it was being packed
 - contact penetration under 5 mm, finger joints within 2° of their limits
-- fixed segment lengths with no unreachable arm or leg frames
-- the pelvis clear of walls and furniture
+- fixed segment lengths, no unreachable arm or leg frames, the pelvis clear of walls and furniture
+
+Goal predicates (what an assistant should have prevented) are reported separately in `goals.json`. An unrecovered error is a valid trajectory with a failed goal.
 
 ## Limitations
 
 - The body is kinematic: no balance or foot forces, and no whole-body collision.
-- The zipper is idealised. After the closure check, the lid hinge range is narrowed to the
-  closed pose. The hand traces only the near side of the track.
-- Garments are compliant rigid bodies, not cloth.
-- Masses, friction and finger strengths are assumed values.
-- Wrist carriages stand in for the shoulder and elbow.
-- Skin is visual geometry bound to rigid finger bodies.
-- Nothing here is calibrated sim-to-real.
+- Garments are compliant rigid piles, not cloth; a pile moves as one folded unit.
+- The zipper is idealised: after a closure check, the lid hinge range is narrowed to the closed pose. The hinge sits at mid-depth, standing in for the fabric hinge, so both halves lie flat. A thin zip-track lip is what the fingertips catch when opening the lid.
+- Standing the case up uses a two-hand overhand grip on the trolley bar, tested with a short pull. A grip that
+  slips is released and retried with the hands placed differently (a re-grip); attempts are logged as `hook_check` events.
+- A physically failed action is rewound (physics, recordings, symbolic state) and retried with a small variation
+  in stand position and timing, up to three times (`action_retry` events); the saved trajectory is one continuous
+  run. A case that still fails is rejected (`result.json` status `failed: ...`, plus `failure.pkl` for debugging).
+- The user is a scripted policy; the event taxonomy is controlled, not exhaustive.
+- Masses, friction and finger strengths are assumed values. Wrist carriages stand in for the shoulder and elbow. Nothing here is calibrated sim-to-real.
 
 ## Licences
 
 - MyoHand model: Apache-2.0 (`hand/LICENSE-myosim.txt`).
-- Poly Haven assets: CC0, listed with hashes in `assets/asset-manifest.json` (fetched, not
-  committed).
-- Suitcase, garments, toiletry bag, bottle, bed, cabinets and apartment shell: procedural
-  (`item_assets.py`, `render_blender.py`), surfaced with Poly Haven fabric, leather and
-  scans (denim, cotton jersey, terry cloth, scuba suede, brown leather) and the
-  generated knit maps.
+- Poly Haven assets: CC0, listed with hashes in `assets/asset-manifest.json`.
+- BlenderKit scans: the garment piles (antoine f, Paweł Wałasiewicz, Rex Hans, GL3D Gabriela Linhares) and the "Black suitcase" (L'ANE). Royalty-free licence: they may be used in renders but not redistributed, so `fetch_assets.py` downloads them and the repository never includes them.
+- Toiletry bag, bottle, liner, bed, cabinets and apartment shell: procedural.

@@ -1,0 +1,36 @@
+{
+ "task": "beach_holiday",
+ "seed": 13,
+ "attempt": 0,
+ "persona": "deliberate",
+ "events": [
+  {
+   "id": "e1",
+   "type": "premature_close",
+   "target": "",
+   "other": "",
+   "after": 3,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 33,
+  "final_goals": {
+   "packed(tshirts)": true,
+   "packed(striped_shirts)": true,
+   "packed(towel_stack)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(camera)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "nothing_on(camera)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}

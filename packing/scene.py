@@ -101,11 +101,11 @@ WINDOWS = [  # (wall, s0, s1, z0, z1) for glazing in the render
 
 TABLE_H = 0.39
 # ---------------------------------------------------------------- furniture
-BED = dict(x=(0.05, 2.15), y=(0.95, 2.55), frame_h=0.30, mattress_top=0.56)
+BED = dict(x=(0.05, 2.15), y=(0.95, 2.55), frame_h=0.26, mattress_top=0.50)   # low platform bed
 PROCEDURAL = [
     # bed frame and mattress (mattress is compliant in physics)
-    Box("bed_frame", (1.10, 1.75, 0.15), (2.10, 1.60, 0.30), "bed_frame"),
-    Box("mattress", (1.11, 1.75, 0.43), (2.04, 1.54, 0.26), "mattress"),
+    Box("bed_frame", (1.10, 1.75, 0.13), (2.10, 1.60, 0.26), "bed_frame"),
+    Box("mattress", (1.11, 1.75, 0.38), (2.04, 1.54, 0.24), "mattress"),
     Box("headboard", (0.08, 1.75, 0.60), (0.06, 1.66, 1.20), "bed_frame"),
     # bathroom vanity along the south wall
     Box("vanity", (4.70, 0.29, 0.42), (1.10, 0.48, 0.84), "vanity"),
@@ -148,82 +148,245 @@ ASSETS = [
           [_asset_box("tv_stand", (2.10, 3.75), (0.55, 0.45), 0.55)]),
     Asset("television", "Television_01", (2.10, 3.75, 0.549), np.pi, []),
     Asset("living_plant", "potted_plant_04", (6.60, 6.05, 0), 0.0, []),
-    Asset("alarm_clock", "alarm_clock_01", (0.30, 2.95, 0.70), np.pi * 0.9, []),
+    Asset("alarm_clock", "alarm_clock_01", (0.17, 3.06, 0.70), np.pi * 0.9, []),
     Asset("open_binder", "binder_notebook", (2.38, 5.0, TABLE_H), 0.25, []),
 ]
 
 # ---------------------------------------------------------------- suitcase
-# Medium hard-shell spinner, 66 x 44 x 26 cm. Local frame: x across the width,
-# y along the length (+y = top end with the carry handle, -y = wheel end),
-# z out of the back panel. The lid hinges on the -x long edge.
-SUITCASE = dict(
-    outer=(0.44, 0.66), base_depth=0.155, lid_depth=0.105, shell=0.006,
-    base_mass=2.6, lid_mass=1.2, hinge_side=-1,
-    # Lying open on the bed. yaw=-pi/2 maps local -x (hinge side) to world +y, so the
-    # lid lies open towards the bed's far side, the operator packs from y~0.6, and the
-    # top handle (local +y) faces the foot of the bed.
-    pos=(1.55, 1.21, BED["mattress_top"]), yaw=-np.pi / 2,
-    color=(0.03, 0.13, 0.20),
+# The case is a scanned black spinner (BlenderKit "Black suitcase", royalty-free),
+# scaled 1.4x into a large check-in case and cut at its zip seam into base and lid
+# (prepare_assets.py). The physics shell below uses the scan's measured extents.
+# Local frame: x across the width, y along the length (+y = top end with the trolley
+# handle, -y = wheel end), z out of the back panel. The lid hinges on the -x long edge.
+SUITCASE_SCAN = dict(
+    asset="ebbe0d72-f5b0-4875-b91e-72457dbfbe09", name="Black suitcase", author="L'ANE", scale=1.4,
+    x_centre=-0.002, z_bottom=0.062, z_top=0.560,      # shell extents in scan units (z up)
+    back_y=0.142, seam_y=0.035, front_y=-0.137,          # back panel, zip seam, front panel (scan y)
+    wheel_seam_y=0.020,                                  # casters split between the halves here
+    trolley_drop=0.045,                                  # telescopic handle lowered to its first stop (scan units)
+    trolley_shift=0.0136,                                # ... and moved off the back panel, so fingers fit under the bar
 )
 
-# ---------------------------------------------------------------- items
+
+def _scan_dims():
+    c = SUITCASE_SCAN; s = c["scale"]
+    W = 0.362 * s
+    L = (c["z_top"] - c["z_bottom"]) * s
+    return round(W, 4), round(L, 4), round((c["back_y"] - c["seam_y"]) * s, 4), round((c["seam_y"] - c["front_y"]) * s, 4)
+
+
+_W, _L, _D, _DL = _scan_dims()
+SUITCASE = dict(
+    outer=(_W, _L), base_depth=_D, lid_depth=_DL,
+    # The fabric liner sits 12 mm inside the scanned shell; the physics walls and floors
+    # are the liner surfaces.
+    shell=0.012, floor=0.018, lid_floor=0.040,     # the lid liner clears the scan's front-pocket hardware
+    # Fabric hinge: the axis sits at mid-depth so both halves lie flat when open. The lid
+    # frame has its origin on the hinge axis; the lid rim is at lid z = base_depth - hinge_h.
+    hinge_h=round((_D + _DL) / 2, 4),
+    base_mass=3.0, lid_mass=1.6, hinge_side=-1,
+    # Trolley bar (retracted): axis along x, centre (y, z) in the base frame, radius, half length.
+    bar=dict(x=-0.012, y=_L / 2 + 0.0841, z=0.060, r=0.016, half=0.088),
+    # Spinner casters: sphere radius and centres (x, y, z) in the base / lid frames.
+    wheel_r=0.035, wheel_x=0.21, wheel_y=-_L / 2 - 0.052, wheel_z_base=0.094, wheel_z_lid=0.091,
+    # Lying open on the bed. yaw=-pi/2 maps local -x (hinge side) to world +y, so the
+    # lid lies open towards the bed's far side, the person packs from y~0.64, and the
+    # trolley handle (local +y) faces the foot of the bed.
+    pos=(1.55, 1.26, BED["mattress_top"]), yaw=-np.pi / 2,
+    color=(0.03, 0.03, 0.035),
+)
+SUIT_W, SUIT_L = SUITCASE["outer"]
+INNER_H = SUITCASE["base_depth"] + SUITCASE["lid_depth"] - SUITCASE["floor"] - SUITCASE["lid_floor"]
+
+
+# ---------------------------------------------------------------- stations
+@dataclass
+class Station:
+    """A place the person stands at and acts on. `normal` is the direction they face;
+    items there are picked with their short side (the squeeze axis) across it. `access`
+    is the walking-graph node the station is reached from; `crouch` is the pelvis height
+    while reaching."""
+    name: str
+    label: str
+    room: str
+    normal: tuple
+    standoff: float
+    crouch: float
+    top: float = 0.0
+    access: str = ""
+    stand: tuple = ()          # default stand point (x, y) when no item is targeted
+    via: tuple = ()            # waypoints between the access node and the stand point
+
+
 DRESSER_TOP = 0.545
+NIGHTSTAND_TOP = 0.70
 COUNTER = 0.87
 SHELF = 0.965
 TABLE = 0.39
 KITCHEN = 0.90
+MATTRESS = BED["mattress_top"]
+
+STATIONS = {s.name: s for s in [
+    Station("dresser", "the dresser", "bedroom", (1, 0), 0.57, 0.80, DRESSER_TOP, "bed_corner", (2.95, 1.20)),
+    Station("bed", "the bed", "bedroom", (0, 1), 0.53, 0.78, MATTRESS, "suitcase", (0.72, 0.64)),
+    Station("bed_far", "the far side of the bed", "bedroom", (0, -1), 0.55, 0.78, MATTRESS, "bed_north", (0.95, 2.70)),
+    Station("nightstand", "the nightstand", "bedroom", (-1, 0), 0.55, 0.86, NIGHTSTAND_TOP, "bed_north", (1.00, 2.92)),
+    Station("vanity", "the bathroom vanity", "bathroom", (0, -1), 0.56, 0.90, COUNTER, "bath_in", (4.55, 0.86),
+            via=((4.55, 1.20),)),
+    Station("towel_shelf", "the towel shelf", "bathroom", (1, 0), 0.47, 0.90, SHELF, "bath_in", (4.92, 1.15),
+            via=((4.70, 1.15),)),
+    Station("kitchen_counter", "the kitchen counter", "kitchen", (1, 0), 0.56, 0.90, KITCHEN, "kitchen_in", (6.06, 1.10)),
+    Station("coffee_table", "the coffee table", "living", (0, 1), 0.56, 0.62, TABLE, "living_mid", (2.10, 4.22)),
+    # The open suitcase is packed from beside the bed; the lid and the final lift are
+    # handled from the foot of the bed.
+    Station("suitcase", "the suitcase", "bedroom", (0, 1), 0.0, 0.80, MATTRESS, "suitcase", (1.55, 0.64)),
+    Station("bed_foot", "the foot of the bed", "bedroom", (-1, 0), 0.0, 0.86, MATTRESS, "bed_foot", (2.48, 1.80)),
+]}
+
+# Walking graph: straight segments that clear walls, doorways and furniture.
+NAV_NODES = {
+    "suitcase": (1.55, 0.64), "bed_corner": (2.45, 0.62), "bed_foot": (2.48, 1.80),
+    "bed_east": (2.62, 2.20), "bed_north": (2.35, 2.95), "bed_door": (3.20, 2.75),
+    "hall_door": (3.20, 3.95), "living_mid": (3.00, 4.25), "hall_east": (3.90, 3.95),
+    "bath_door": (4.55, 3.30), "bath_in": (4.55, 1.85), "kitchen_hall": (5.95, 2.70),
+    "kitchen_in": (5.95, 1.00),
+}
+NAV_EDGES = [
+    ("suitcase", "bed_corner"), ("bed_corner", "bed_foot"), ("bed_corner", "bed_east"),
+    ("bed_foot", "bed_east"), ("bed_east", "bed_north"), ("bed_east", "bed_door"),
+    ("bed_door", "hall_door"), ("hall_door", "living_mid"), ("hall_door", "hall_east"),
+    ("hall_east", "bath_door"), ("bath_door", "bath_in"), ("hall_east", "kitchen_hall"),
+    ("kitchen_hall", "kitchen_in"),
+]
+
+# ---------------------------------------------------------------- items
+# The family decides which skill grounds `pick up` and `put`.
+FAMILIES = {
+    "folded_pile": dict(label="folded garment pile", pick="two-hand side squeeze", place="lay flat",
+                        hands=2, stackable=True, fragile=False),
+    "rigid_box": dict(label="rigid box", pick="two-hand side squeeze", place="lay flat",
+                      hands=2, stackable=True, fragile=False),
+    "fragile_box": dict(label="fragile box", pick="two-hand side squeeze", place="lay flat, nothing on top",
+                        hands=2, stackable=False, fragile=True),
+    "bottle": dict(label="bottle", pick="one-hand power grip", place="stand upright",
+                   hands=1, stackable=False, fragile=False),
+}
+
+# Scanned BlenderKit piles (royalty-free licence; fetched by fetch_assets.py and prepared
+# by prepare_assets.py). raw = scan extents in metres; yaw_deg puts the short side on x.
+# Piles are scaled so the short side (the squeeze axis) is at most 20 cm, which leaves
+# a palm's width at the case walls and between the two garment columns, and the long
+# side at most 28.5 cm, which leaves room for the toiletry bag beside a column.
+GARMENT_SCANS = {
+    "trousers": dict(asset="13029600-f765-4d9c-81c6-40a132c0b90b", name="Stack of blue pants",
+                     author="antoine f", raw=(0.418, 0.476, 0.2106), scale=0.478),
+    "tshirts": dict(asset="0b960a0d-01f7-4038-95bf-6915f58360f1", name="Stack of folded t-shirts",
+                    author="Paweł Wałasiewicz", raw=(0.2392, 0.3951, 0.1571), scale=0.72),
+    "sweater_pile": dict(asset="09e88778-bfa7-49a8-b53f-71d6273f3774", name="Folded garment stack",
+                         author="antoine f", raw=(0.3432, 0.4187, 0.2412), scale=0.58),
+    "striped_shirts": dict(asset="4fdb482d-2642-4388-ae57-8097afa99519", name="Folded Clothes Stack",
+                           author="Paweł Wałasiewicz", raw=(0.4107, 0.298, 0.1939), scale=0.67, yaw_deg=90),
+    "sweatshirts": dict(asset="f7449db4-8eaa-4298-849a-7c2dbff4e75d", name="Stack of folded sweatshirts",
+                        author="Paweł Wałasiewicz", raw=(0.3021, 0.4628, 0.2045), scale=0.615),
+    "towel": dict(asset="755a9a16-d738-44ab-9ab6-07d35db05e47", name="Folded Towel", author="Rex Hans",
+                  raw=(0.2672, 0.2262, 0.0454), scale=0.88, yaw_deg=90, objects=("Cube",)),
+    "towel_stack": dict(asset="2d9f13aa-15aa-48b1-8116-d891377fc162", name="Stack of Towels",
+                        author="GL3D Gabriela Linhares", raw=(0.2265, 0.3475, 0.1436), scale=0.82),
+    "gym_clothes": dict(asset="eab5b1cb-c75d-4e80-a679-c9a4ea26c3b7", name="Folded Clothes with Socks",
+                        author="GL3D Gabriela Linhares", raw=(0.2629, 0.2887, 0.1678), scale=0.76),
+}
+
+
+def scan_size(key):
+    g = GARMENT_SCANS[key]
+    x, y, z = g["raw"]
+    if g.get("yaw_deg", 0) % 180 == 90:
+        x, y = y, x
+    return tuple(round(v * g["scale"] + 0.001, 4) for v in (x, y, z))
+
+
+@dataclass
+class Item:
+    name: str
+    label: str
+    kind: str              # pile | bag | bottle | asset (geometry of the physics body)
+    family: str
+    size: tuple            # collision box full extents (local x = squeeze axis, y, z)
+    mass: float
+    station: str           # home station
+    xy: tuple              # centre on the home station
+    yaw: float = None      # default: short side across the station normal
+    heavy: bool = False
+    asset: str = ""
+    tint: tuple = (1, 1, 1)
+    soft: bool = False
+    mesh_offset: tuple = (0, 0, 0)   # asset origin in the item body frame
+    mesh_objects: tuple = ()         # asset objects to render (empty = all)
+
+    @property
+    def room(self):
+        return STATIONS[self.station].room
+
+    @property
+    def start(self):
+        return (self.xy[0], self.xy[1], STATIONS[self.station].top + self.size[2] / 2)
+
+    @property
+    def start_yaw(self):
+        if self.yaw is not None:
+            return self.yaw
+        n = STATIONS[self.station].normal
+        return float(np.arctan2(n[1], n[0]) + np.pi / 2)
+
+
+def _pile(name, label, station, xy, mass, heavy=False):
+    return Item(name, label, "pile", "folded_pile", scan_size(name), mass, station, xy, heavy=heavy, soft=True)
+
 
 ITEMS = [
-    Item("jeans", "folded jeans", "garment", (0.32, 0.25, 0.05), 0.70, "denim_fabric",
-         (3.52, 0.98, DRESSER_TOP + 0.025), np.pi / 2, "bedroom", soft=True),
-    Item("tshirt_white", "white T-shirt", "garment", (0.30, 0.23, 0.03), 0.20, "cotton_jersey",
-         (3.52, 1.42, DRESSER_TOP + 0.015), np.pi / 2 + 0.05, "bedroom", tint=(0.92, 0.92, 0.9), soft=True),
-    Item("tshirt_navy", "navy T-shirt", "garment", (0.30, 0.23, 0.03), 0.20, "cotton_jersey",
-         (3.52, 1.42, DRESSER_TOP + 0.045), np.pi / 2 - 0.04, "bedroom", tint=(0.10, 0.14, 0.30), soft=True),
-    Item("sweater", "knit sweater", "garment", (0.32, 0.25, 0.055), 0.50, "knitted_fleece",
-         (0.72, 1.17, BED["mattress_top"] + 0.0275), 0.04, "bedroom", tint=(0.80, 0.72, 0.60), soft=True),
-    Item("towel", "folded towel", "garment", (0.30, 0.20, 0.045), 0.45, "waffle_pique_cotton",
-         (5.39, 1.15, SHELF + 0.0225), np.pi / 2, "bathroom", tint=(0.95, 0.95, 0.93), soft=True),
-    Item("toiletry_bag", "toiletry bag", "bag", (0.23, 0.14, 0.09), 0.65, "toiletry",
-         (4.55, 0.30, COUNTER + 0.045), 0.0, "bathroom", tint=(0.12, 0.25, 0.20)),
-    Item("bottle", "water bottle", "bottle", (0.072, 0.072, 0.23), 0.55, "bottle",
-         (6.62, 0.75, KITCHEN + 0.115), 0.0, "kitchen", tint=(0.36, 0.45, 0.38)),
-    Item("notebook", "leather notebook", "asset", (0.17, 0.20, 0.025), 0.35, "asset",
-         (1.88, 4.78, TABLE + 0.0125), 0.0, "living", asset="binder_notebook",
-         mesh_offset=(-0.342, 0, -0.0105), mesh_objects=("binder_notebook_closed",)),
-    Item("camera", "camera", "asset", (0.148, 0.035, 0.078), 0.62, "asset",
-         (2.32, 4.80, TABLE + 0.039), 0.0, "living", asset="Camera_01",
-         mesh_offset=(0, -0.0015, -0.039), mesh_objects=("Camera_01",)),
+    _pile("trousers", "folded trousers", "dresser", (3.52, 0.98), 1.2, heavy=True),
+    _pile("tshirts", "T-shirt pile", "dresser", (3.52, 1.42), 1.0),
+    _pile("sweater_pile", "sweater pile", "bed", (0.72, 1.20), 1.2),
+    _pile("striped_shirts", "striped shirts", "bed_far", (0.95, 2.15), 1.0),
+    _pile("sweatshirts", "sweatshirts", "nightstand", (0.45, 2.92), 1.2),
+    _pile("towel", "folded towel", "towel_shelf", (5.39, 1.15), 0.4),
+    _pile("towel_stack", "stack of towels", "vanity", (5.02, 0.30), 1.2),
+    _pile("gym_clothes", "sweatpants and socks", "kitchen_counter", (6.62, 1.55), 0.8),
+    Item("toiletry_bag", "toiletry bag", "bag", "rigid_box", (0.23, 0.13, 0.09), 0.65, "vanity", (4.55, 0.30),
+         heavy=True, tint=(0.12, 0.25, 0.20)),
+    Item("bottle", "water bottle", "bottle", "bottle", (0.072, 0.072, 0.23), 0.55, "kitchen_counter", (6.62, 0.75),
+         yaw=0.0, tint=(0.36, 0.45, 0.38)),
+    Item("notebook", "leather notebook", "asset", "rigid_box", (0.17, 0.20, 0.025), 0.35, "coffee_table", (1.88, 4.78),
+         yaw=0.0, asset="binder_notebook", mesh_offset=(-0.342, 0, -0.0105), mesh_objects=("binder_notebook_closed",)),
+    # lens towards the sofa: picked up that way, it is packed with the lens facing into the case
+    Item("camera", "camera", "asset", "fragile_box", (0.148, 0.035, 0.078), 0.62, "coffee_table", (2.32, 4.80),
+         yaw=np.pi, asset="Camera_01", mesh_offset=(0, -0.0015, -0.039), mesh_objects=("Camera_01",)),
 ]
 
-# Final placement in suitcase-base local coordinates (item centre, yaw about local z).
-# Inner base: x +-0.214, y +-0.324, z 0.006..0.155; the closed lid adds 0.099.
-# The garment stack (+ notebook) lies on the hinge side with its long side along the
-# suitcase length, so both hands squeeze it from the operator's left and right. The
-# strip on the operator's side holds the toiletry bag (camera on top) and the water
-# bottle standing upright; hands never reach across a tall pile.
-STACK_X, STRIP_X = -0.080, 0.130
-PACK_SLOTS = {
-    "jeans":        dict(pos=(STACK_X, 0.0, 0.006 + 0.025), yaw=np.pi / 2),
-    "tshirts":      dict(pos=(STACK_X, 0.0, 0.056 + 0.030), yaw=np.pi / 2),
-    "sweater":      dict(pos=(STACK_X, 0.0, 0.116 + 0.0275), yaw=np.pi / 2),
-    "towel":        dict(pos=(STACK_X, 0.0, 0.171 + 0.0225), yaw=np.pi / 2),
-    "notebook":     dict(pos=(STACK_X, 0.0, 0.216 + 0.0125), yaw=np.pi / 2),
-    "toiletry_bag": dict(pos=(STRIP_X, 0.130, 0.006 + 0.045), yaw=np.pi / 2),
-    "camera":       dict(pos=(STRIP_X, 0.130, 0.096 + 0.039), yaw=np.pi / 2),
-    "bottle":       dict(pos=(STRIP_X + 0.01, -0.200, 0.006 + 0.115), yaw=0.0),
-}
-# Trips: (destination room, items carried together, grasp)
-TRIPS = [
-    ("bedroom", ["jeans"], "squeeze"),
-    ("bedroom", ["tshirt_white", "tshirt_navy"], "squeeze"),
-    ("bedroom", ["sweater"], "squeeze"),
-    ("bathroom", ["towel"], "squeeze"),
-    ("bathroom", ["toiletry_bag"], "squeeze"),
-    ("kitchen", ["bottle"], "wrap"),
-    ("living", ["notebook"], "squeeze"),
-    ("living", ["camera"], "squeeze"),
-]
+
+# ---------------------------------------------------------------- pack regions
+@dataclass
+class Region:
+    """Where things go in the open case (suitcase-base frame: x across, y along the
+    length, +y = handle end). Items in a region stack on the case floor."""
+    name: str
+    label: str
+    xy: tuple
+    families: tuple
+    max_len: float         # longest accepted extent along the case length (squeeze axis)
+    max_across: float
+
+
+# Inner base: x +-0.241, y +-0.337; inner height 0.333 with the lid closed. Two garment
+# columns lie near the hinge side (1.5 cm clear of the arc the lid's hinge-side wall sweeps)
+# with a palm-width gap between them and at the
+# end walls; the strip on the person's side holds the bag (camera on top) and the bottle.
+REGIONS = {r.name: r for r in [
+    Region("wheel_end", "the wheel-end garment column", (-0.068, -0.155), ("folded_pile", "rigid_box"), 0.205, 0.30),
+    Region("handle_end", "the handle-end garment column", (-0.068, 0.155), ("folded_pile", "rigid_box"), 0.205, 0.30),
+    Region("front_strip", "the front strip", (0.170, 0.120), ("rigid_box", "fragile_box"), 0.24, 0.15),
+    Region("bottle_corner", "the front wheel-end corner", (0.140, -0.205), ("bottle",), 0.08, 0.08),
+]}
 
 
 def all_static_boxes():

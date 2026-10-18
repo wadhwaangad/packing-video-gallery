@@ -1,0 +1,194 @@
+[
+ {
+  "name": "work-trip-wrong-pile-and-omission",
+  "task": "work_trip",
+  "persona": "brisk",
+  "seed": 10,
+  "events": [
+   {
+    "type": "wrong_object",
+    "recover": true,
+    "channel": "error"
+   },
+   {
+    "type": "omission",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 30,
+  "labels": {
+   "nominal": 26,
+   "error": 2,
+   "recovery": 2,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 276.6,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": true,
+  "failed_checks": []
+ },
+ {
+  "name": "winter-visit-stall",
+  "task": "winter_visit",
+  "persona": "brisk",
+  "seed": 1,
+  "events": [
+   {
+    "type": "stall",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 31,
+  "labels": {
+   "nominal": 30,
+   "error": 1,
+   "recovery": 0,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 277.5,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": true,
+  "failed_checks": []
+ },
+ {
+  "name": "beach-holiday-question-and-plan-change",
+  "task": "beach_holiday",
+  "persona": "deliberate",
+  "seed": 12,
+  "events": [
+   {
+    "type": "question",
+    "recover": true,
+    "channel": "question"
+   },
+   {
+    "type": "plan_change",
+    "recover": false,
+    "channel": "plan_change"
+   }
+  ],
+  "actions": 37,
+  "labels": {
+   "nominal": 34,
+   "error": 0,
+   "recovery": 0,
+   "question": 2,
+   "plan_change": 1
+  },
+  "sim_seconds": 383.7,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": true,
+  "failed_checks": []
+ },
+ {
+  "name": "weekend-trip-early-close",
+  "task": "weekend_trip",
+  "persona": "steady",
+  "seed": 7,
+  "events": [
+   {
+    "type": "premature_close",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 41,
+  "labels": {
+   "nominal": 38,
+   "error": 2,
+   "recovery": 1,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 401.7,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": false,
+  "failed_checks": [
+   "upper_arm_length_fixed",
+   "no_unreachable_arm_frames",
+   "no_unreachable_leg_frames"
+  ]
+ },
+ {
+  "name": "beach-holiday-early-close",
+  "task": "beach_holiday",
+  "persona": "deliberate",
+  "seed": 13,
+  "events": [
+   {
+    "type": "premature_close",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 33,
+  "labels": {
+   "nominal": 30,
+   "error": 2,
+   "recovery": 1,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 372.0,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": false,
+  "failed_checks": [
+   "upper_arm_length_fixed",
+   "no_unreachable_arm_frames",
+   "no_unreachable_leg_frames"
+  ]
+ },
+ {
+  "name": "gym-weekend-repeat-and-wrong-room",
+  "task": "gym_weekend",
+  "persona": "steady",
+  "seed": 6,
+  "events": [
+   {
+    "type": "repetition",
+    "recover": false,
+    "channel": "error"
+   },
+   {
+    "type": "nav_deviation",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 29,
+  "labels": {
+   "nominal": 25,
+   "error": 4,
+   "recovery": 0,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 319.2,
+  "status": "failed: case not upright: 53.7 deg",
+  "goals_satisfied": false,
+  "failed_goals": [
+   "case_upright"
+  ],
+  "verified": false,
+  "failed_checks": [
+   "single_continuous_run",
+   "suitcase_upright_under_5deg",
+   "four_wheels_on_floor",
+   "contact_penetration_under_5mm"
+  ]
+ }
+]

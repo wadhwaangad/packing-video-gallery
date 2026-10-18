@@ -1,0 +1,233 @@
+{
+ "trousers": {
+  "kind": "garment",
+  "asset": "13029600-f765-4d9c-81c6-40a132c0b90b",
+  "name": "Stack of blue pants",
+  "author": "antoine f",
+  "raw_extent_m": [
+   0.418,
+   0.476,
+   0.2106
+  ],
+  "scale": 0.478,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1998,
+   0.2275,
+   0.1007
+  ],
+  "collision_box_m": [
+   0.2008,
+   0.2285,
+   0.1017
+  ],
+  "ground_verts_removed": 2502
+ },
+ "tshirts": {
+  "kind": "garment",
+  "asset": "0b960a0d-01f7-4038-95bf-6915f58360f1",
+  "name": "Stack of folded t-shirts",
+  "author": "Pawe\u0142 Wa\u0142asiewicz",
+  "raw_extent_m": [
+   0.2392,
+   0.3951,
+   0.1571
+  ],
+  "scale": 0.72,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1723,
+   0.2845,
+   0.1131
+  ],
+  "collision_box_m": [
+   0.1732,
+   0.2855,
+   0.1141
+  ],
+  "ground_verts_removed": 0
+ },
+ "sweater_pile": {
+  "kind": "garment",
+  "asset": "09e88778-bfa7-49a8-b53f-71d6273f3774",
+  "name": "Folded garment stack",
+  "author": "antoine f",
+  "raw_extent_m": [
+   0.3432,
+   0.4187,
+   0.2412
+  ],
+  "scale": 0.58,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1991,
+   0.2428,
+   0.1399
+  ],
+  "collision_box_m": [
+   0.2001,
+   0.2438,
+   0.1409
+  ],
+  "ground_verts_removed": 1179
+ },
+ "striped_shirts": {
+  "kind": "garment",
+  "asset": "4fdb482d-2642-4388-ae57-8097afa99519",
+  "name": "Folded Clothes Stack",
+  "author": "Pawe\u0142 Wa\u0142asiewicz",
+  "raw_extent_m": [
+   0.4107,
+   0.298,
+   0.1939
+  ],
+  "scale": 0.67,
+  "yaw_deg": 90,
+  "extent_m": [
+   0.1996,
+   0.2751,
+   0.1299
+  ],
+  "collision_box_m": [
+   0.2007,
+   0.2762,
+   0.1309
+  ],
+  "ground_verts_removed": 0
+ },
+ "sweatshirts": {
+  "kind": "garment",
+  "asset": "f7449db4-8eaa-4298-849a-7c2dbff4e75d",
+  "name": "Stack of folded sweatshirts",
+  "author": "Pawe\u0142 Wa\u0142asiewicz",
+  "raw_extent_m": [
+   0.3021,
+   0.4628,
+   0.2045
+  ],
+  "scale": 0.615,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1858,
+   0.2846,
+   0.1258
+  ],
+  "collision_box_m": [
+   0.1868,
+   0.2856,
+   0.1268
+  ],
+  "ground_verts_removed": 0
+ },
+ "towel": {
+  "kind": "garment",
+  "asset": "755a9a16-d738-44ab-9ab6-07d35db05e47",
+  "name": "Folded Towel",
+  "author": "Rex Hans",
+  "raw_extent_m": [
+   0.2672,
+   0.2262,
+   0.0454
+  ],
+  "scale": 0.88,
+  "yaw_deg": 90,
+  "extent_m": [
+   0.1991,
+   0.2351,
+   0.0399
+  ],
+  "collision_box_m": [
+   0.2001,
+   0.2361,
+   0.041
+  ],
+  "ground_verts_removed": 0
+ },
+ "towel_stack": {
+  "kind": "garment",
+  "asset": "2d9f13aa-15aa-48b1-8116-d891377fc162",
+  "name": "Stack of Towels",
+  "author": "GL3D Gabriela Linhares",
+  "raw_extent_m": [
+   0.2265,
+   0.3475,
+   0.1436
+  ],
+  "scale": 0.82,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1858,
+   0.2849,
+   0.1178
+  ],
+  "collision_box_m": [
+   0.1867,
+   0.2859,
+   0.1188
+  ],
+  "ground_verts_removed": 0
+ },
+ "gym_clothes": {
+  "kind": "garment",
+  "asset": "eab5b1cb-c75d-4e80-a679-c9a4ea26c3b7",
+  "name": "Folded Clothes with Socks",
+  "author": "GL3D Gabriela Linhares",
+  "raw_extent_m": [
+   0.2629,
+   0.2887,
+   0.1678
+  ],
+  "scale": 0.76,
+  "yaw_deg": 0,
+  "extent_m": [
+   0.1998,
+   0.2194,
+   0.1276
+  ],
+  "collision_box_m": [
+   0.2008,
+   0.2204,
+   0.1285
+  ],
+  "ground_verts_removed": 0
+ },
+ "suitcase": {
+  "kind": "suitcase",
+  "asset": "ebbe0d72-f5b0-4875-b91e-72457dbfbe09",
+  "name": "Black suitcase",
+  "author": "L'ANE",
+  "scale": 1.4,
+  "base_extent": [
+   [
+    -0.2563,
+    -0.4378,
+    -0.0003
+   ],
+   [
+    0.2529,
+    0.4491,
+    0.1751
+   ]
+  ],
+  "lid_extent": [
+   [
+    -0.0031,
+    -0.4378,
+    -0.1642
+   ],
+   [
+    0.5149,
+    0.391,
+    0.2067
+   ]
+  ],
+  "physics": {
+   "outer": [
+    0.5068,
+    0.6972
+   ],
+   "base_depth": 0.1498,
+   "lid_depth": 0.2408
+  }
+ }
+}

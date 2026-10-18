@@ -60,6 +60,17 @@ SHAPES["wrap_big"] = dict(_blend(SHAPES["open"], SHAPES["wrap"], 0.88), wrist=-0
 # Handle hook from above: fingers hang straight down from the knuckles (to drop into the
 # gap behind a bar), then 'hook' curls them under it.
 SHAPES["hook_open"] = dict(SHAPES["press"], mcp=1.45, pm=0.15, md=0.10)
+# Letting go of a bar: fingers hang straight down behind it and the thumb opens away, so
+# nothing is left under the bar when the hand lifts.
+SHAPES["bar_release"] = dict(SHAPES["hook_open"], **THUMB_OPEN)
+# Two-hand hook on the 32 mm trolley bar: a softer wrap than 'hook' (sized for a thinner
+# handle) with the thumb held out of the way, so the bar is not driven into the palm.
+SHAPES["bar_hook"] = dict(SHAPES["hook"], mcp=0.95, pm=1.25, md=0.85,
+                          cmc_flexion=0.2, cmc_abduction=0.9, mp_flexion=0.0, ip_flexion=0.0)
+# Overhand grip on the bar: fingers round the far side and under, thumb under it from the
+# near side, so the loop is closed and the bar can turn in the hand but not roll out.
+SHAPES["bar_fist"] = dict(SHAPES["hook"], mcp=1.25, pm=1.45, md=1.0,
+                          cmc_flexion=0.70, cmc_abduction=0.78, mp_flexion=0.69, ip_flexion=-0.61)
 SHAPES["cup_open"] = dict(SHAPES["open"], wrist=-0.40)   # release a wrapped object without swinging the forearm
 
 
@@ -94,7 +105,8 @@ class Runner:
         m = self.m
         self.d = mujoco.MjData(m)
         d = self.d
-        d.qpos[m.joint("lid_hinge").qposadr[0]] = np.pi + 0.12
+        # Open lid lying flat on the mattress beside the base.
+        d.qpos[m.joint("lid_hinge").qposadr[0]] = np.pi
         mujoco.mj_forward(m, d)
         self.aid = {m.actuator(i).name: i for i in range(m.nu)}
         self.carriage0 = {s: m.body(f"carriage_{s}").pos.copy() for s in "rl"}
@@ -102,6 +114,7 @@ class Runner:
         self.radius = {s: m.body(f"radius_{s}").id for s in "rl"}
         self.hand_bodies = {s: self._subtree(self.radius[s]) for s in "rl"}
         self.item_ids = {it.name: m.body(it.name).id for it in S.ITEMS}
+        self.soft_ids = {m.body(it.name).id for it in S.ITEMS if it.soft}
         self.suit_ids = [m.body("suitcase").id, m.body("suitcase_lid").id]
         self.frames, self.events, self.stages = [], [], []
         self.diag = dict(max_penetration=0.0, worst_penetration=None, max_joint_excursion=0.0, worst_joint=None,
@@ -109,7 +122,7 @@ class Runner:
         self.label = "Start"
         self.step_count = 0
         # Commanded state
-        self.root = dict(x=1.45, y=0.64, yaw=np.pi / 2, h=0.95)
+        self.root = dict(x=S.NAV_NODES["suitcase"][0], y=S.NAV_NODES["suitcase"][1], yaw=np.pi / 2, h=0.95)
         self.hand = {}
         for s in "rl":
             p, R = self.hand_pose(s)
@@ -219,10 +232,13 @@ class Runner:
     def _monitor(self):
         m, d = self.m, self.d
         for c in d.contact[: d.ncon]:
-            if -c.dist > self.diag["max_penetration"]:
-                self.diag["max_penetration"] = float(-c.dist)
-                self.diag["worst_penetration"] = dict(t=round(d.time, 4), stage=self.label,
-                                                      geoms=[m.geom(c.geom1).name, m.geom(c.geom2).name])
+            # Folded garment piles are deliberately compliant: their contacts are tracked apart.
+            soft = m.geom_bodyid[c.geom1] in self.soft_ids or m.geom_bodyid[c.geom2] in self.soft_ids
+            key = "max_penetration_soft" if soft else "max_penetration"
+            if -c.dist > self.diag.get(key, 0.0):
+                self.diag[key] = float(-c.dist)
+                self.diag["worst_penetration_soft" if soft else "worst_penetration"] = dict(
+                    t=round(d.time, 4), stage=self.label, geoms=[m.geom(c.geom1).name, m.geom(c.geom2).name])
         for j in range(m.njnt):
             if m.jnt_limited[j] and m.jnt_type[j] == 3:
                 q = d.qpos[m.jnt_qposadr[j]]
@@ -382,15 +398,19 @@ class Runner:
         if final_yaw is not None:
             self.turn(final_yaw)
 
-    def turn(self, yaw, T=None):
-        dy = abs((yaw - self.root["yaw"] + np.pi) % (2 * np.pi) - np.pi)
+    def turn(self, yaw, T=None, direction=None):
+        """Turn in place, carrying the hands along. direction=+1/-1 forces the way round."""
+        y0 = self.root["yaw"]
+        dyw = (yaw - y0 + np.pi) % (2 * np.pi) - np.pi
+        if direction is not None and np.sign(dyw) != direction and abs(dyw) > 1e-3:
+            dyw += 2 * np.pi * direction
+        dy = abs(dyw)
         if dy < 1e-3:
             return
         o, Rr = self.root_frame()
         local = {s: (Rr.T @ (self.hand[s][0] - o), Rr.T @ self.hand[s][1]) for s in "rl"}
         T = T or max(0.6, dy / 1.6)
-        y0 = self.root["yaw"]
-        y1 = y0 + (yaw - y0 + np.pi) % (2 * np.pi) - np.pi
+        y1 = y0 + dyw
         n = int(round(T / PHYS_DT))
         for k in range(n):
             self.root["yaw"] = y0 + (y1 - y0) * minjerk((k + 1) / n)
@@ -398,6 +418,30 @@ class Runner:
             for s in "rl":
                 self.hand[s] = (o + Rr @ local[s][0], Rr @ local[s][1])
             self.step()
+
+    # ------------------------------------------------------------ rewind
+    def snapshot(self):
+        """Light checkpoint (physics + commanded state + log lengths) for rewinding an action."""
+        d, m = self.d, self.m
+        return dict(qpos=d.qpos.copy(), qvel=d.qvel.copy(), act=d.act.copy(), ctrl=d.ctrl.copy(), time=d.time,
+                    qacc_warmstart=d.qacc_warmstart.copy(), lid_range=m.jnt_range[m.joint("lid_hinge").id].copy(),
+                    root=dict(self.root), hand={s: (self.hand[s][0].copy(), self.hand[s][1].copy()) for s in "rl"},
+                    finger={s: dict(self.finger[s]) for s in "rl"}, gaze=self.gaze.copy(), zip=self.zip_progress,
+                    zip_locked=self.zip_locked, label=self.label, step_count=self.step_count,
+                    n=(len(self.frames), len(self.events), len(self.stages)))
+
+    def restore(self, snap):
+        d, m = self.d, self.m
+        d.qpos[:] = snap["qpos"]; d.qvel[:] = snap["qvel"]; d.act[:] = snap["act"]; d.ctrl[:] = snap["ctrl"]
+        d.time = snap["time"]; d.qacc_warmstart[:] = snap["qacc_warmstart"]
+        m.jnt_range[m.joint("lid_hinge").id] = snap["lid_range"]
+        self.root = dict(snap["root"]); self.hand = {s: (v[0].copy(), v[1].copy()) for s, v in snap["hand"].items()}
+        self.finger = {s: dict(v) for s, v in snap["finger"].items()}; self.gaze = snap["gaze"].copy()
+        self.zip_progress, self.zip_locked = snap["zip"], snap["zip_locked"]
+        self.label, self.step_count = snap["label"], snap["step_count"]
+        nf, ne, ns = snap["n"]
+        del self.frames[nf:]; del self.events[ne:]; del self.stages[ns:]
+        mujoco.mj_forward(m, d)
 
     # ------------------------------------------------------------ queries
     def contacts_between(self, bodies_a, bodies_b):

@@ -1,0 +1,40 @@
+{
+ "goals": {
+  "packed(tshirts)": true,
+  "packed(striped_shirts)": true,
+  "packed(towel_stack)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "packed(camera)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "nothing_on(camera)": true,
+  "lid_closed": true,
+  "zipped": true,
+  "case_upright": true
+ },
+ "satisfied": true,
+ "pack": [
+  "tshirts",
+  "striped_shirts",
+  "towel_stack",
+  "toiletry_bag",
+  "bottle",
+  "camera"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "premature_close",
+   "channel": "error",
+   "target": "",
+   "other": "",
+   "after": 3,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "closes the lid before everything is packed"
+  }
+ ]
+}

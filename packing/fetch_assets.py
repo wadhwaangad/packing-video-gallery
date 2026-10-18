@@ -1,11 +1,20 @@
-"""Download the CC0 Poly Haven assets used by the packing simulation.
+"""Download the assets used by the packing simulation.
 
-Every file is recorded in assets/asset-manifest.json with its source URL,
-license and sha256, so renders can be traced back to exact inputs.
+- Poly Haven (CC0): furniture, props, textures and the sky HDRI.
+- BlenderKit (royalty-free licence, free assets): the scanned folded-garment piles and
+  the scanned suitcase listed in scene.GARMENT_SCANS / scene.SUITCASE_SCAN. Free
+  BlenderKit assets download without an account key. The licence allows use in
+  renders but not redistribution of the files, so they are fetched, never committed.
+
+Every file is recorded in assets/asset-manifest.json with its source URL, licence and
+sha256, so renders can be traced back to exact inputs. Run prepare_assets.py next.
 Usage: python packing/fetch_assets.py
 """
 import hashlib, json, sys, urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import scene as S
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "assets"
@@ -36,23 +45,16 @@ TEXTURES = {
     "oak_wood_planks": "apartment floor",
     "painted_plaster_wall": "apartment walls",
     "long_white_tiles": "bathroom floor and wall",
-    "denim_fabric": "folded jeans",
-    "cotton_jersey": "folded t-shirts",
-    "knitted_fleece": "folded sweater",
-    "rough_linen": "bed linen",
-    "waffle_pique_cotton": "towel",
-    "fabric_pattern_07": "toiletry bag",
-    "wool_boucle": "rug",
+    "denim_fabric": "operator trousers",
+    "cotton_jersey": "operator shirt, bed sheet, suitcase lining",
+    "wool_boucle": "rug and headboard",
 }
-# Fabrics for the packed items, at 2k because the head camera sees them up close.
+# Fabrics for the procedural toiletry bag, at 2k because the head camera sees it up close.
 ITEM_TEXTURES = {
-    "denim_fabric_04": "folded jeans",
-    "brown_leather": "jeans waistband patch",
-    "cotton_jersey": "folded t-shirts (2k)",
-    "terry_cloth": "folded towel",
-    "polar_fleece": "sweater fibre fuzz under the knit stitch",
+    "brown_leather": "toiletry bag pull and trim",
     "scuba_suede": "toiletry bag shell",
 }
+BK_API = "https://www.blenderkit.com/api/v1"
 HDRIS = {"kloofendal_48d_partly_cloudy_puresky": "daylight outside the windows"}
 
 
@@ -100,6 +102,21 @@ def main():
                      files={f"{name}_2k.hdr": fetch(info["url"], ASSETS / "hdri" / f"{name}_2k.hdr")})
         manifest["assets"].append(entry)
         print("hdri", name, flush=True)
+    for key, g in [(k, v) for k, v in S.GARMENT_SCANS.items()] + [("suitcase", S.SUITCASE_SCAN)]:
+        hit = get_json(f"{BK_API}/search/?query=asset_base_id:{g['asset']}+asset_type:model")["results"][0]
+        if not hit.get("isFree"):
+            raise RuntimeError(f"{g['name']} is not a free BlenderKit asset")
+        blend = next(f for f in hit["files"] if f["fileType"] == "blend")
+        signed = get_json(blend["downloadUrl"] + "?scene_uuid=00000000-0000-0000-0000-000000000000")["filePath"]
+        dest = ASSETS / "blenderkit" / f"{g['asset']}.blend"
+        entry = dict(id=g["asset"], kind="blenderkit_model", role=f"scan: {key}", name=hit["name"],
+                     author=hit["author"]["fullName"], license=hit["license"],
+                     license_url="https://www.blenderkit.com/docs/licenses/",
+                     page=f"https://www.blenderkit.com/get-blenderkit/{hit['id']}/",
+                     files={dest.name: fetch(signed, dest)})
+        manifest["assets"].append(entry)
+        print("blenderkit", hit["name"], flush=True)
+    manifest["license"] = "Poly Haven assets: CC0 1.0. BlenderKit assets: royalty-free licence (not redistributed)."
     (ASSETS / "asset-manifest.json").write_text(json.dumps(manifest, indent=1))
     print("assets:", len(manifest["assets"]))
 

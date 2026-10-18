@@ -1,0 +1,45 @@
+{
+ "goals": {
+  "packed(trousers)": true,
+  "packed(tshirts)": true,
+  "packed(sweatshirts)": true,
+  "packed(towel)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "packed(notebook)": true,
+  "packed(camera)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(trousers)": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "nothing_on(camera)": true,
+  "lid_closed": true,
+  "zipped": true,
+  "case_upright": true
+ },
+ "satisfied": true,
+ "pack": [
+  "trousers",
+  "tshirts",
+  "sweatshirts",
+  "towel",
+  "toiletry_bag",
+  "bottle",
+  "notebook",
+  "camera"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "wrong_object",
+   "channel": "error",
+   "target": "sweatshirts",
+   "other": "striped_shirts",
+   "after": -1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "picks up a pile that is not on the list instead of the intended one"
+  }
+ ]
+}

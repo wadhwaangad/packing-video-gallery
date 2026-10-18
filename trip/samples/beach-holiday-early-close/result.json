@@ -1,0 +1,37 @@
+{
+ "status": "complete",
+ "sim_seconds": 372.010999998115,
+ "wall_seconds": 399.67308139801025,
+ "frames": 9300,
+ "actions": 33,
+ "goals_satisfied": true,
+ "diagnostics": {
+  "max_penetration": 0.002651831687272943,
+  "worst_penetration": {
+   "t": 178.78,
+   "stage": "Grip striped shirts",
+   "geoms": [
+    "5distph_coll_2_r",
+    "mattress"
+   ]
+  },
+  "max_joint_excursion": 0.015793086228337805,
+  "worst_joint": {
+   "t": 331.3,
+   "stage": "Zipped shut",
+   "joint": "mcp4_abduction_l"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.0027755670223160054,
+  "worst_penetration_soft": {
+   "t": 348.68,
+   "stage": "Stand it up by the handle",
+   "geoms": [
+    "tshirts_geom",
+    "striped_shirts_geom"
+   ]
+  }
+ }
+}

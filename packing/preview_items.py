@@ -1,4 +1,4 @@
-"""Close-up preview of the procedural items (development aid).
+"""Close-up preview of the packed items: scanned piles and procedural bag and bottle (development aid).
 
 Usage: python preview_items.py OUT.jpg [--samples 64] [--items a,b,c] [--view top|side|ego]
 """
@@ -17,7 +17,7 @@ import item_assets as IA
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out"); ap.add_argument("--samples", type=int, default=64)
-    ap.add_argument("--items", default="jeans,tshirt_white,tshirt_navy,sweater,towel,toiletry_bag,bottle")
+    ap.add_argument("--items", default="trousers,tshirts,sweatshirts,towel,toiletry_bag,bottle")
     ap.add_argument("--view", default="ego"); ap.add_argument("--res", default="1600x900")
     a = ap.parse_args()
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -43,7 +43,7 @@ def main():
     off = x / 2
     for nm, cx in zip(names, xs):
         it = S.item(nm)
-        h = IA.build(it)
+        h = RB.build_item(it)
         h.location = (cx - off, 0, it.size[2] / 2)
         h.rotation_euler.z = 0.0 if nm != "toiletry_bag" else 0.3
     bpy.ops.object.camera_add(); cam = bpy.context.object; sc.camera = cam

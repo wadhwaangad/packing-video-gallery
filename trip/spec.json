@@ -1,0 +1,554 @@
+{
+ "actions": [
+  {
+   "verb": "go_to",
+   "cls": "navigate",
+   "arg": "<station | item>",
+   "grounds": "a station, or the stand point in front of an item's current position",
+   "pre": "target exists; an item already in your hands cannot be a destination",
+   "skill": "turn in place (wall-aware), walk the room graph, face the station"
+  },
+  {
+   "verb": "pick_up",
+   "cls": "manipulate",
+   "arg": "<item>",
+   "grounds": "a visible item on the station you face",
+   "pre": "hands free; item is on that station and you are in front of it; items in the case need take_out",
+   "skill": "two-hand side squeeze, or one-hand power grip for the bottle; lift checked by contact"
+  },
+  {
+   "verb": "put_in",
+   "cls": "manipulate",
+   "arg": "<region> [upright|lying]",
+   "grounds": "a region of the open case; drop height from the piles already there",
+   "pre": "holding something; at the suitcase; lid open; family accepted by the region; nothing fragile underneath; height fits",
+   "skill": "lower onto the stack, open the grip, withdraw; landing checked in the region"
+  },
+  {
+   "verb": "put_back",
+   "cls": "manipulate",
+   "arg": "-",
+   "grounds": "the held item's home spot",
+   "pre": "holding something; standing at its home station",
+   "skill": "lower onto the surface, open, withdraw"
+  },
+  {
+   "verb": "take_out",
+   "cls": "manipulate",
+   "arg": "<item>",
+   "grounds": "an item in the case",
+   "pre": "hands free; at the suitcase; lid open; the item is on top of its stack",
+   "skill": "squeeze pick inside the case"
+  },
+  {
+   "verb": "close_lid",
+   "cls": "case",
+   "arg": "-",
+   "grounds": "the lid (from the foot of the bed)",
+   "pre": "hands free; lid open; nothing above the rim",
+   "skill": "hook the lid's end wall, swing past vertical, let gravity shut it"
+  },
+  {
+   "verb": "zip",
+   "cls": "case",
+   "arg": "-",
+   "grounds": "the zip track (from beside the bed)",
+   "pre": "lid closed; not zipped",
+   "skill": "press the lid with both palms, run the zip along the near side; closure checked before locking"
+  },
+  {
+   "verb": "unzip",
+   "cls": "case",
+   "arg": "-",
+   "grounds": "the zip track",
+   "pre": "zipped",
+   "skill": "run the zip back; hinge released"
+  },
+  {
+   "verb": "open_lid",
+   "cls": "case",
+   "arg": "-",
+   "grounds": "the lid (from the foot of the bed)",
+   "pre": "lid closed; not zipped",
+   "skill": "fingertips under the zip-track lip on the free edge, swing past vertical, let it fall open"
+  },
+  {
+   "verb": "stand_up",
+   "cls": "case",
+   "arg": "-",
+   "grounds": "the trolley handle (from the foot of the bed)",
+   "pre": "zipped",
+   "skill": "two-hand overhand grip on the bar, tested with a short pull (re-grip if it slips); stand the case up with the wrists turning, lift it off the bed, set it on its wheels, let go"
+  },
+  {
+   "verb": "wait",
+   "cls": "other",
+   "arg": "<seconds>",
+   "grounds": "-",
+   "pre": "-",
+   "skill": "hold still"
+  },
+  {
+   "verb": "say",
+   "cls": "other",
+   "arg": "<text>",
+   "grounds": "-",
+   "pre": "-",
+   "skill": "utterance logged with its time (questions, plan changes)"
+  }
+ ],
+ "families": {
+  "folded_pile": {
+   "label": "folded garment pile",
+   "pick": "two-hand side squeeze",
+   "place": "lay flat",
+   "hands": 2,
+   "stackable": true,
+   "fragile": false
+  },
+  "rigid_box": {
+   "label": "rigid box",
+   "pick": "two-hand side squeeze",
+   "place": "lay flat",
+   "hands": 2,
+   "stackable": true,
+   "fragile": false
+  },
+  "fragile_box": {
+   "label": "fragile box",
+   "pick": "two-hand side squeeze",
+   "place": "lay flat, nothing on top",
+   "hands": 2,
+   "stackable": false,
+   "fragile": true
+  },
+  "bottle": {
+   "label": "bottle",
+   "pick": "one-hand power grip",
+   "place": "stand upright",
+   "hands": 1,
+   "stackable": false,
+   "fragile": false
+  }
+ },
+ "items": [
+  {
+   "name": "trousers",
+   "label": "folded trousers",
+   "family": "folded_pile",
+   "station": "dresser",
+   "room": "bedroom",
+   "size_cm": [
+    20.1,
+    22.9,
+    10.2
+   ],
+   "mass_kg": 1.2,
+   "heavy": true,
+   "source": "BlenderKit scan: Stack of blue pants (antoine f)"
+  },
+  {
+   "name": "tshirts",
+   "label": "T-shirt pile",
+   "family": "folded_pile",
+   "station": "dresser",
+   "room": "bedroom",
+   "size_cm": [
+    17.3,
+    28.5,
+    11.4
+   ],
+   "mass_kg": 1.0,
+   "heavy": false,
+   "source": "BlenderKit scan: Stack of folded t-shirts (Paweł Wałasiewicz)"
+  },
+  {
+   "name": "sweater_pile",
+   "label": "sweater pile",
+   "family": "folded_pile",
+   "station": "bed",
+   "room": "bedroom",
+   "size_cm": [
+    20.0,
+    24.4,
+    14.1
+   ],
+   "mass_kg": 1.2,
+   "heavy": false,
+   "source": "BlenderKit scan: Folded garment stack (antoine f)"
+  },
+  {
+   "name": "striped_shirts",
+   "label": "striped shirts",
+   "family": "folded_pile",
+   "station": "bed_far",
+   "room": "bedroom",
+   "size_cm": [
+    20.1,
+    27.6,
+    13.1
+   ],
+   "mass_kg": 1.0,
+   "heavy": false,
+   "source": "BlenderKit scan: Folded Clothes Stack (Paweł Wałasiewicz)"
+  },
+  {
+   "name": "sweatshirts",
+   "label": "sweatshirts",
+   "family": "folded_pile",
+   "station": "nightstand",
+   "room": "bedroom",
+   "size_cm": [
+    18.7,
+    28.6,
+    12.7
+   ],
+   "mass_kg": 1.2,
+   "heavy": false,
+   "source": "BlenderKit scan: Stack of folded sweatshirts (Paweł Wałasiewicz)"
+  },
+  {
+   "name": "towel",
+   "label": "folded towel",
+   "family": "folded_pile",
+   "station": "towel_shelf",
+   "room": "bathroom",
+   "size_cm": [
+    20.0,
+    23.6,
+    4.1
+   ],
+   "mass_kg": 0.4,
+   "heavy": false,
+   "source": "BlenderKit scan: Folded Towel (Rex Hans)"
+  },
+  {
+   "name": "towel_stack",
+   "label": "stack of towels",
+   "family": "folded_pile",
+   "station": "vanity",
+   "room": "bathroom",
+   "size_cm": [
+    18.7,
+    28.6,
+    11.9
+   ],
+   "mass_kg": 1.2,
+   "heavy": false,
+   "source": "BlenderKit scan: Stack of Towels (GL3D Gabriela Linhares)"
+  },
+  {
+   "name": "gym_clothes",
+   "label": "sweatpants and socks",
+   "family": "folded_pile",
+   "station": "kitchen_counter",
+   "room": "kitchen",
+   "size_cm": [
+    20.1,
+    22.0,
+    12.8
+   ],
+   "mass_kg": 0.8,
+   "heavy": false,
+   "source": "BlenderKit scan: Folded Clothes with Socks (GL3D Gabriela Linhares)"
+  },
+  {
+   "name": "toiletry_bag",
+   "label": "toiletry bag",
+   "family": "rigid_box",
+   "station": "vanity",
+   "room": "bathroom",
+   "size_cm": [
+    23.0,
+    13.0,
+    9.0
+   ],
+   "mass_kg": 0.65,
+   "heavy": true,
+   "source": "procedural"
+  },
+  {
+   "name": "bottle",
+   "label": "water bottle",
+   "family": "bottle",
+   "station": "kitchen_counter",
+   "room": "kitchen",
+   "size_cm": [
+    7.2,
+    7.2,
+    23.0
+   ],
+   "mass_kg": 0.55,
+   "heavy": false,
+   "source": "procedural"
+  },
+  {
+   "name": "notebook",
+   "label": "leather notebook",
+   "family": "rigid_box",
+   "station": "coffee_table",
+   "room": "living",
+   "size_cm": [
+    17.0,
+    20.0,
+    2.5
+   ],
+   "mass_kg": 0.35,
+   "heavy": false,
+   "source": "Poly Haven model"
+  },
+  {
+   "name": "camera",
+   "label": "camera",
+   "family": "fragile_box",
+   "station": "coffee_table",
+   "room": "living",
+   "size_cm": [
+    14.8,
+    3.5,
+    7.8
+   ],
+   "mass_kg": 0.62,
+   "heavy": false,
+   "source": "Poly Haven model"
+  }
+ ],
+ "stations": [
+  {
+   "name": "dresser",
+   "label": "the dresser",
+   "room": "bedroom",
+   "crouch": 0.8
+  },
+  {
+   "name": "bed",
+   "label": "the bed",
+   "room": "bedroom",
+   "crouch": 0.78
+  },
+  {
+   "name": "bed_far",
+   "label": "the far side of the bed",
+   "room": "bedroom",
+   "crouch": 0.78
+  },
+  {
+   "name": "nightstand",
+   "label": "the nightstand",
+   "room": "bedroom",
+   "crouch": 0.86
+  },
+  {
+   "name": "vanity",
+   "label": "the bathroom vanity",
+   "room": "bathroom",
+   "crouch": 0.9
+  },
+  {
+   "name": "towel_shelf",
+   "label": "the towel shelf",
+   "room": "bathroom",
+   "crouch": 0.9
+  },
+  {
+   "name": "kitchen_counter",
+   "label": "the kitchen counter",
+   "room": "kitchen",
+   "crouch": 0.9
+  },
+  {
+   "name": "coffee_table",
+   "label": "the coffee table",
+   "room": "living",
+   "crouch": 0.62
+  },
+  {
+   "name": "suitcase",
+   "label": "the suitcase",
+   "room": "bedroom",
+   "crouch": 0.8
+  },
+  {
+   "name": "bed_foot",
+   "label": "the foot of the bed",
+   "room": "bedroom",
+   "crouch": 0.86
+  }
+ ],
+ "regions": [
+  {
+   "name": "wheel_end",
+   "label": "the wheel-end garment column",
+   "families": [
+    "folded_pile",
+    "rigid_box"
+   ]
+  },
+  {
+   "name": "handle_end",
+   "label": "the handle-end garment column",
+   "families": [
+    "folded_pile",
+    "rigid_box"
+   ]
+  },
+  {
+   "name": "front_strip",
+   "label": "the front strip",
+   "families": [
+    "rigid_box",
+    "fragile_box"
+   ]
+  },
+  {
+   "name": "bottle_corner",
+   "label": "the front wheel-end corner",
+   "families": [
+    "bottle"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "name": "weekend_trip",
+   "title": "Weekend away",
+   "pack": [
+    "folded trousers",
+    "T-shirt pile",
+    "sweatshirts",
+    "folded towel",
+    "toiletry bag",
+    "water bottle",
+    "leather notebook",
+    "camera"
+   ]
+  },
+  {
+   "name": "gym_weekend",
+   "title": "Gym weekend",
+   "pack": [
+    "sweatpants and socks",
+    "T-shirt pile",
+    "folded towel",
+    "toiletry bag",
+    "water bottle"
+   ]
+  },
+  {
+   "name": "work_trip",
+   "title": "Work trip",
+   "pack": [
+    "folded trousers",
+    "striped shirts",
+    "toiletry bag",
+    "leather notebook",
+    "water bottle"
+   ]
+  },
+  {
+   "name": "beach_holiday",
+   "title": "Beach holiday",
+   "pack": [
+    "T-shirt pile",
+    "striped shirts",
+    "stack of towels",
+    "toiletry bag",
+    "water bottle",
+    "camera"
+   ]
+  },
+  {
+   "name": "winter_visit",
+   "title": "Winter visit",
+   "pack": [
+    "sweater pile",
+    "sweatshirts",
+    "folded trousers",
+    "toiletry bag",
+    "water bottle",
+    "leather notebook"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "type": "wrong_object",
+   "channel": "error",
+   "description": "picks up a pile that is not on the list instead of the intended one"
+  },
+  {
+   "type": "omission",
+   "channel": "error",
+   "description": "skips an item on the list"
+  },
+  {
+   "type": "repetition",
+   "channel": "error",
+   "description": "walks back for an item that is already packed"
+  },
+  {
+   "type": "nav_deviation",
+   "channel": "error",
+   "description": "heads to the wrong room first"
+  },
+  {
+   "type": "heavy_on_top",
+   "channel": "error",
+   "description": "puts the heavy toiletry bag on top of a clothes pile"
+  },
+  {
+   "type": "bottle_lying",
+   "channel": "error",
+   "description": "lays the water bottle down instead of standing it up (not sampled by default yet: the lying placement is not reliable with the scanned case)"
+  },
+  {
+   "type": "premature_close",
+   "channel": "error",
+   "description": "closes the lid before everything is packed"
+  },
+  {
+   "type": "stall",
+   "channel": "error",
+   "description": "stops making progress for several seconds"
+  },
+  {
+   "type": "question",
+   "channel": "question",
+   "description": "asks a question about the task"
+  },
+  {
+   "type": "plan_change",
+   "channel": "plan_change",
+   "description": "announces a legitimate change to the packing list"
+  }
+ ],
+ "personas": [
+  {
+   "name": "brisk",
+   "walk": 1.05,
+   "pause": 0.0,
+   "label": "walks quickly, no pauses"
+  },
+  {
+   "name": "steady",
+   "walk": 0.9,
+   "pause": 0.4,
+   "label": "even pace, short pause after each step"
+  },
+  {
+   "name": "deliberate",
+   "walk": 0.75,
+   "pause": 1.0,
+   "label": "slow walker, pauses to look after each step"
+  }
+ ],
+ "suitcase": {
+  "outer_cm": [
+   50.7,
+   69.7
+  ],
+  "depth_cm": 39.1,
+  "inner_height_cm": 33.3,
+  "source": "BlenderKit scan: Black suitcase (L'ANE), scaled 1.4x"
+ }
+}

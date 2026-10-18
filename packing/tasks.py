@@ -147,18 +147,10 @@ def carry_pose(r, names, height=1.0, forward=0.36):
     return {s: (pd + Rd @ rel[s][0], Rd @ rel[s][1]) for s in "rl"}
 
 
-def slot_pose(r, name, slot=None):
-    slot = slot or S.PACK_SLOTS[name]
-    sp, sR = r.suitcase_frame()
-    p = sp + sR @ np.array(slot["pos"])
-    R = sR @ rz(slot["yaw"])
-    return p, R
-
-
-def place_item(r, names, slot_name, drop=0.004, raise_h=0.12, out=0.035, crouch_h=0.80):
-    """Lower the held item into its slot, open the grip and withdraw."""
+def place_item(r, names, target, drop=0.004, raise_h=0.12, out=0.035, crouch_h=0.80, where="the suitcase"):
+    """Lower the held item onto `target` (centre position, rotation), open the grip and withdraw."""
     rel = grasp_relative(r, names)
-    p_slot, R_slot = slot_pose(r, slot_name)
+    p_slot, R_slot = np.asarray(target[0], float), np.asarray(target[1], float)
     p_item, R_item = r.body_pose(names[0])
     # Choose the slot yaw (mod pi) closest to the current item yaw.
     ax_now, ax_slot = R_item[:, 0], R_slot[:, 0]
@@ -168,7 +160,7 @@ def place_item(r, names, slot_name, drop=0.004, raise_h=0.12, out=0.035, crouch_
     label = " and ".join(S.item(n).label for n in names)
     def palms(pc):
         return {s: (pc + R_slot @ rel[s][0], R_slot @ rel[s][1]) for s in "rl"}
-    r.stage(f"Bring {label} over the suitcase")
+    r.stage(f"Bring {label} over {where}")
     r.move(1.6, hands=palms(p_slot + np.array([0, 0, raise_h])), root=dict(h=crouch_h), gaze=p_slot)
     r.stage(f"Lower {label} into place")
     r.move(1.2, hands=palms(p_slot + np.array([0, 0, drop])))

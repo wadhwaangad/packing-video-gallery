@@ -1,12 +1,10 @@
-"""Procedural models of the packed items for the Blender renders.
+"""Procedural models of the toiletry bag and the water bottle for the Blender renders.
 
-Each builder returns an empty (the item's body frame, centred on its collision box)
-with the visual parts parented to it. The garments are real folded stacks: the cloth
-snakes through the stack as one continuous layer with rounded fold ends, slit gaps
-between plies, soft rolled side edges and slightly uneven edges. Item details (waistband,
-pocket, rivets, rib collars, sleeves and cuffs, towel border, zip, piping, bottle cap)
-are separate geometry draped onto that surface. Surface materials use Poly Haven CC0
-fabric scans; the knit stitch maps come from make_knit_textures.py.
+(The folded garments are scanned piles; see prepare_assets.py.) Each builder returns an
+empty (the item's body frame, centred on its collision box) with the visual parts
+parented to it: the bag's coil zip, slider, leather pull, piping and carry loop; the
+bottle's lathe-turned steel foot, powder-coated body, lip ring, ribbed cap and carry
+loop. Surface materials use Poly Haven CC0 scans.
 
 Nothing here touches the physics: every model stays inside its item's collision box
 (scene.ITEMS), so the recorded simulation is unchanged.
@@ -223,106 +221,6 @@ def plain(name, color, rough=0.5, metal=0.0, aniso=0.0, coat=0.0, speckle=0.0):
 
 
 # ------------------------------------------------------------------ folded cloth
-def fold_stack(name, L, W, H, layers, mat, t_ratio=0.86, fold_ex=1.5, bulge=0.0035, wobble=0.0007,
-               edge_jitter=0.007, seed=0.0, creases=6, top_dz=None, start=-1, res=0.0022, ny=40, wrinkle=0.0012):
-    """A folded garment: one continuous ply of cloth snaking through `layers` levels.
-
-    Cross-section in x-z (fold ends at +-x), extruded along y with rolled side edges.
-    top_dz(x, y) adds a height offset to the top surface (necklines, seams).
-    """
-    p = H / layers; t = p * t_ratio; rf = p / 2; ex0 = rf * fold_ex
-    jr = np.random.default_rng(int(seed * 977) + 3)
-    a0 = L / 2 - ex0 * 1.2 - t / 2
-    cl = []                                   # centreline: x, z, layer
-    for k in range(layers):
-        z = -H / 2 + p / 2 + k * p
-        fwd = (k % 2 == 0) == (start == -1)
-        ex = ex0 * jr.uniform(0.85, 1.2)
-        a = a0 + jr.uniform(-0.15, 0.15) * ex0
-        x0, x1 = (-a, a) if fwd else (a, -a)
-        if k:
-            x0 = cl[-1][0]
-        if k == 0:
-            x0 = x0 * 1.0 + (-1 if fwd else 1) * ex * 0.55
-        if k == layers - 1:
-            x1 = x1 + (1 if fwd else -1) * ex * 0.55
-        # only the top ply is seen closely; inner plies show at the edges only
-        n = max(6, int(abs(x1 - x0) / (res if k == layers - 1 else res * 3.5)))
-        for i in range(n):
-            f = i / n
-            cl.append((x0 + (x1 - x0) * f, z, k))
-        if k < layers - 1:
-            side = 1 if fwd else -1
-            for i in range(12):
-                th = -math.pi / 2 + math.pi * i / 12
-                cl.append((x1 + side * ex * math.cos(th) ** 0.8, z + rf + rf * math.sin(th), k + i / 12))
-        else:
-            cl.append((x1, z, k))
-    C = np.array([(c[0], c[1]) for c in cl]); K = np.array([c[2] for c in cl])
-    T = np.gradient(C, axis=0); T /= np.linalg.norm(T, axis=1, keepdims=True)
-    Nn = np.stack([-T[:, 1], T[:, 0]], 1)
-    nc = len(C)
-    # outline: left side forward, right side backward
-    oc = np.concatenate([C, C[::-1]]); on = np.concatenate([Nn, -Nn[::-1]]); ok = np.concatenate([K, K[::-1]])
-    M = len(oc)
-    # rings along y: rolled edge at each end
-    rc = min(p * 0.75, W * 0.1)
-    caps = [math.radians(a_) for a_ in (0, 20, 38, 54, 68, 80)]
-    ring = [(-1, phi) for phi in caps[::-1]] + [(0, f) for f in np.linspace(0, 1, ny)[1:-1]] + [(1, phi) for phi in caps]
-    rng = np.random.default_rng(int(seed * 1000) + 1)
-    cre = []
-    for _ in range(creases):
-        cx, cy = rng.uniform(-L / 2.5, L / 2.5), rng.uniform(-W / 2.5, W / 2.5)
-        ang = rng.uniform(0, math.pi); ln = rng.uniform(0.04, 0.12)
-        cre.append((cx, cy, math.cos(ang), math.sin(ang), ln, rng.uniform(0.0008, 0.0020)))
-    verts = []; uvs = []
-    s_cum = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(oc, axis=0), axis=1))])
-    for side, q in ring:
-        for i in range(M):
-            x, zc = oc[i]; k = ok[i]
-            wh = W / 2 - edge_jitter * (0.5 + 0.5 * noise.noise(Vector((x * 7.0, int(k) * 1.37 + (k % 1) * 0.6, seed + side * 3.1))))
-            if side == 0:
-                y = -(wh - rc) + 2 * (wh - rc) * q; mfac = 1.0
-            else:
-                y = side * (wh - rc + rc * math.sin(q)); mfac = math.cos(q)
-            off = on[i] * (t / 2) * mfac
-            w = wobble * noise.noise(Vector((x * 30, y * 30, k * 2.3 + seed)))
-            off = off + on[i] * w * mfac
-            px, pz = x + off[0], zc + off[1]
-            # whole stack domes upward: top bulges most, bottom stays flat
-            hf = (pz + H / 2) / H
-            dome = bulge * max(0.0, 1 - (px / (L / 2)) ** 2) * max(0.0, 1 - (y / (W / 2)) ** 2) * hf
-            pz += dome
-            if on[i][1] * mfac > 0.3 or on[i][1] > 0.3:
-                topw = 1.0 if k >= layers - 1 - 1e-6 else 0.35
-                und = noise.noise(Vector((px * 9.0, y * 9.0, seed + 0.7))) * wrinkle
-                rv = noise.noise(Vector((px * 26.0 + y * 8.0, y * 14.0 - px * 5.0, seed + 5.3)))
-                ridge = -(1 - abs(rv)) ** 5 * wrinkle * 1.1
-                pz += (und + ridge) * topw * min(1.0, mfac * 1.5) * (1 if on[i][1] > 0 else 0)
-            if on[i][1] * mfac > 0.3 and k >= layers - 1 - 1e-6:   # top face of top ply
-                for cx, cy, dx, dy, ln, dep in cre:
-                    u = (px - cx) * dx + (y - cy) * dy; v = -(px - cx) * dy + (y - cy) * dx
-                    if abs(u) < ln:
-                        pz -= dep * math.exp(-(v / 0.0030) ** 2) * (1 - (u / ln) ** 2) ** 0.5
-                if top_dz is not None:
-                    pz += top_dz(px, y)
-            verts.append((px, y, pz))
-            uvs.append((s_cum[i] / 0.3, (y + W / 2) / 0.3))
-    R = len(ring); faces = []
-    for j in range(R - 1):
-        for i in range(M):
-            i2 = (i + 1) % M
-            faces.append((j * M + i, j * M + i2, (j + 1) * M + i2, (j + 1) * M + i))
-    for j, flip in ((0, True), (R - 1, False)):
-        for i in range(nc - 1):
-            f = (j * M + i, j * M + i + 1, j * M + M - 2 - i, j * M + M - 1 - i)
-            faces.append(f[::-1] if flip else f)
-    ob = _obj(name, verts, faces, mat, uvs=uvs)
-    bm = bmesh.new(); bm.from_mesh(ob.data)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(ob.data); bm.free()
-    return ob
-
-
 def sweep(name, pts, width, thick, mat, up=(0, 0, 1), closed=False, subdiv=1, uv_scale=1.0, taper=None):
     """Rectangular strip swept along a 3D polyline (bands, straps, piping, belt loops)."""
     P = np.asarray(pts, float); n = len(P)
@@ -474,170 +372,6 @@ def _arc(cx, cy, rx, ry, a0, a1, n=24):
 THREAD_GOLD = (0.62, 0.32, 0.07)
 
 
-def jeans(name, size, seed=1.0):
-    L, W, H = size
-    denim = fabric("denim 04", "denim_fabric_04_2k", 0.22, albedo=(0.032, 0.048, 0.095), desat=0.75, sheen=0.25, bump=1.2,
-                   rot=math.radians(20), edge_fade=0.55, micro_bump=0.05)
-    thread = plain("jeans thread", THREAD_GOLD, 0.6)
-    leather = fabric("jeans patch leather", "brown_leather_2k", 0.10, albedo=(0.20, 0.11, 0.05), desat=0.6, sheen=0.1, bump=0.8)
-    copper = plain("rivet copper", (0.80, 0.50, 0.30), 0.32, 1.0)
-    base_h = H - 0.004
-    body = fold_stack(f"{name}_body", L, W, base_h, 5, denim, seed=seed, bulge=0.0025, creases=7)
-    body.location.z = -0.002
-    surf = Surface(body)
-    parts = [body]
-    x_band0, x_band1 = L / 2 - 0.040, L / 2 - 0.004
-    band = patch(f"{name}_band", [(x_band0, -W / 2 + 0.004), (x_band1, -W / 2 + 0.006), (x_band1, W / 2 - 0.006), (x_band0, W / 2 - 0.004)],
-                 0.0022, surf, denim, res=0.006)
-    parts.append(band); surf.add(band)
-    # yoke (deeper at the centre back, +y) and the back pocket below it
-    yoke = [(x_band0 - 0.002, -W / 2 + 0.006), (x_band0 - 0.030, W / 2 - 0.006)]
-    pk = [(0.072, -0.080), (0.060, 0.060), (-0.040, 0.066), (-0.072, -0.004), (-0.030, -0.078)]
-    pocket = patch(f"{name}_pocket", pk, 0.0016, surf, denim, res=0.005)
-    parts.append(pocket)
-    # leather patch on the waistband near the centre back
-    lp = [(x_band0 + 0.006, 0.030), (x_band1 - 0.004, 0.030), (x_band1 - 0.004, 0.092), (x_band0 + 0.006, 0.092)]
-    surf2 = Surface(body, band, pocket)
-    patch_ob = patch(f"{name}_leather", lp, 0.0014, surf2, leather, res=0.006)
-    parts.append(patch_ob)
-    # belt loops: strips sewn below the band, over its face and folded over the top edge
-    loops = []
-    for yl in (-0.085, 0.004):
-        pts = drape([(x_band0 - 0.009, yl), (x_band1 - 0.001, yl)], surf2, 0.0012)
-        e = pts[-1]
-        pts += [(e[0] + 0.0025, yl, e[2] - 0.0012), (e[0] + 0.0035, yl, e[2] - 0.0045)]
-        loop = sweep(f"{name}_loop{yl:+.2f}", pts, 0.0105, 0.0017, denim, subdiv=1)
-        loops.append(loop); parts.append(loop)
-    surf3 = Surface(body, band, pocket, patch_ob, *loops)
-    # stitching: band edges, yoke (double), pocket edges (double), arcuate, centre-back seam, patch
-    lines = []
-    for off in (0.0025, 0.0055):
-        lines.append(([(x_band0 + off, -W / 2 + 0.006), (x_band0 + off, W / 2 - 0.006)], False))
-    lines.append(([(x_band1 - 0.003, -W / 2 + 0.008), (x_band1 - 0.003, W / 2 - 0.008)], False))
-    for off in (0.0, 0.006):
-        lines.append(([(yoke[0][0] - off, yoke[0][1]), (yoke[1][0] - off, yoke[1][1])], False))
-    for off in (0.0, 0.006):
-        lines.append(([(yoke[1][0] - 0.004, W / 2 - 0.012 - off), (-L / 2 + 0.02, W / 2 - 0.016 - off)], False))
-    c = np.mean(pk, axis=0)
-    for inset in (0.003, 0.0085):
-        poly = [tuple(np.array(p_) + (c - np.array(p_)) / np.linalg.norm(c - np.array(p_)) * inset) for p_ in pk]
-        lines.append((poly[1:] + poly[:1], False))
-    # arcuate: two mirrored gull-wing curves across the pocket below its top edge
-    for dx in (0.0, 0.0055):
-        x0 = 0.050 - dx
-        wing = []
-        for i in range(33):
-            y = -0.064 + 0.124 * i / 32
-            yc = -0.002
-            half = 0.062
-            f = abs(y - yc) / half
-            wing.append((x0 - 0.030 * math.sin(math.pi * f) ** 1.2 + 0.004 * f, y))
-        lines.append((wing, False))
-    lines.append((lp, True))
-    k = 0
-    for pts, closed in lines:
-        parts.append(stitches(f"{name}_st{k}", pts, surf3, thread, closed=closed)); k += 1
-    # rivets at the pocket top corners
-    for (x, y) in (pk[0], pk[1]):
-        z = surf3.z(x, y)
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=20, ring_count=10, radius=0.0035, location=(x - 0.004, y, z + 0.0002))
-        rv = bpy.context.object; rv.scale.z = 0.45; rv.data.materials.append(copper)
-        for p_ in rv.data.polygons:
-            p_.use_smooth = True
-        parts.append(rv)
-    return _holder(f"item_{name}", parts)
-
-
-def tshirt(name, size, albedo, seed=2.0):
-    L, W, H = size
-    jersey = fabric(f"jersey {name}", "cotton_jersey_2k", 0.12, albedo=albedo, sheen=0.45, sheen_rough=0.45, bump=0.9,
-                    micro_bump=0.03)
-    rib = fabric(f"rib {name}", "knit_rib_2k", 0.030, albedo=albedo, sheen=0.5, bump=0.9, coords="UV", projection="FLAT")
-    label = plain("neck label", (0.82, 0.80, 0.76), 0.7)
-    xe = L / 2 - 0.006                                  # back neck edge
-    nr_y, nr_x = 0.068, 0.072                           # neckline half-width, front drop
-
-    def neck(x, y):
-        # inside the neckline the back panel shows, a few millimetres down
-        u = (xe - x) / nr_x; v = y / nr_y
-        r = u * u + v * v if x < xe else v * v
-        if r < 1.0 and x > xe - nr_x:
-            return -0.0040 * (1 - r ** 3)
-        return 0.0
-
-    body = fold_stack(f"{name}_body", L, W, H - 0.003, 3, jersey, seed=seed, bulge=0.0015, creases=8, top_dz=neck,
-                      edge_jitter=0.005, start=1)
-    body.location.z = -0.0015
-    surf = Surface(body)
-    parts = [body]
-    th = np.linspace(-math.pi / 2, math.pi / 2, 40)
-    collar_xy = [(xe - nr_x * math.cos(a_) * 1.0, nr_y * math.sin(a_)) for a_ in th]
-    collar = sweep(f"{name}_collar", drape(collar_xy, surf, 0.0021), 0.013, 0.0042, rib, uv_scale=1.0)
-    bk = [(xe - 0.003 - 0.011 * (1 - (y / nr_y) ** 2), y) for y in np.linspace(-nr_y, nr_y, 30)]
-    back = sweep(f"{name}_backneck", drape(bk, surf, 0.0016), 0.009, 0.0032, rib, uv_scale=1.0)
-    parts += [collar, back]
-    lab = patch(f"{name}_label", [(xe - 0.016, -0.016), (xe - 0.006, -0.016), (xe - 0.006, 0.016), (xe - 0.016, 0.016)],
-                0.0004, surf, label, res=0.004)
-    parts.append(lab)
-    # shoulder seams, stitched in matching thread, and the cover stitch below the collar
-    thread = plain(f"thread {name}", tuple(c * 0.85 for c in albedo), 0.7)
-    surf2 = Surface(body, collar)
-    for s_ in (-1, 1):
-        parts.append(stitches(f"{name}_sh{s_}", [(xe - 0.002, s_ * (nr_y + 0.006)), (xe - 0.020, s_ * (W / 2 - 0.010))], surf2, thread,
-                              pitch=0.0022, dash=0.0016, r=0.00028))
-    inner = [(xe - (nr_x + 0.010) * math.cos(a_), (nr_y + 0.010) * math.sin(a_)) for a_ in th]
-    parts.append(stitches(f"{name}_cs", inner, surf2, thread, pitch=0.0022, dash=0.0016, r=0.00028))
-    return _holder(f"item_{name}", parts)
-
-
-def sweater(name, size, albedo=(0.50, 0.40, 0.29), seed=3.0):
-    L, W, H = size
-    knit = fabric("knit body", "knit_stockinette_2k", 0.088, albedo=albedo, sheen=0.7, sheen_rough=0.6, bump=1.6,
-                  rot=math.radians(90))
-    rib = fabric("knit rib", "knit_rib_2k", 0.075, albedo=tuple(c * 0.95 for c in albedo), sheen=0.7, sheen_rough=0.6,
-                 bump=1.2, coords="UV", projection="FLAT")
-    xe = L / 2 - 0.008
-    nr_y, nr_x = 0.062, 0.058
-
-    def neck(x, y):
-        u = (xe - x) / nr_x; v = y / nr_y
-        r = u * u + v * v if x < xe else v * v
-        if r < 1.0 and x > xe - nr_x:
-            return -0.0055 * (1 - r ** 3)
-        # sleeves folded behind push the sides up a little; shoulder fold ridges
-        return 0.0
-    body = fold_stack(f"{name}_body", L, W, H - 0.004, 4, knit, seed=seed, bulge=0.004, creases=3, wobble=0.0009,
-                      edge_jitter=0.007, start=1, top_dz=neck, wrinkle=0.0016, fold_ex=1.7)
-    body.location.z = -0.002
-    surf = Surface(body)
-    parts = [body]
-    th = np.linspace(-math.pi / 2, math.pi / 2, 48)
-    ring_xy = [(xe - nr_x * math.cos(a_), nr_y * math.sin(a_)) for a_ in th]
-    collar = sweep(f"{name}_collar", drape(ring_xy, surf, 0.0035), 0.022, 0.0070, rib, uv_scale=1.0)
-    bk = [(xe - 0.002 - 0.012 * (1 - (y / nr_y) ** 2), y) for y in np.linspace(-nr_y, nr_y, 30)]
-    back = sweep(f"{name}_backneck", drape(bk, surf, 0.0030), 0.013, 0.0060, rib, uv_scale=1.0)
-    parts += [collar, back]
-    return _holder(f"item_{name}", parts)
-
-
-def towel(name, size, albedo=(0.30, 0.15, 0.09), seed=4.0):
-    L, W, H = size
-    terry = fabric("terry", "terry_cloth_2k", 0.12, albedo=albedo, sheen=0.9, sheen_rough=0.6, bump=2.2, rough_add=0.05,
-                   micro_bump=0.0, loops=0.9, desat=0.85,
-                   bands=[("x", 0.080, 0.110, (0.78, 0.80, 0.84), 0.2), ("x", 0.116, 0.122, (0.70, 0.72, 0.78), 0.15)])
-    body = fold_stack(f"{name}_body", L, W, H - 0.002, 3, terry, seed=seed, t_ratio=0.94, fold_ex=1.7, bulge=0.0045,
-                      wobble=0.0014, edge_jitter=0.007, creases=2, wrinkle=0.0018)
-    body.location.z = -0.001
-    surf = Surface(body)
-    thread = plain("towel thread", tuple(c * 0.92 for c in albedo), 0.8)
-    parts = [body]
-    # hemmed long edges: a flat-felled hem line of stitches along both y edges of the top ply
-    for s_ in (-1, 1):
-        parts.append(stitches(f"{name}_hem{s_}", [(-L / 2 + 0.02, s_ * (W / 2 - 0.009)), (L / 2 - 0.02, s_ * (W / 2 - 0.009))],
-                              surf, thread, pitch=0.0028, dash=0.002, r=0.0004, lift=0.0006))
-    return _holder(f"item_{name}", parts)
-
-
 def toiletry_bag(name, size, albedo=(0.045, 0.08, 0.068), seed=5.0):
     L, W, H = size
     shell = fabric("bag canvas", "scuba_suede_2k", 0.10, albedo=albedo, sheen=0.3, bump=0.9, micro_bump=0.04)
@@ -767,11 +501,6 @@ def water_bottle(name, size, albedo=(0.30, 0.40, 0.33)):
 
 
 BUILDERS = {
-    "jeans": lambda it: jeans(it.name, it.size),
-    "tshirt_white": lambda it: tshirt(it.name, it.size, (0.62, 0.62, 0.60), seed=2.0),
-    "tshirt_navy": lambda it: tshirt(it.name, it.size, (0.035, 0.05, 0.12), seed=2.7),
-    "sweater": lambda it: sweater(it.name, it.size),
-    "towel": lambda it: towel(it.name, it.size),
     "toiletry_bag": lambda it: toiletry_bag(it.name, it.size),
     "bottle": lambda it: water_bottle(it.name, it.size),
 }

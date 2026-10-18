@@ -16,6 +16,7 @@ def export(run_dir):
     solver, feet = O.TorsoSolver(), O.Feet()
     out, worst = [], dict(arm=0.0, leg=0.0)
     unreachable_arm = unreachable_leg = 0
+    bad_arm, bad_leg = [], []
     look = int(round(O.Feet.SWING * 25))
     for i, fr in enumerate(frames):
         P = np.array(fr["xpos"])
@@ -28,9 +29,12 @@ def export(run_dir):
         arm_err = max(abs(res[0]), abs(res[1]))
         worst["arm"] = max(worst["arm"], arm_err)
         unreachable_arm += arm_err > 0.003
+        if arm_err > 0.003:
+            bad_arm.append((fr["t"], fr["stage"]))
         legs = [np.linalg.norm(b["ankles"][i] - b["hips"][i]) for i in range(2)]
         if max(legs) > O.THIGH + O.SHIN + 1e-4:
             unreachable_leg += 1
+            bad_leg.append((fr["t"], fr["stage"]))
         worst["leg"] = max(worst["leg"], max(legs))
         out.append(dict(t=fr["t"], q=q.tolist(),
                         pts={k: (np.asarray(v).tolist() if k not in ("feet", "R", "head_R") else None)
@@ -39,7 +43,9 @@ def export(run_dir):
                         feet=[[ft[s][0].tolist(), float(ft[s][1])] for s in (0, 1)]))
     audit = dict(frames=len(out), max_arm_length_error_m=worst["arm"], unreachable_arm_frames=int(unreachable_arm),
                  max_hip_to_ankle_m=worst["leg"], leg_length_m=O.THIGH + O.SHIN, unreachable_leg_frames=int(unreachable_leg),
-                 upper_arm_m=O.UPPER_ARM, shoulder_width_m=2 * O.SHOULDER_HALF)
+                 upper_arm_m=O.UPPER_ARM, shoulder_width_m=2 * O.SHOULDER_HALF,
+                 unreachable_arm_stages=sorted({st for _, st in bad_arm}), unreachable_leg_stages=sorted({st for _, st in bad_leg}),
+                 unreachable_arm_times=[round(t, 2) for t, _ in bad_arm[::10]], unreachable_leg_times=[round(t, 2) for t, _ in bad_leg[::10]])
     (run_dir / "operator_poses.json").write_text(json.dumps(dict(poses=out, audit=audit)))
     print(json.dumps(audit, indent=1))
     return audit

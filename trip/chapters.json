@@ -1,62 +1,64 @@
 [
  {
-  "title": "Jeans",
-  "time": 0.75,
-  "sim_time": 3.0
- },
- {
-  "title": "T-shirts",
-  "time": 5.92,
-  "sim_time": 23.69
- },
- {
-  "title": "Sweater",
-  "time": 11.38,
-  "sim_time": 45.5
- },
- {
-  "title": "Towel",
-  "time": 15.95,
-  "sim_time": 63.78
+  "title": "Folded trousers",
+  "time": 0.5,
+  "sim_time": 2.0
  },
  {
   "title": "Toiletry bag",
-  "time": 25.23,
-  "sim_time": 100.91
+  "time": 6.32,
+  "sim_time": 25.284
  },
  {
   "title": "Water bottle",
-  "time": 34.69,
-  "sim_time": 138.78
+  "time": 17.11,
+  "sim_time": 68.436
  },
  {
-  "title": "Notebook",
-  "time": 45.72,
-  "sim_time": 182.88
+  "title": "Error: picks up a pile that is not on the list instead of the intended one",
+  "time": 29.49,
+  "sim_time": 117.971,
+  "event": "e1",
+  "channel": "error"
+ },
+ {
+  "title": "Sweatshirts",
+  "time": 35.02,
+  "sim_time": 140.072
+ },
+ {
+  "title": "T-shirt pile",
+  "time": 41.99,
+  "sim_time": 167.946
+ },
+ {
+  "title": "Folded towel",
+  "time": 48.3,
+  "sim_time": 193.202
+ },
+ {
+  "title": "Leather notebook",
+  "time": 58.7,
+  "sim_time": 234.813
  },
  {
   "title": "Camera",
-  "time": 53.85,
-  "sim_time": 215.4
+  "time": 67.78,
+  "sim_time": 271.102
  },
  {
   "title": "Close the lid",
-  "time": 61.69,
-  "sim_time": 246.78
+  "time": 76.46,
+  "sim_time": 305.855
  },
  {
   "title": "Zip",
-  "time": 67.77,
-  "sim_time": 271.07
+  "time": 82.32,
+  "sim_time": 329.262
  },
  {
-  "title": "Lift and stand",
-  "time": 71.37,
-  "sim_time": 285.47
- },
- {
-  "title": "Ready",
-  "time": 78.11,
-  "sim_time": 312.43
+  "title": "Stand it up",
+  "time": 88.3,
+  "sim_time": 353.19
  }
 ]

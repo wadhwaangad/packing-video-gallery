@@ -1,5 +1,5 @@
 {
- "license": "CC0 1.0 (Poly Haven)",
+ "license": "Poly Haven assets: CC0 1.0. BlenderKit assets: royalty-free licence (not redistributed).",
  "license_url": "https://polyhaven.com/license",
  "assets": [
   {
@@ -238,7 +238,7 @@
   {
    "id": "denim_fabric",
    "kind": "texture",
-   "role": "folded jeans",
+   "role": "operator trousers",
    "resolution": "1k",
    "folder": "denim_fabric",
    "page": "https://polyhaven.com/a/denim_fabric",
@@ -252,7 +252,7 @@
   {
    "id": "cotton_jersey",
    "kind": "texture",
-   "role": "folded t-shirts",
+   "role": "operator shirt, bed sheet, suitcase lining",
    "resolution": "1k",
    "folder": "cotton_jersey",
    "page": "https://polyhaven.com/a/cotton_jersey",
@@ -264,64 +264,9 @@
    }
   },
   {
-   "id": "knitted_fleece",
-   "kind": "texture",
-   "role": "folded sweater",
-   "resolution": "1k",
-   "folder": "knitted_fleece",
-   "page": "https://polyhaven.com/a/knitted_fleece",
-   "files": {
-    "diff.jpg": "57d7e416b698d02171a260da1a47109fc0f85b232f565d2a42d6d1be416c32e0",
-    "nor_gl.jpg": "ca1f965fee9957665a78a54bfa09e2c44f4e626d38fff6238a9a214cad5bab99",
-    "rough.jpg": "0f82adaf29135b0d0a799d7dfcb2f64e76a9836bbf43d5745fb66330077e2042",
-    "arm.jpg": "5d391163b4375452e7da832c19b9fe57b83aa73a81cf8ccd06a5abc0d5fa7beb"
-   }
-  },
-  {
-   "id": "rough_linen",
-   "kind": "texture",
-   "role": "bed linen",
-   "resolution": "1k",
-   "folder": "rough_linen",
-   "page": "https://polyhaven.com/a/rough_linen",
-   "files": {
-    "diff.jpg": "04897d7611d7390ddf5b2c6f7273f448dfc48341fdbd1f4f207fa30b331d7f57",
-    "nor_gl.jpg": "e2402166d1a489f7414814e69e1836ab672aa24e30bec2d41fea356f81687e53",
-    "rough.jpg": "734ad6718841a6e296aacaa6e9ee2e1686eed5f62bb8d71c915c5605e162bcb4",
-    "arm.jpg": "e1ca6b51ed62834063253e08f8f2e23836aa00d72675b960ddd8e608d9f0c7e6"
-   }
-  },
-  {
-   "id": "waffle_pique_cotton",
-   "kind": "texture",
-   "role": "towel",
-   "resolution": "1k",
-   "folder": "waffle_pique_cotton",
-   "page": "https://polyhaven.com/a/waffle_pique_cotton",
-   "files": {
-    "diff.jpg": "aefa6db3ee7f619f6ffa84ce7093af958faa15d457cb694e7dc540e0524561a8",
-    "nor_gl.jpg": "d8aa0eef91fa7468d1f9a582301db6c17081a12bee9be42719de352e1a87efae",
-    "rough.jpg": "e7c5d225ddfbfcc386cea0cd5f16605f1af8ff3b84c7289344c6f11c5a9b3186",
-    "arm.jpg": "1bd7d8f4ad0363738a9ffc491047e5414fb9a83a662ca5ec8a8b52ef99c61277"
-   }
-  },
-  {
-   "id": "fabric_pattern_07",
-   "kind": "texture",
-   "role": "toiletry bag",
-   "resolution": "1k",
-   "folder": "fabric_pattern_07",
-   "page": "https://polyhaven.com/a/fabric_pattern_07",
-   "files": {
-    "nor_gl.jpg": "f6955bbdead9f023f2357f6f8808ed49627d10882cd2a3cb6b5a5ace155abc45",
-    "rough.jpg": "3d90ac40b5c32a15649cc8525b7eeed133ea46b63a0e3eae5e34911d5c967e3a",
-    "arm.jpg": "57520f1383a41ea9d69a3f9c1d2a2b0cdc6ba85c579935c44a1281845ec11030"
-   }
-  },
-  {
    "id": "wool_boucle",
    "kind": "texture",
-   "role": "rug",
+   "role": "rug and headboard",
    "resolution": "1k",
    "folder": "wool_boucle",
    "page": "https://polyhaven.com/a/wool_boucle",
@@ -333,23 +278,9 @@
    }
   },
   {
-   "id": "denim_fabric_04",
-   "kind": "texture",
-   "role": "folded jeans",
-   "resolution": "2k",
-   "folder": "denim_fabric_04_2k",
-   "page": "https://polyhaven.com/a/denim_fabric_04",
-   "files": {
-    "diff.jpg": "6926a6f3e2e494e9890f27bf30e53af50452b2e2eb46e7dbeb049f3723806be9",
-    "nor_gl.jpg": "f1bba15943f13dc93069374868e47f638ee5832543d340c1ef8aa9619e4c051a",
-    "rough.jpg": "69af47a013cc42273e7dcaef4f44c1704b07c73a5d4e1a61bf2f1c535b2ae5f8",
-    "arm.jpg": "ebc5b7622dacab0a696d35cf73553a307da9d8ffae510042e81011e911f4aa2e"
-   }
-  },
-  {
    "id": "brown_leather",
    "kind": "texture",
-   "role": "jeans waistband patch",
+   "role": "toiletry bag pull and trim",
    "resolution": "2k",
    "folder": "brown_leather_2k",
    "page": "https://polyhaven.com/a/brown_leather",
@@ -358,48 +289,6 @@
     "nor_gl.jpg": "3386277290af50b4d464dc9a9f195bbf8dd6f137b9ae0274552397d2f0135c98",
     "rough.jpg": "8a47afca2630310849034fe40ca9497db0956c67c0d933e6efd49d3cd2befe83",
     "arm.jpg": "3c043ed2e4595e735c1cd013dacbcdfbaf8b2e5975b868d1dc188ecfe463f66d"
-   }
-  },
-  {
-   "id": "cotton_jersey",
-   "kind": "texture",
-   "role": "folded t-shirts (2k)",
-   "resolution": "2k",
-   "folder": "cotton_jersey_2k",
-   "page": "https://polyhaven.com/a/cotton_jersey",
-   "files": {
-    "diff.jpg": "ddaedb1e9d7d903eac532f7f8722fbb397a9efb0da82801b97002bada416d2d0",
-    "nor_gl.jpg": "ce2ff297a75638492fb46dae98e628e41e08f604634d04301184751695843b71",
-    "rough.jpg": "46cb4da6f20afe9f244bf8aa6338f49266edda9177ac6807d6e2d780d7de4432",
-    "arm.jpg": "27aa148d26c30789148c8e977a0b711da8a591e1915b38ebcb8e549e26b3fa18"
-   }
-  },
-  {
-   "id": "terry_cloth",
-   "kind": "texture",
-   "role": "folded towel",
-   "resolution": "2k",
-   "folder": "terry_cloth_2k",
-   "page": "https://polyhaven.com/a/terry_cloth",
-   "files": {
-    "diff.jpg": "de2d64c46dbd964b6028ec5ca905a43b8ee278f8ac5ef7fe084f796003681b5a",
-    "nor_gl.jpg": "cacba8fa0535d97e14e738d46042be78570ec8975cfe34709fa7869f274a76b0",
-    "rough.jpg": "44ff3928e16d5d489d00ab05a28a0251d55ca9b8834ed88f611fad06c12c9478",
-    "arm.jpg": "f628ff97acfd643c5ec9d53be663c11b84be334f7ddd2e345a593a0ea7f9b011"
-   }
-  },
-  {
-   "id": "polar_fleece",
-   "kind": "texture",
-   "role": "sweater fibre fuzz under the knit stitch",
-   "resolution": "2k",
-   "folder": "polar_fleece_2k",
-   "page": "https://polyhaven.com/a/polar_fleece",
-   "files": {
-    "diff.jpg": "f438e737c6d626408089644e31f3552e4a2006249bfa80e63edfd557ae6b2835",
-    "nor_gl.jpg": "aee6e85d96ec4505a5f69e91898e6f45af8f184ea0d9b03e6d21b0be0ed74229",
-    "rough.jpg": "11ecdd16d11d995bb272f5e9110dbd60e55dfc04a4b0c88dae992f8f2371589d",
-    "arm.jpg": "06559a640f4f3078e9c08df87bf387c3701dd6785139a2b28ae277509026099e"
    }
   },
   {
@@ -423,6 +312,123 @@
    "page": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
    "files": {
     "kloofendal_48d_partly_cloudy_puresky_2k.hdr": "5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198"
+   }
+  },
+  {
+   "id": "13029600-f765-4d9c-81c6-40a132c0b90b",
+   "kind": "blenderkit_model",
+   "role": "scan: trousers",
+   "name": "Stack of blue pants",
+   "author": "antoine f",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/447c12d9-3ffe-40dd-a58b-09b6280ae3e8/",
+   "files": {
+    "13029600-f765-4d9c-81c6-40a132c0b90b.blend": "edcb4b4e2f104ce684279ec90d4ab6f8593be610c8b0119efa3d25f622e4bb5c"
+   }
+  },
+  {
+   "id": "0b960a0d-01f7-4038-95bf-6915f58360f1",
+   "kind": "blenderkit_model",
+   "role": "scan: tshirts",
+   "name": "Stack of folded t-shirts",
+   "author": "Pawe\u0142 Wa\u0142asiewicz",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/27db7faf-b712-412a-aebd-c9eed3f4e57c/",
+   "files": {
+    "0b960a0d-01f7-4038-95bf-6915f58360f1.blend": "5ec60cfdd0a960850136b328319e82725857454e86293e11b29a312a5ee84e13"
+   }
+  },
+  {
+   "id": "09e88778-bfa7-49a8-b53f-71d6273f3774",
+   "kind": "blenderkit_model",
+   "role": "scan: sweater_pile",
+   "name": "Folded garment stack",
+   "author": "antoine f",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/27ae850a-ffb6-4e3a-84d8-693bd85a6d0f/",
+   "files": {
+    "09e88778-bfa7-49a8-b53f-71d6273f3774.blend": "d12753d91fe8cc50c13b841f0b077095bee9bc2be9b156c2ccbd7e906a99e319"
+   }
+  },
+  {
+   "id": "4fdb482d-2642-4388-ae57-8097afa99519",
+   "kind": "blenderkit_model",
+   "role": "scan: striped_shirts",
+   "name": "Folded Clothes Stack",
+   "author": "Pawe\u0142 Wa\u0142asiewicz",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/994f76b2-e72e-4bf2-9a3c-651dff9bcd0b/",
+   "files": {
+    "4fdb482d-2642-4388-ae57-8097afa99519.blend": "4bf3d680b6a1ed76494a26635edea6d504f41a2cf04702f21693bec2b1bbe556"
+   }
+  },
+  {
+   "id": "f7449db4-8eaa-4298-849a-7c2dbff4e75d",
+   "kind": "blenderkit_model",
+   "role": "scan: sweatshirts",
+   "name": "Stack of folded sweatshirts",
+   "author": "Pawe\u0142 Wa\u0142asiewicz",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/e5b9d8bc-5da6-437b-8c7f-ca180dd00fb8/",
+   "files": {
+    "f7449db4-8eaa-4298-849a-7c2dbff4e75d.blend": "024bc7ef6ab185ccc46c7794cd2b9d1f5b7339b4906453fbf0b57a028406657f"
+   }
+  },
+  {
+   "id": "755a9a16-d738-44ab-9ab6-07d35db05e47",
+   "kind": "blenderkit_model",
+   "role": "scan: towel",
+   "name": "Folded Towel",
+   "author": "Rex Hans",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/20c5b395-85cd-4120-999d-d034b65ad5a0/",
+   "files": {
+    "755a9a16-d738-44ab-9ab6-07d35db05e47.blend": "59de9c21e189370eb7b1243cf640445160cb1e1d225ff433438a4ddaf81dcde6"
+   }
+  },
+  {
+   "id": "2d9f13aa-15aa-48b1-8116-d891377fc162",
+   "kind": "blenderkit_model",
+   "role": "scan: towel_stack",
+   "name": "Stack of Towels",
+   "author": "GL3D Gabriela Linhares",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/44c08753-33bd-48f3-8787-323c6792f268/",
+   "files": {
+    "2d9f13aa-15aa-48b1-8116-d891377fc162.blend": "bb28be71f7d67a3387a3fd59700ef98a9151e5356b3c6159587db87fdd85871d"
+   }
+  },
+  {
+   "id": "eab5b1cb-c75d-4e80-a679-c9a4ea26c3b7",
+   "kind": "blenderkit_model",
+   "role": "scan: gym_clothes",
+   "name": "Folded Clothes with Socks",
+   "author": "GL3D Gabriela Linhares",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/7918a8a9-a911-4a0d-8f50-7091bd2c8d9f/",
+   "files": {
+    "eab5b1cb-c75d-4e80-a679-c9a4ea26c3b7.blend": "0415754bc049fea7a78cc1957416c10bd00067ef8773db69bc3a9dddbee881cf"
+   }
+  },
+  {
+   "id": "ebbe0d72-f5b0-4875-b91e-72457dbfbe09",
+   "kind": "blenderkit_model",
+   "role": "scan: suitcase",
+   "name": "Black suitcase",
+   "author": "L'ANE ",
+   "license": "royalty_free",
+   "license_url": "https://www.blenderkit.com/docs/licenses/",
+   "page": "https://www.blenderkit.com/get-blenderkit/788cba24-909b-46c1-a4bd-fb2831d68ca6/",
+   "files": {
+    "ebbe0d72-f5b0-4875-b91e-72457dbfbe09.blend": "bac54fcf59f56e87138ea5c23c5b2e5bf91e2534ff8dfcf541d3c3efe2ab3705"
    }
   }
  ]

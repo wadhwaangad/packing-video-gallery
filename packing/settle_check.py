@@ -7,7 +7,7 @@ import scene as S
 m, _ = B.build()
 d = mujoco.MjData(m)
 lid = m.joint("lid_hinge")
-d.qpos[lid.qposadr[0]] = np.pi + 0.12
+d.qpos[lid.qposadr[0]] = np.pi
 mujoco.mj_forward(m, d)
 start = {it.name: d.xpos[m.body(it.name).id].copy() for it in S.ITEMS}
 for _ in range(2000):

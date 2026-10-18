@@ -3,10 +3,12 @@ import numpy as np
 from scipy.spatial.transform import Rotation as Rot
 import scene as S
 from runner import minjerk
-from tasks import unit, hand_R, facing, slot_pose, clear_hands, approach
+from tasks import unit, hand_R, facing, clear_hands, approach
 
 W, L = S.SUITCASE["outer"]
 D, DL, T_SHELL = S.SUITCASE["base_depth"], S.SUITCASE["lid_depth"], S.SUITCASE["shell"]
+HH = S.SUITCASE["hinge_h"]
+ZR = D - HH                       # lid rim height in the lid frame
 
 
 # ---------------------------------------------------------------- thermos
@@ -54,12 +56,12 @@ def carry_one(r, name, side, height=1.0, forward=0.33, lateral=0.12):
     return {side: (pd + R @ relp, R @ relR)}
 
 
-def place_upright(r, name, side="r", raise_h=0.08):
+def place_upright(r, name, p_slot, side="r", raise_h=0.08):
     """Lower the upright bottle into its slot, open the fingers and lift the hand straight up."""
     p, R = r.body_pose(name)
     hp, hR = r.hand[side]
     relp, relR = R.T @ (hp - p), R.T @ hR
-    p_slot, R_slot = slot_pose(r, name)
+    p_slot = np.asarray(p_slot, float)
     # Straighten the bottle (it may have tilted in the grip); it is round, so yaw is free.
     axis = R[:, 2]
     v = np.cross(axis, [0, 0, 1.0]); sn = np.linalg.norm(v)
@@ -76,16 +78,32 @@ def place_upright(r, name, side="r", raise_h=0.08):
     r.stage(f"Stand the {label} in the suitcase")
     r.move(1.2, hands={side: (p_slot + np.array([0, 0, 0.003]) + Rd @ relp, Rd @ relR)})
     r.hold(0.2)
+    # With the base on the floor, square it up: rotate the grip about the base until the
+    # bottle stands vertical (it sits a little tilted in a one-hand grip).
+    h = S.item(name).size[2]
+    for _ in range(2):
+        p, R = r.body_pose(name)
+        axis = R[:, 2]; v = np.cross(axis, [0, 0, 1.0]); sn = np.linalg.norm(v)
+        if sn < np.sin(np.radians(1.5)):
+            break
+        Rc = Rot.from_rotvec(v / sn * np.arcsin(min(sn, 1.0))).as_matrix()
+        pivot = p - axis * h / 2
+        hp, hR = r.hand[side]
+        r.move(0.5, hands={side: (pivot + Rc @ (hp - pivot), Rc @ hR)})
+        r.hold(0.15)
+    r.event("bottle_tilt_at_release_deg", value=float(np.degrees(np.arccos(np.clip(r.body_pose(name)[1][2, 2], -1, 1)))))
     r.stage(f"Release the {label}")
+    # Open slowly while the palm backs away from the bottle, then lift clear.
     hp, hR = r.hand[side]
-    r.move(0.7, hands={side: (hp - hR[:, 2] * -0.004, hR)}, fingers={side: "cup_open"})
+    r.move(1.0, hands={side: (hp + hR[:, 2] * 0.015, hR)}, fingers={side: "cup_open"})
+    hp, hR = r.hand[side]
     r.move(1.0, hands={side: (hp + np.array([0, 0, 0.22]), hR)})
     clear_hands(r)
     pp, _ = r.body_pose(name)
     r.event("placed", item=name, pos=pp.tolist(), speed=r.item_speed(name))
 
 
-def place_lying(r, name, side="r", raise_h=0.10):
+def place_lying(r, name, p_slot, side="r", raise_h=0.10):
     """Rotate a wrapped cylinder to lie along the suitcase length, palm on top, and set it down."""
     p, R = r.body_pose(name)
     hp, hR = r.hand[side]
@@ -93,7 +111,7 @@ def place_lying(r, name, side="r", raise_h=0.10):
     z_i = np.array([0, 0, 1.0])                   # cylinder axis in the item frame
     n_i = relR @ np.array([0, 0, -1.0])          # palm normal in the item frame
     n_i = unit(n_i - z_i * (n_i @ z_i))
-    p_slot, _ = slot_pose(r, name)
+    p_slot = np.asarray(p_slot, float)
     sp, sR = r.suitcase_frame()
     F, _ = facing(r)
     best = None
@@ -131,32 +149,77 @@ def lid_angle(r):
 
 def hinge_axis(r):
     sp, sR = r.suitcase_frame()
-    return sp + sR @ np.array([-W / 2, 0, D]), sR @ np.array([0, -1.0, 0])
+    return sp + sR @ np.array([-W / 2, 0, HH]), sR @ np.array([0, -1.0, 0])
+
+
+# Lid-edge hooks tried in turn: (grip inset from the free edge, palm offset over the wall, palm height).
+LID_HOOKS = [(0.075, 0.022, 0.004), (0.10, 0.018, 0.0), (0.055, 0.026, 0.008)]
+LID_SWING_T = 2.3     # seconds for the swing over
 
 
 def close_lid(r, side="r"):
     """Hook the free corner of the lid's handle-end wall and swing the lid shut.
 
     In the lid frame the handle-end wall lies at y=+L/2 (towards the foot of the bed);
-    its rim is at z=0 and the free edge at x=+W. The palm rests on the rim with the
+    its rim is at z=ZR and the free edge at x=+W. The palm rests on the rim with the
     fingers reaching over into the lid; curling them makes a hook, so lifting rotates
-    the lid by contact alone."""
-    grip = np.array([W - 0.075, L / 2 - T_SHELL / 2, 0.0])
+    the lid by contact alone. The hook is tested with a short lift, and the swing is
+    watched: if the lid falls behind the hand, the person lets go and hooks it again."""
+    for attempt, hook in enumerate(LID_HOOKS):
+        if _hook_lid(r, side, hook, attempt) and _swing_lid(r, side):
+            break
+        r.move(0.4, fingers={side: "open"})
+        hp, hR = r.hand[side]
+        r.move(0.6, hands={side: (hp + np.array([0, 0, 0.08]), hR)})
+        r.hold(1.0)
+        if lid_angle(r) < np.radians(150):
+            # Left part-way: hooking it again from here would press it onto the contents.
+            raise RuntimeError(f"close_lid: lid left at {np.degrees(lid_angle(r)):.0f} deg")
+    else:
+        raise RuntimeError("close_lid: could not swing the lid over")
+    hw, _ = hinge_axis(r)
+    r.stage("Let the lid fall closed")
+    # Open the fingers and draw the hand straight back out over the wall (against the
+    # finger direction) before lifting it, so nothing props the lid.
+    hp, hR = r.hand[side]
+    _, R_l = r.body_pose("suitcase_lid")
+    out_wall = R_l @ np.array([0, 1.0, 0])          # back out over the handle-end wall
+    r.move(0.35, fingers={side: "open"})
+    # Out past the handle end (fingers slide out under the wall's rim edge), clear of the
+    # arc the falling lid sweeps, then up.
+    r.move(0.7, hands={side: (hp + out_wall * 0.20, hR)})
+    hp, hR = r.hand[side]
+    r.move(0.8, hands={side: (hp + np.array([0, 0, 0.10]), hR)}, gaze=hw)
+    r.hold(1.5)
+    r.event("lid_released", lid_angle_deg=float(np.degrees(lid_angle(r))))
+
+
+def _hook_lid(r, side, hook, attempt):
+    inset, over, h = hook
     p_lid, R_lid = r.body_pose("suitcase_lid")
-    down_l = R_lid.T @ np.array([0, 0, -1.0])     # world-down expressed in the lid frame (open lid)
-    f_l = np.array([0, -1.0, 0])                  # fingers point along lid -y, over the wall into the lid
-    Rh_l = hand_R(f_l, down_l)
-    palm_l = grip + np.array([0, 0.022, 0])
+    down_l = R_lid.T @ np.array([0, 0, -1.0])     # world-down expressed in the lid frame
+    Rh_l = hand_R(np.array([0, -1.0, 0]), down_l)  # fingers along lid -y, over the wall into the lid
+    grip = np.array([W - inset, L / 2 - T_SHELL / 2, ZR])
+    palm_l = grip + np.array([0, over, 0])
 
     def tgt(up=0.0, back=0.0):
         p, R = r.body_pose("suitcase_lid")
         return {side: (p + R @ (palm_l + np.array([0, back, 0])) + np.array([0, 0, up]), R @ Rh_l)}
 
-    r.stage("Hook the lid edge")
-    r.move(1.6, hands=tgt(0.07, 0.06), fingers={side: "open"}, root=dict(h=0.86), gaze=p_lid + R_lid @ grip)
-    r.move(0.9, hands=tgt(0.012))
-    r.move(0.9, hands=tgt(0.004), fingers={side: "hook"})
+    r.stage("Hook the lid edge" if attempt == 0 else "Re-hook the lid edge")
+    r.move(1.6 if attempt == 0 else 1.0, hands=tgt(0.07, 0.06), fingers={side: "open"}, root=dict(h=0.86),
+           gaze=p_lid + R_lid @ grip)
+    r.move(0.9, hands=tgt(h + 0.008))
+    r.move(0.9, hands=tgt(h), fingers={side: "hook"})
     r.hold(0.25)
+    th_a = lid_angle(r)
+    r.move(0.5, hands=tgt(h + 0.03))                  # test lift: the hooked lid must come up
+    lifted = th_a - lid_angle(r)
+    r.event("lid_hook_check", attempt=attempt, lid_rise_deg=float(np.degrees(lifted)))
+    return lifted > np.radians(1.5)
+
+
+def _swing_lid(r, side):
     hp, hR = r.hand[side]
     p_lid, R_lid = r.body_pose("suitcase_lid")
     relp, relR = R_lid.T @ (hp - p_lid), R_lid.T @ hR
@@ -170,29 +233,22 @@ def close_lid(r, side="r"):
         return pl + Rl @ relp, Rl @ relR
 
     r.stage("Swing the lid over")
-    th_rel = np.radians(50.0)                       # well past vertical: gravity closes it from here
-    n = 4200
+    # This deep lid balances near 64 deg (it must be carried past vertical), so it is swung
+    # briskly: its momentum carries it over the balance point as the hand slows.
+    th_rel = np.radians(35.0)
+    n = int(LID_SWING_T * 1000)
     for k in range(n):
         th = th0 + (th_rel - th0) * minjerk((k + 1) / n)
         r.hand[side] = pose_at(th)
         r.gaze = hw
         r.step()
+        # A lid left behind by the hand high up has slipped off the hook; near its balance
+        # point (about 64 deg) it is only stalling, so the swing carries on.
+        if k % 100 == 99 and lid_angle(r) - th > np.radians(10) and lid_angle(r) > np.radians(76):
+            r.event("lid_slipped", lid_angle_deg=float(np.degrees(lid_angle(r))), hand_deg=float(np.degrees(th)))
+            return False
     r.event("lid_swung", lid_angle_deg=float(np.degrees(lid_angle(r))))
-    r.stage("Let the lid fall closed")
-    # Open the fingers and draw the hand straight back out over the wall (against the
-    # finger direction) before lifting it, so nothing props the lid.
-    hp, hR = r.hand[side]
-    _, R_l = r.body_pose("suitcase_lid")
-    clear_rim = R_l @ np.array([0, 0, -1.0])        # fingers off the rim, away from the lid panel
-    out_wall = R_l @ np.array([0, 1.0, 0])          # back out over the handle-end wall
-    r.move(0.35, fingers={side: "open"})
-    # Out past the handle end (fingers slide out under the wall's rim edge), clear of the
-    # arc the falling lid sweeps, then up.
-    r.move(0.7, hands={side: (hp + out_wall * 0.20, hR)})
-    hp, hR = r.hand[side]
-    r.move(0.8, hands={side: (hp + np.array([0, 0, 0.10]), hR)}, gaze=hw)
-    r.hold(1.5)
-    r.event("lid_released", lid_angle_deg=float(np.degrees(lid_angle(r))))
+    return lid_angle(r) < np.radians(62)
 
 
 def press_and_zip(r):
@@ -263,220 +319,260 @@ def press_and_zip(r):
            fingers={"r": "relaxed", "l": "relaxed"})
 
 
-# ---------------------------------------------------------------- final lift
-def lift_suitcase(r, floor_xy=(2.02, 0.52), stand=(1.50, 0.50)):
-    """Hook the top and side handles, lift the case off the bed, turn it upright, set it on its wheels."""
+def _zip_track(r):
+    """The near-side zip track as traced by press_and_zip: point at arc length, hand pose."""
     sp, sR = r.suitcase_frame()
-    zc = D * 0.55
-    top_bar = np.array([0, L / 2 + 0.045, zc])     # bar axis along base x
-    side_bar = np.array([-W / 2 - 0.045, 0, zc])   # bar axis along base y
-    down = np.array([0, 0, -1.0])
-    # Both hands come from above (forearm pointing down), palm facing the case, fingers
-    # hanging outside the bar; curling them hooks under the bar towards the case.
-    down_b = sR.T @ down
-    f_top_b, n_top_b = down_b, np.array([0, -1.0, 0])     # top handle on the +y end: palm faces -y
-    f_side_b, n_side_b = down_b, np.array([1.0, 0, 0])    # side handle on the -x side: palm faces +x
-    Rl_b = hand_R(f_top_b, n_top_b); Rr_b = hand_R(f_side_b, n_side_b)
+    path_local = [(W / 2, -L / 2 + 0.04, D), (W / 2, 0.0, D), (W / 2, L / 2 - 0.05, D)]
+    pts = [sp + sR @ np.array(p) for p in path_local]
+    seg = [np.linalg.norm(b - a) for a, b in zip(pts[:-1], pts[1:])]
+    cum = np.concatenate([[0], np.cumsum(seg)])
 
-    def hook_targets(up=0.0, out=0.0):
-        sp, sR = r.suitcase_frame()
-        # palm 4.5 cm above the bar axis (knuckles level with it), just outside it
-        zl = sp + sR @ (top_bar + np.array([0, 0.019 + out, 0]) - down_b * 0.045) + [0, 0, up]
-        zr = sp + sR @ (side_bar + np.array([-0.019 - out, 0, 0]) - down_b * 0.045) + [0, 0, up]
-        return {"l": (zl, sR @ Rl_b), "r": (zr, sR @ Rr_b)}
+    def at(sv):
+        i = min(np.searchsorted(cum, sv, side="right") - 1, len(seg) - 1)
+        return pts[i] + (pts[i + 1] - pts[i]) * ((sv - cum[i]) / seg[i])
 
-    r.stage("Grip both handles")
-    approach(r, hook_targets(0.10, out=0.02), fingers={"r": "press", "l": "press"}, gaze=sp, root=dict(h=0.86))
-    r.move(0.9, hands=hook_targets(0.0, out=0.02))
-    r.move(0.5, hands=hook_targets(0.0))
-    r.move(0.9, fingers={"r": "hook", "l": "hook"})
-    r.hold(0.3)
-    rel = {}
-    sp, sR = r.suitcase_frame()
-    for s in "rl":
-        hp, hR = r.hand[s]
-        rel[s] = (sR.T @ (hp - sp), sR.T @ hR)
-    z0 = sp[2]
+    centre = sp + sR @ np.array([0, 0, D])
 
-    def hands_for(p, R):
-        return {s: (p + R @ rel[s][0], R @ rel[s][1]) for s in "rl"}
+    def zp(sv):
+        p = at(sv)
+        out = unit((p - centre) * np.array([1, 1, 0]))
+        return p + out * 0.085 + np.array([0, 0, 0.03])
 
-    r.stage("Lift the suitcase")
-    r.move(1.4, hands=hands_for(sp + [0, 0, 0.12], sR), root=dict(h=0.92))
-    r.hold(0.4)
-    rise = r.suitcase_frame()[0][2] - z0
-    r.event("suitcase_lift_check", rise_m=float(rise),
-            contacts={s: r.contacts_between(r.hand_bodies[s], r.suit_ids)[0] for s in "rl"})
-    if rise < 0.06:
-        raise RuntimeError(f"suitcase lift failed: {rise}")
-    # Upright: base +y (handle end) points up; wheels (-y) down; base +z (lid side) faces away from the bed.
-    centre_local = np.array([0, 0, (D + DL) / 2])
-    R_up = np.column_stack([np.array([1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, -1.0, 0])])
-    # keep the lid facing the room (+y) or (-y) according to the current lid direction
-    if (sR[:, 2] @ np.array([0, 1.0, 0])) > 0:
-        R_up = np.column_stack([np.array([-1.0, 0, 0]), np.array([0, 0, 1.0]), np.array([0, 1.0, 0])])
-    wheel_drop = L / 2 + 0.03 + 0.028
-    p_floor_centre = np.array([floor_xy[0], floor_xy[1], wheel_drop])
-    sp1, sR1 = r.suitcase_frame()
-    c1 = sp1 + sR1 @ centre_local
-    mid_c = np.array([(c1[0] + floor_xy[0]) / 2, (c1[1] + floor_xy[1]) / 2 - 0.15, 0.85])
-    slerp_R = Rot.from_matrix([sR1, R_up])
-    from scipy.spatial.transform import Slerp
-    sl = Slerp([0, 1], slerp_R)
-    r.stage("Swing it off the bed and upright")
-    root0 = dict(r.root)
+    pinch = hand_R(np.array([0, 0, -1.0]), -unit((at(0.0) - centre) * np.array([1, 1, 0])))
+    return at, zp, pinch, cum[-1], centre
+
+
+def unzip(r):
+    """Run the zipper back along the near side and free the lid hinge."""
+    at, zp, pinch, Ltot, centre = _zip_track(r)
+    r.stage("Unzip the case")
+    approach(r, {"r": (zp(Ltot) + [0, 0, 0.04], pinch)}, fingers={"r": "squeeze"}, root=dict(h=0.86), gaze=at(Ltot))
+    r.move(0.5, hands={"r": (zp(Ltot), pinch)})
+    n = 6000
+    for k in range(n):
+        sv = Ltot * (1 - minjerk((k + 1) / n))
+        r.hand["r"] = (zp(sv), pinch)
+        r.zip_progress = sv / Ltot
+        r.gaze = at(sv)
+        r.step()
+    j = r.m.joint("lid_hinge").id
+    r.m.jnt_range[j] = [0.0, np.pi + 0.35]
+    r.zip_locked = False
+    r.event("zipper_released", lid_angle_deg=float(np.degrees(lid_angle(r))))
+    hp, hR = r.hand["r"]
+    r.move(0.5, hands={"r": (hp + [0, 0, 0.04], hR)}, fingers={"r": "open"})
+    r.move(0.8, hands={"r": (hp + [0, 0, 0.18], hR)}, fingers={"r": "relaxed"})
+
+
+def open_lid(r, side="r"):
+    """From the foot of the bed: hook the fingertips under the zip-track lip on the lid's
+    free long edge near the handle end, swing the lid up past its balance point and let it fall open."""
+    if r.zip_locked:
+        raise RuntimeError("open_lid: the case is zipped")
+    p_lid, R_lid = r.body_pose("suitcase_lid")
+    # Lid frame: free-edge wall outer face at x = W, lip under-side at z = ZR + 0.001.
+    f_l = np.array([0, 0, -1.0])                  # fingers hang down along the outside of the wall
+    n_l = np.array([-1.0, 0, 0])                  # palm faces the wall
+    Rh_l = hand_R(f_l, n_l)
+    corner = np.array([W, L / 2 - 0.09, ZR])
+
+    def tgt(up=0.0, out=0.0):
+        p, R = r.body_pose("suitcase_lid")
+        return {side: (p + R @ (corner + np.array([0.034 + out, 0, 0.055])) + np.array([0, 0, up]), R @ Rh_l)}
+
+    r.stage("Hook the lid edge")
+    r.move(1.6, hands=tgt(0.08, 0.05), fingers={side: "open"}, root=dict(h=0.86), gaze=p_lid + R_lid @ corner)
+    r.move(0.9, hands=tgt(0.0, 0.02))
+    r.move(0.6, hands=tgt(0.0))
+    r.move(0.9, fingers={side: "hook"})
+    r.hold(0.25)
+    hp, hR = r.hand[side]
+    p_lid, R_lid = r.body_pose("suitcase_lid")
+    relp, relR = R_lid.T @ (hp - p_lid), R_lid.T @ hR
+    hw, ax = hinge_axis(r)
+    th0 = lid_angle(r)
+
+    def pose_at(th):
+        # The fingertips follow the lip round the hinge; the hand itself turns only half as
+        # far (the wrist and fingers take the rest), so the forearm stays within reach.
+        dR = Rot.from_rotvec(ax * (th - th0)).as_matrix()
+        dRh = Rot.from_rotvec(ax * 0.5 * (th - th0)).as_matrix()
+        return hw + dR @ (p_lid - hw) + dR @ R_lid @ relp, dRh @ R_lid @ relR
+
+    r.stage("Swing the lid open")
+    th_rel = np.radians(82.0)                     # past its balance point (~64 deg): gravity opens it from here
     n = 4200
     for k in range(n):
-        u = minjerk((k + 1) / n)
-        Ru = sl(u).as_matrix()
-        # quadratic path through mid_c
-        c = (1 - u) ** 2 * c1 + 2 * u * (1 - u) * mid_c + u * u * (p_floor_centre + [0, 0, 0.06])
-        p = c - Ru @ centre_local
-        r.hand.update(hands_for(p, Ru))
-        r.root["x"] = root0["x"] + (stand[0] - root0["x"]) * u
-        r.root["y"] = root0["y"] + (stand[1] - root0["y"]) * u
-        r.root["h"] = root0["h"] + (0.80 - root0["h"]) * np.sin(np.pi * u) * 0.5
-        r.gaze = c
+        th = th0 + (th_rel - th0) * minjerk((k + 1) / n)
+        r.hand[side] = pose_at(th)
+        r.gaze = hw
         r.step()
-    r.stage("Set it down on its wheels")
-    p_end = p_floor_centre - R_up @ centre_local + [0, 0, -0.004]
-    r.move(1.4, hands=hands_for(p_end, R_up), root=dict(h=0.84))
-    r.hold(0.4)
-    r.stage("Let go of the handles")
-    out = {}
-    for s in "rl":
-        hp, hR = r.hand[s]
-        out[s] = (hp + hR[:, 1] * 0.04 + np.array([0, 0, 0.03]), hR)
-    r.move(0.8, fingers={"r": "open", "l": "open"})
-    r.move(0.9, hands=out)
-    r.hold(0.3)
+    r.event("lid_lifted", lid_angle_deg=float(np.degrees(lid_angle(r))))
+    if lid_angle(r) < np.radians(68):
+        raise RuntimeError(f"open_lid: lid only reached {np.degrees(lid_angle(r)):.1f} deg")
+    r.stage("Let the lid fall open")
+    hp, hR = r.hand[side]
+    _, R_l = r.body_pose("suitcase_lid")
+    r.move(0.35, fingers={side: "open"})
+    r.move(0.7, hands={side: (hp + R_l @ np.array([0.12, 0, 0]), hR)})
+    hp, hR = r.hand[side]
+    r.move(0.8, hands={side: (hp + np.array([0, 0, 0.10]), hR)}, gaze=hw)
+    r.hold(1.5)
+    r.event("lid_opened", lid_angle_deg=float(np.degrees(lid_angle(r))))
 
 
-def lift_by_top_handle(r, floor_xy=(1.12, 0.64)):
-    """Hook the top handle with the left hand and lift: gravity swings the case to hang
-    upright from the handle; carry it off the bed and lower it onto its wheels."""
-    sp, sR = r.suitcase_frame()
-    zc = D * 0.55
-    top_bar = np.array([0, L / 2 + 0.045, zc])
-    down = np.array([0, 0, -1.0])
-    down_b = sR.T @ down
-    Rl_b = hand_R(down_b, np.array([0, -1.0, 0]))       # forearm down, palm facing the case end
-
-    def hook_target(up=0.0, out=0.0):
-        sp, sR = r.suitcase_frame()
-        return sp + sR @ (top_bar + np.array([0, 0.019 + out, 0]) - down_b * 0.045) + [0, 0, up], sR @ Rl_b
-
-    r.stage("Hook the top handle")
-    approach(r, {"l": hook_target(0.10, out=0.02)}, fingers={"l": "press"}, gaze=sp, root=dict(h=0.86))
-    r.move(0.9, hands={"l": hook_target(0.0, out=0.02)})
-    r.move(0.5, hands={"l": hook_target(0.0)})
-    r.move(0.9, fingers={"l": "hook"})
-    r.hold(0.3)
-    p0, R0 = r.hand["l"]
-    bar0 = sp + sR @ top_bar
-    r.stage("Lift it by the handle")
-    wheel_drop = L / 2 + 0.045 + L / 2 + 0.03 + 0.028    # bar axis to wheel bottoms when hanging
-    # Raise the handle end to about chest height: the case pivots on its wheel end.
-    lift_z = 1.08
-    r.move(2.4, hands={"l": (np.array([p0[0], p0[1] - 0.03, p0[2] + (lift_z - bar0[2])]), R0)},
-           root=dict(h=0.95), gaze=bar0 + [0, 0, 0.3])
-    r.hold(0.5)
-    sp1, sR1 = r.suitcase_frame()
-    r.event("suitcase_lift_check", rise_m=float(sp1[2] - sp[2]),
-            handle_end_up_deg=float(np.degrees(np.arccos(np.clip(sR1[2, 1], -1, 1)))),
-            contacts={"l": r.contacts_between(r.hand_bodies["l"], r.suit_ids)[0]})
-    if sp1[2] - sp[2] < 0.05:
-        raise RuntimeError("suitcase lift failed")
-    bar = lambda: r.suitcase_frame()[0] + r.suitcase_frame()[1] @ top_bar
-    off = r.hand["l"][0] - bar()
-    # Draw it towards the body: the wheel end slides to the bed edge and swings down,
-    # leaving the case hanging upright from the handle.
-    r.stage("Draw it off the bed")
-    p1 = np.array([floor_xy[0] + 0.02, floor_xy[1] - 0.14, lift_z + 0.08]) + off
-    r.move(3.0, hands={"l": (p1, R0)}, root=dict(x=1.62, y=0.52, yaw=np.pi / 2 + 0.25),
-           gaze=np.array([floor_xy[0], floor_xy[1], 0.5]))
-    r.hold(1.5)                                           # let the hanging case stop swinging
-    r.event("hanging_check", handle_end_up_deg=float(np.degrees(np.arccos(np.clip(r.suitcase_frame()[1][2, 1], -1, 1)))))
-    p2 = np.array([floor_xy[0], floor_xy[1], wheel_drop + 0.05]) + off
-    r.move(2.0, hands={"l": (p2, R0)})
-    r.stage("Set it down on its wheels")
-    p3 = np.array([floor_xy[0], floor_xy[1], wheel_drop - 0.006]) + off
-    r.move(1.6, hands={"l": (p3, R0)}, root=dict(h=0.90))
-    r.hold(0.5)
-    r.stage("Let go of the handle")
-    r.move(0.8, fingers={"l": "open"})
-    hp, hR = r.hand["l"]
-    r.move(1.0, hands={"l": (hp + [0, -0.06, 0.12], hR)})
-    r.hold(0.4)
+# ---------------------------------------------------------------- final lift
+WRIST_FOLLOW = 0.8      # fraction of the case's tip the wrists follow while standing it up
+STAND_T = 3.2           # seconds to stand the case up
+RELEASE_RISE = 0.07     # hands rise this much while the fingers open
+CARRY_REACH = 0.32      # pelvis distance from the bar while carrying the upright case
+# Hand placements tried in turn (forearm pitch deg, knuckle height above the bar, knuckle
+# depth into the gap as a fraction of it); a slipping grip is released and the next tried.
+GRIP_ATTEMPTS = [(15, 0.010, 0.25), (0, 0.010, 0.15), (25, 0.008, 0.35), (10, 0.012, 0.20)]
 
 
-def lift_from_bed_foot(r, side="r", floor_x=2.52):
-    """From the foot of the bed: hook the top handle palm-down with a level forearm, stand
-    the case up on its wheels, lift it clear, carry it past the bed end and set it down.
+def lift_from_bed_foot(r, floor_x=2.52):
+    """From the foot of the bed: hook the trolley bar with both hands, stand the case up
+    on its wheels, lift it clear, carry it past the bed end and set it down. A packed
+    large case weighs about 11 kg, so both hands share it. A grip that does not hold on the
+    test pull is released and retried with the hands placed differently (a re-grip).
 
     Every pull (up, or towards the body) seats the bar deeper in the curled fingers."""
     sp, sR = r.suitcase_frame()
-    zc = D * 0.55
-    top_bar = np.array([0, L / 2 + 0.045, zc])
+    hb = S.SUITCASE["bar"]
+    top_bar = np.array([hb["x"], hb["y"], hb["z"]])
     bar = lambda: r.suitcase_frame()[0] + r.suitcase_frame()[1] @ top_bar
     bar0 = bar()
     away = bar0 - np.array([r.root["x"], r.root["y"], bar0[2]]); away[2] = 0; away = unit(away)
     up = np.array([0, 0, 1.0])
-    idle = "l" if side == "r" else "r"
-    Rh = hand_R(away, -up)                          # forearm level towards the case, palm down
+    right = np.array([away[1], -away[0], 0.0])
+    lat = {"r": 0.046, "l": -0.046}                 # side by side along the bar
+    gap = hb["y"] - S.SUIT_L / 2 - hb["r"]          # free space between the bar and the case end
+    # Knuckle line in the palm frame (MCP joints of fingers 2-5), measured on this hand.
+    knuck = {}
+    for s in "rl":
+        hp, hR = r.hand_pose(s)
+        k = np.mean([r.d.xpos[r.m.body(f"{i}proxph_{s}").id] for i in (2, 3, 4, 5)], axis=0)
+        knuck[s] = hR.T @ (k - hp)
 
-    def hook(lift=0.0, back=0.0):
-        b = bar()
-        # knuckles over the gap behind the bar; palm pad resting on the bar top
-        return b - away * (0.022 + back) + up * (0.011 + 0.002 + lift), Rh
+    def shifted(base, delta):
+        return {s: (base[s][0] + delta, base[s][1]) for s in "rl"}
 
-    r.stage("Hook the top handle")
-    approach(r, {side: hook(0.10, 0.04)}, fingers={side: "hook_open"}, gaze=bar0, root=dict(h=0.72))
-    r.move(1.0, hands={side: hook(0.06)})
-    r.move(0.9, hands={side: hook(0.0)})
-    r.move(0.9, fingers={side: "hook"})
-    r.hold(0.3)
-    p0, R0 = r.hand[side]
-    wheel_drop = L / 2 + 0.045 + L / 2 + 0.03 + 0.028    # bar axis to wheel bottoms, case upright
+    def grip(pitch_deg, knuckle_up, depth, first):
+        """Hook the bar: forearms pitched down towards the case, palms facing down and
+        away, knuckles over the gap behind the bar so the hanging fingers drop into it and
+        curl under. Then test it with a short pull: True if the bar comes up."""
+        pitch = np.radians(pitch_deg)
+        Rh = hand_R(away * np.cos(pitch) - up * np.sin(pitch), -up * np.cos(pitch) - away * np.sin(pitch))
+
+        def hook(lift=0.0, back=0.0):
+            b = bar()
+            return {s: (b + right * lat[s] + away * (hb["r"] + depth * gap - back)
+                        + up * (hb["r"] + knuckle_up + lift) - Rh @ knuck[s], Rh) for s in "rl"}
+
+        r.stage("Hook the trolley handle" if first else "Re-grip the trolley handle")
+        if first:
+            approach(r, hook(0.10, 0.04), fingers={"r": "hook_open", "l": "hook_open"}, gaze=bar0, root=dict(h=0.72))
+        else:
+            r.move(0.8, hands=hook(0.10, 0.04), fingers={"r": "hook_open", "l": "hook_open"})
+        r.move(1.0, hands=hook(0.06))
+        r.move(0.9, hands=hook(0.0))
+        r.move(0.9, fingers={"r": "bar_fist", "l": "bar_fist"})
+        r.hold(0.3)
+        z0 = bar()[2]
+        base = {s: r.hand[s] for s in "rl"}
+        r.move(0.8, hands=shifted(base, up * 0.07))
+        rise = bar()[2] - z0
+        r.event("hook_check", pitch_deg=pitch_deg, bar_rise_m=float(rise),
+                contacts={s: r.contacts_between(r.hand_bodies[s], [r.m.body("suitcase").id])[0] for s in "rl"})
+        if rise > 0.035:
+            return True
+        # Slipped: let go and lift the hands clear before trying again.
+        r.move(0.6, fingers={"r": "hook_open", "l": "hook_open"})
+        base = {s: r.hand[s] for s in "rl"}
+        r.move(0.6, hands=shifted(base, up * 0.06))
+        return False
+
+    for k, (pd, ku, dp) in enumerate(GRIP_ATTEMPTS):
+        if grip(pd, ku, dp, first=k == 0):
+            break
+    else:
+        raise RuntimeError("suitcase lift failed: no grip on the trolley bar")
+    p0 = {s: (r.hand[s][0].copy(), r.hand[s][1].copy()) for s in "rl"}
+    bar1 = bar()
+    wheel_drop = hb["y"] - S.SUITCASE["wheel_y"] + S.SUITCASE["wheel_r"]   # bar axis to wheel bottoms, case upright
     r.stage("Stand it up by the handle")
     stand_z = S.BED["mattress_top"] + wheel_drop + 0.01
-    r.move(3.2, hands={side: (p0 - away * 0.10 + up * (stand_z - bar0[2]), R0)}, root=dict(h=0.95), follow=(idle,),
-           gaze=bar0 + up * 0.3)
+    delta = -away * 0.10 + up * (stand_z - bar1[2])
+    h0 = r.root["h"]
+    n = int(STAND_T * 1000)
+    trace = []
+    pitch0 = np.arcsin(np.clip(r.suitcase_frame()[1][2, 1], -1, 1))     # handle-end elevation
+    for k in range(n):
+        u = minjerk((k + 1) / n)
+        # The wrists turn part of the way with the case as it tips up, so the bar stays
+        # seated in the curled fingers instead of rolling out of them.
+        tip = np.arcsin(np.clip(r.suitcase_frame()[1][2, 1], -1, 1)) - pitch0
+        Rw = Rot.from_rotvec(-right * WRIST_FOLLOW * tip).as_matrix()
+        for s in "rl":
+            off = p0[s][0] - bar1
+            r.hand[s] = (bar1 + delta * u + Rw @ off, Rw @ p0[s][1])
+            # the wrist joint takes up to 40 degrees of that turn, so the forearm stays low
+            r.finger[s][f"flexion_{s}"] = float(min(0.7, WRIST_FOLLOW * max(tip, 0.0)))
+        r.root["h"] = h0 + (0.95 - h0) * u
+        r.gaze = bar0 + up * 0.3
+        r.step()
+        if k % (n // 8) == n // 8 - 1:
+            trace.append(dict(u=round(u, 2), bar=np.round(bar(), 3).tolist(),
+                              contacts={s: r.contacts_between(r.hand_bodies[s], [r.m.body("suitcase").id])[0] for s in "rl"}))
+    r.event("stand_trace", trace=trace)
     r.hold(0.8)
     sp1, sR1 = r.suitcase_frame()
     r.event("suitcase_lift_check", rise_m=float(sp1[2] - sp[2]),
             handle_end_up_deg=float(np.degrees(np.arccos(np.clip(sR1[2, 1], -1, 1)))),
-            contacts={side: r.contacts_between(r.hand_bodies[side], r.suit_ids)[0]})
+            contacts={s: r.contacts_between(r.hand_bodies[s], r.suit_ids)[0] for s in "rl"})
     if sp1[2] - sp[2] < 0.05:
         raise RuntimeError("suitcase lift failed")
-    off = r.hand[side][0] - bar()
+
+    def at_bar(target):
+        off = {s: r.hand[s][0] - bar() for s in "rl"}
+        return {s: (target + off[s], r.hand[s][1]) for s in "rl"}
+
     r.stage("Lift it off the bed")
     b1 = bar()
-    r.move(1.2, hands={side: (b1 + up * 0.08 + off, R0)}, follow=(idle,))
+    r.move(1.2, hands=at_bar(b1 + up * 0.08))
     r.stage("Carry it past the end of the bed")
-    r.move(3.0, hands={side: (np.array([floor_x, b1[1], b1[2] + 0.08]) + off, R0)},
-           root=dict(x=floor_x + 0.50), gaze=np.array([floor_x, b1[1], 0.4]), follow=(idle,))
+    r.move(3.0, hands=at_bar(np.array([floor_x, b1[1], b1[2] + 0.08])), root=dict(x=floor_x + CARRY_REACH),
+           gaze=np.array([floor_x, b1[1], 0.4]))
     r.hold(0.8)
     r.event("hanging_check", handle_end_up_deg=float(np.degrees(np.arccos(np.clip(r.suitcase_frame()[1][2, 1], -1, 1)))))
-    off = r.hand[side][0] - bar()
     r.stage("Set it down on its wheels")
-    r.move(2.4, hands={side: (np.array([floor_x, b1[1], wheel_drop + 0.03]) + off, R0)}, root=dict(h=0.70), follow=(idle,))
+    r.move(2.4, hands=at_bar(np.array([floor_x, b1[1], wheel_drop + 0.03])), root=dict(h=0.70))
     # Square it up: bring the handle directly above the wheel footprint as it touches down.
-    foot_local = np.array([0, -L / 2 - 0.03, (D + DL) / 2])
+    foot_local = np.array([0, S.SUITCASE["wheel_y"], (S.SUITCASE["wheel_z_base"] + HH + ZR + S.SUITCASE["wheel_z_lid"]) / 2])
     for _ in range(3):
         cp, cR = r.suitcase_frame()
         foot = cp + cR @ foot_local
-        b_now = bar()
-        tgt = np.array([foot[0], foot[1], wheel_drop - 0.004])
-        r.move(0.8, hands={side: (r.hand[side][0] + (tgt - b_now), R0)})
+        r.move(0.8, hands=at_bar(np.array([foot[0], foot[1], wheel_drop - 0.004])))
     r.hold(0.5)
     r.event("touchdown_tilt_deg", value=float(np.degrees(np.arccos(np.clip(r.suitcase_frame()[1][2, 1], -1, 1)))))
     r.stage("Let go of the handle")
-    # Straighten the fingers out from under the bar (they point back over the case top),
-    # slide the hand back off the bar, then lift it away.
-    r.move(0.9, fingers={side: "press"})
-    hp, hR = r.hand[side]
-    r.move(0.7, hands={side: (hp - away * 0.09 + up * 0.01, hR)})
-    hp, hR = r.hand[side]
-    r.move(0.8, hands={side: (hp + up * 0.10, hR)}, root=dict(h=0.95))
+    # A spinner case standing on its wheels tips over at about 9 degrees front to back, so
+    # the release must not push it: unload the grip by a centimetre, open the fingers
+    # slowly, then lift the hands straight up and only then draw them back.
+    base = {s: r.hand[s] for s in "rl"}
+    r.move(0.4, hands=shifted(base, up * 0.01))
+    # open while rising, so the fingertips swing out and up rather than into the case
+    base = {s: r.hand[s] for s in "rl"}
+    r.move(1.4, hands=shifted(base, up * RELEASE_RISE), fingers={"r": "open", "l": "open"})
     r.hold(0.4)
+    base = {s: r.hand[s] for s in "rl"}
+    r.move(1.2, hands=shifted(base, up * 0.15))
+    r.event("release_contacts", contacts={s: r.contacts_between(r.hand_bodies[s], r.suit_ids)[0] for s in "rl"})
+    base = {s: r.hand[s] for s in "rl"}
+    r.move(0.8, hands=shifted(base, -away * 0.12), fingers={"r": "relaxed", "l": "relaxed"}, root=dict(h=0.95))
+    # Step back from the standing case before lowering the arms past its top.
+    back = np.array([r.root["x"], r.root["y"]]) - away[:2] * 0.22
+    r.move(1.2, root=dict(x=float(back[0]), y=float(back[1])), follow=("r", "l"))
+    r.hold(0.6)
+

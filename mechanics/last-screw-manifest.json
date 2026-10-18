@@ -1,9 +1,0 @@
-{
-  "scope": "Internal joint-mechanics review only; full human pose and final whole-assembly release are not validated by this clip",
-  "source_checkpoint": "cold_access_final/checkpoints/tightened_105111_03.pkl",
-  "start": 1251.72000002325,
-  "end": 1263.040000025556,
-  "frames": 284,
-  "physical_rows_sha256": "252d762128f2ba163414d98ef7308beba467a7090dd3fcdfc81c9fb24dcc0a71",
-  "passive_clamp_N": 24.90540379572133
-}

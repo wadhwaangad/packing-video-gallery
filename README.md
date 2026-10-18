@@ -1,19 +1,17 @@
-# Assembly video journal
+# Packing simulator
 
-## New: packing a suitcase for a trip
+[`index.html`](index.html) presents a simulator for packing a suitcase in a two-room apartment, with a reference trajectory rendered from the head camera and room cameras.
 
-[`packing.html`](packing.html) shows one continuous simulated run in a two-room apartment. A person collects eight items from the dresser, the bed, the bathroom, the kitchen and the living room, and packs them into a hard-shell suitcase lying on the bed. They then close and zip it and stand it on its wheels. All grasps are contact-only (no hand-object welds), using MyoHand hands in MuJoCo. The page has a moving head-camera view and room cameras rendered with Blender Cycles, plus completion checks in [`trip/validation.json`](trip/validation.json). Source and pipeline: [`packing/`](packing/README.md). Assets: Poly Haven (CC0). Hands: MyoHub/myo_sim (Apache-2.0).
+- **Executable tasks, not recordings.** A case is a task (the packing list), a seed, a persona and a private schedule of events. A scripted user replans after every action, so the same case can unfold differently when the world changes.
+- **Semantic actions with a grounder.** The actions are `go_to`, `pick_up`, `put_in`, `put_back`, `take_out`, `close_lid`, `zip`, `unzip`, `open_lid`, `stand_up`, `wait` and `say`. Refused actions return feedback and change nothing.
+- **Object families.** Folded piles, rigid boxes, fragile boxes and the bottle each decide which contact skill grounds `pick_up` and `put_in`.
+- **Goal predicates.** Success is a set of predicates (packed items, no extras, bottle upright, heavy items on the floor, nothing on the camera, closed, zipped, upright), not a reference route.
+- **Progress-conditioned events.** These are wrong object, omission, repetition, navigation deviation, heavy item on top, bottle laid down, premature close and stall, each with optional self-recovery. Questions and plan changes use separate channels.
+- **Physics.** Every action runs in MuJoCo with two anatomical MyoHand hands. Grasps are contact-only, with no welds or equality constraints, and the outcome is verified before it is committed.
+- **Photoreal renders.** The garment piles and the suitcase are photo-scanned BlenderKit models. The apartment uses Poly Haven assets. Frames are path-traced with Blender Cycles.
 
-Watch the videos at https://hellomuffin.github.io/assembly-video-gallery/ .
+Source, pipeline and file formats: [`packing/README.md`](packing/README.md). The reference trajectory's records are in [`trip/`](trip/). [`hands/`](hands/index.html) holds the earlier hand-only lift and turn physics tests.
 
-The newest pair shows one continuous BEKVÄM assembly run from loose parts to a released stool: eight wooden components, two dowels, and eleven fasteners. The operator view uses a moving head-position camera and connected arms with finite reach. The outside view shows the same recorded run. The previews play at four times simulation speed. A separate operator video preserves every recorded frame at 25 fps and original movement speed. The page includes operation chapters.
+Limitations: the body is kinematic, solved around the simulated forearms. Garments are compliant rigid piles, not cloth. The zipper is idealised, and the user is scripted. These are simulation checks, not evidence of real-world transfer.
 
-`run-evidence.json` records the completion checks, avatar reach checks, and source hashes. `assembly-events.json` contains the recorded assembly milestones. These are simulation checks, not evidence of real-world transfer.
-
-Limitations: the human avatar is kinematic, without balance, foot-contact, or whole-body collision simulation. Grasps and bore/thread engagement use idealized connectors. Material and contact properties are assumed. The rebate collision profiles include explicit clearance for overlap in the source CAD; this has not been calibrated against real furniture. Fingers are visual geometry, not an independently controlled contact model. The footage is simulated, not photoreal human capture.
-
-Furniture geometry and derived videos: [IKEA3DAssemblyDataset](https://github.com/IKEA/IKEA3DAssemblyDataset), [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Older supported-human-lift media uses [Assistive Gym](https://github.com/Healthcare-Robotics/assistive-gym), MIT. The new operator avatar is procedural.
-
-## Assembly data explorer
-
-[Browse the collected data samples](https://hellomuffin.github.io/assembly-video-gallery/data/index.html): 24 playable excerpts from 15 datasets, original annotation timelines and records, part-mask stills, a 36-source assembly registry, and the complete 124-row slide-linked training-catalog audit. Filter by dataset, assembly type, and annotation. Acquisition counts are a dated local snapshot; source licenses and original-video rights remain separate.
+Assets: BlenderKit (royalty-free licence; fetched by script, not redistributed), Poly Haven (CC0). Hands: MyoHub/myo_sim (Apache-2.0).

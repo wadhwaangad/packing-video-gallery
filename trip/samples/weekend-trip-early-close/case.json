@@ -1,0 +1,39 @@
+{
+ "task": "weekend_trip",
+ "seed": 7,
+ "attempt": 0,
+ "persona": "steady",
+ "events": [
+  {
+   "id": "e1",
+   "type": "premature_close",
+   "target": "",
+   "other": "",
+   "after": 4,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 41,
+  "final_goals": {
+   "packed(trousers)": true,
+   "packed(tshirts)": true,
+   "packed(sweatshirts)": true,
+   "packed(towel)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(notebook)": true,
+   "packed(camera)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(trousers)": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "nothing_on(camera)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}
