@@ -1,100 +1,2053 @@
 {
- "actions": [
+ "action_space": {
+  "types": {
+   "Ref": "words naming something in the scene (an item, a place, a part or control of an asset), resolved against what is there now; 'it' is the item in hand",
+   "Frac": "fraction of a part's travel, 0 to 1 ('halfway', '25%', 'fully')",
+   "Level": "a stop of a telescopic handle, 0 (retracted) to its top stop",
+   "Digit": "one lock-dial digit, 0 to 9",
+   "Code": "a three-digit lock combination ('3-7-2')",
+   "Extent": "number of detent clicks to turn a dial (positive = up)",
+   "Dur": "seconds",
+   "Count": "a positive whole number of repetitions",
+   "Rel": "in | on | beside",
+   "Side": "wheel_end | handle_end | front_side | hinge_side",
+   "Spot": "where in the case: a named spot, or the item centre in cm from the inside of the wheel-end wall (along) and from the hinge-side wall (across)",
+   "Angle": "degrees about the vertical; 0 = the item's long side across the case",
+   "Orient": "upright | lying (the bottle); flat for everything else",
+   "Style": "half (folding in thirds is not simulated: see the fold verb)",
+   "Text": "free text"
+  },
+  "verbs": {
+   "go_to": {
+    "group": "navigate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "station",
+     "item",
+     "anchor_case"
+    ],
+    "steps": [
+     "Resolve the place, or the item (then its current place).",
+     "Stand point: a station's default spot, or in front of the item at the station's standoff.",
+     "Route: shortest path on the walking graph, shortcut wherever the straight line keeps 30 cm from furniture; a carried item is turned the way round that keeps it clear of walls.",
+     "Walk at the persona's speed and turn to face the station."
+    ],
+    "check": "if carrying, the item is still between the hands (< 30 cm)",
+    "effect": "station := place"
+   },
+   "look_at": {
+    "group": "navigate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "station",
+     "item",
+     "part"
+    ],
+    "steps": [
+     "Resolve the reference to a point (item centre, part centre or station).",
+     "Turn the head (gaze target) towards it; the body does not move."
+    ],
+    "check": "none",
+    "effect": "none"
+   },
+   "pick_up": {
+    "group": "manipulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "item"
+    ],
+    "steps": [
+     "Resolve the item; it must be within reach (at this station, or in the open case with nothing on it).",
+     "Grasp by family: folded piles and boxes with a two-hand side squeeze across the short side, the bottle with a one-hand power wrap just above its centre of mass.",
+     "Targets from the item's observed pose: palms outside the faces, then in by 7-10 mm.",
+     "Lift 10-12 cm and test: the item must rise with the hands by contact alone.",
+     "Carry in front of the chest at max(1.0 m, start + 10 cm)."
+    ],
+    "check": "item rose >= 70 % of the hand lift by contact (no attachment)",
+    "effect": "holding := item"
+   },
+   "place": {
+    "group": "manipulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": false,
+      "default": "it"
+     },
+     {
+      "name": "rel",
+      "type": "Rel",
+      "required": false,
+      "default": "in"
+     },
+     {
+      "name": "dest",
+      "type": "Ref",
+      "required": false,
+      "default": "suitcase"
+     },
+     {
+      "name": "at",
+      "type": "Spot",
+      "required": false,
+      "default": null
+     },
+     {
+      "name": "side",
+      "type": "Side",
+      "required": false,
+      "default": null
+     },
+     {
+      "name": "yaw",
+      "type": "Angle",
+      "required": false,
+      "default": null
+     },
+     {
+      "name": "orient",
+      "type": "Orient",
+      "required": false,
+      "default": ""
+     }
+    ],
+    "ref_kinds": [
+     "item"
+    ],
+    "steps": [
+     "The item must be the one in hand.",
+     "Destination: 'in' the case at a Spot (named or measured), 'on' another packed item, 'beside' one (on a given side), or on a station's surface.",
+     "Pose: Spot -> (x, y) in the case frame; yaw default puts the squeezed side along the case length; the bottle 'upright' or 'lying'.",
+     "Fit (5 mm height map of what is packed): inside the liner walls, resting on the highest surface under it with >= 60 % support, nothing fragile underneath, top below the closed lid, clear of the lid's swing, room for the hands beside the squeezed faces.",
+     "Lower to the measured top of the supports (live poses), open the grip along the palm normals, lift clear."
+    ],
+    "check": "item rests within 7 cm of the requested centre inside the walls; bottle within 10 deg of vertical (upright) or > 70 deg (lying)",
+    "effect": "item := in case at (x, y, yaw), on its supports"
+   },
+   "put_back": {
+    "group": "manipulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": false,
+      "default": "it"
+     }
+    ],
+    "ref_kinds": [
+     "item"
+    ],
+    "steps": [
+     "The item must be the one in hand and the person at its home station.",
+     "Lower it to its starting pose on that surface and release."
+    ],
+    "check": "item within 8 cm of where it started",
+    "effect": "item := at home"
+   },
+   "open": {
+    "group": "articulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "to",
+      "type": "Frac",
+      "required": false,
+      "default": 1.0
+     }
+    ],
+    "ref_kinds": [
+     "part"
+    ],
+    "steps": [
+     "Resolve the part; check the asset supports 'open' on it and the value (the lid only fully, a zip to any fraction).",
+     "Lid: from the foot of the bed, hook the fingertips under the free edge's zip-track lip, swing it past its balance point (~64 deg) and let it fall open.",
+     "Zip: pinch the slider and run it back along the track to the requested fraction."
+    ],
+    "check": "lid > 150 deg open; zip slider at the fraction",
+    "effect": "part opening := to"
+   },
+   "close": {
+    "group": "articulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "to",
+      "type": "Frac",
+      "required": false,
+      "default": 0.0
+     }
+    ],
+    "ref_kinds": [
+     "part"
+    ],
+    "steps": [
+     "Resolve the part and the value as for open.",
+     "Lid: hook the free edge, test-lift it, swing it over briskly past the balance point; if it slips the hook is released and tried again in a different place.",
+     "Zip: press the lid down with one palm, pinch the slider and run it along the track to the fraction; fully closed engages only after a closure check (lid < 2.5 deg)."
+    ],
+    "check": "lid < 3 deg; zip at the fraction",
+    "effect": "part opening := to"
+   },
+   "press": {
+    "group": "control",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "hold",
+      "type": "Dur",
+      "required": false,
+      "default": 0.3
+     },
+     {
+      "name": "times",
+      "type": "Count",
+      "required": false,
+      "default": 1
+     }
+    ],
+    "ref_kinds": [
+     "control"
+    ],
+    "steps": [
+     "Resolve the control (a button).",
+     "Fingertip to 1 cm above the button along its axis, then in until the measured contact force exceeds the button's spring (detected from contacts, not assumed).",
+     "Hold for `hold` seconds; release; repeat `times` times."
+    ],
+    "check": "button travel reached its stop for >= hold",
+    "effect": "device reacts (lock releases the zip pulls; the handle latch frees)"
+   },
+   "turn": {
+    "group": "control",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "to",
+      "type": "Digit",
+      "required": false,
+      "default": null
+     },
+     {
+      "name": "by",
+      "type": "Extent",
+      "required": false,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "control"
+    ],
+    "steps": [
+     "Resolve the dial; exactly one of `to` / `by`.",
+     "Read the dial; the shorter way round gives the clicks to go.",
+     "Fingertip on the exposed rim, drag tangentially one detent at a time; re-read after each flick (closed loop) until the reading equals the target."
+    ],
+    "check": "dial reads the target digit (joint angle within half a detent)",
+    "effect": "dial := digit"
+   },
+   "set": {
+    "group": "control",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "value",
+      "type": "Setting",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "control",
+     "device"
+    ],
+    "steps": [
+     "Resolve the control or device and parse the setting for it (Code for the lock, Level for the trolley handle).",
+     "Lock: turn each dial to its digit (as `turn`).",
+     "Trolley handle: grip the bar, press the button in the grip, pull or push to the stop, release the button so the latch engages."
+    ],
+    "check": "lock dials read the code; handle latched within 5 mm of the stop",
+    "effect": "setting := value"
+   },
+   "insert": {
+    "group": "control",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "into",
+      "type": "Ref",
+      "required": false,
+      "default": "lock"
+     }
+    ],
+    "ref_kinds": [
+     "part"
+    ],
+    "steps": [
+     "Resolve the zip pulls; the zip must be fully closed.",
+     "Pinch both pulls and push them into the lock's slots until they latch."
+    ],
+    "check": "both pulls latched",
+    "effect": "zip pulls := docked"
+   },
+   "fasten": {
+    "group": "articulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "part"
+    ],
+    "steps": [
+     "Resolve the strap; the lid must be closed.",
+     "Pinch the male buckle, align it with the female and push until it clicks."
+    ],
+    "check": "buckle latched",
+    "effect": "strap := fastened"
+   },
+   "unfasten": {
+    "group": "articulate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "part"
+    ],
+    "steps": [
+     "Resolve the strap.",
+     "Squeeze the two side-release tabs and pull the male half out."
+    ],
+    "check": "buckle free",
+    "effect": "strap := open"
+   },
+   "stand_up": {
+    "group": "case",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": false,
+      "default": "suitcase"
+     }
+    ],
+    "ref_kinds": [
+     "device"
+    ],
+    "steps": [
+     "The case must be closed and zipped; from the foot of the bed.",
+     "Two-hand overhand grip on the trolley bar (test pull, re-grip if it slips).",
+     "Tip it up onto its wheels with the wrists following the case, lift it off the bed, carry it past the bed end and set it down; release while rising."
+    ],
+    "check": "case within 10 deg of upright on four wheels",
+    "effect": "case := upright on the floor"
+   },
+   "lay_down": {
+    "group": "case",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": false,
+      "default": "suitcase"
+     }
+    ],
+    "ref_kinds": [
+     "device"
+    ],
+    "steps": [
+     "The case must be standing on the floor.",
+     "Grip the trolley bar, lift it onto the foot of the bed and lower it onto its back."
+    ],
+    "check": "case lying on its back on the bed",
+    "effect": "case := on the bed"
+   },
+   "roll": {
+    "group": "case",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": false,
+      "default": "suitcase"
+     },
+     {
+      "name": "to",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "device"
+    ],
+    "steps": [
+     "The case must stand on its wheels with the trolley handle at a stop above 0.",
+     "Grip the handle, walk the route to the place pushing the case alongside on its 360-degree wheels (the way the manuals recommend), let go."
+    ],
+    "check": "case upright within 20 cm of the destination",
+    "effect": "case place := destination"
+   },
+   "fold": {
+    "group": "cloth",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     },
+     {
+      "name": "style",
+      "type": "Style",
+      "required": false,
+      "default": "half"
+     }
+    ],
+    "ref_kinds": [
+     "cloth"
+    ],
+    "steps": [
+     "The loose towel lies flat on the kitchen counter, its near edge hanging over the counter's front edge.",
+     "Both flat hands, palms up, slide under the hanging edge (a third in from each corner), lift it, draw back past the counter's lip and rise above the towel.",
+     "Carry the edge over to just past the far edge, lower it, tip the fingertips down so it slides off them onto the towel, lift the hands away."
+    ],
+    "check": "the towel's depth shrank to 0.5 of flat (+-0.2), measured on the simulated cloth",
+    "effect": "cloth := folded in half"
+   },
+   "unfold": {
+    "group": "cloth",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "cloth"
+    ],
+    "steps": [
+     "Not simulated: the folded edge lies flat on the towel, where neither the scoop nor a pinch can get under it with this hand model (the cloth is too coarse to bunch)."
+    ],
+    "check": "-",
+    "effect": "-"
+   },
+   "wait": {
+    "group": "other",
+    "signature": [
+     {
+      "name": "seconds",
+      "type": "Dur",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [],
+    "steps": [
+     "Arms at rest; hold for the duration."
+    ],
+    "check": "none",
+    "effect": "none"
+   },
+   "say": {
+    "group": "other",
+    "signature": [
+     {
+      "name": "text",
+      "type": "Text",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [],
+    "steps": [
+     "Arms at rest; the utterance is logged as an event (question / plan-change channel)."
+    ],
+    "check": "none",
+    "effect": "none"
+   }
+  },
+  "macros": {
+   "pack": "go_to(item) -> pick_up(item) -> go_to(suitcase) -> place(item, in, suitcase, at)",
+   "unpack": "go_to(suitcase) -> pick_up(item) -> go_to(home) -> put_back(item)",
+   "lock": "close(main_zip) -> insert(zip_pulls, into=lock) -> turn dials away from the code",
+   "unlock": "set(lock, code) -> press(lock_button)"
+  },
+  "assets": {
+   "suitcase": {
+    "label": "the suitcase",
+    "source": [
+     "scan: BlenderKit 'Black suitcase' (L'ANE)",
+     "Samsonite TSA lock instructions",
+     "Samsonite / Delsey spinner manuals"
+    ],
+    "case_ops": [
+     "stand_up",
+     "lay_down",
+     "roll"
+    ],
+    "parts": {
+     "lid": {
+      "kind": "part",
+      "label": "the lid",
+      "words": [
+       "lid",
+       "top",
+       "cover"
+      ],
+      "ops": {
+       "open": {
+        "to": "Frac",
+        "values": [
+         1.0
+        ],
+        "why": "the lid only stays put closed or lying fully open"
+       },
+       "close": {
+        "to": "Frac",
+        "values": [
+         0.0
+        ],
+        "why": "the lid only stays put closed or lying fully open"
+       }
+      }
+     },
+     "main_zip": {
+      "kind": "part",
+      "label": "the main zip",
+      "words": [
+       "zip",
+       "zipper",
+       "zips",
+       "zippers",
+       "main"
+      ],
+      "ops": {
+       "open": {
+        "to": "Frac",
+        "range": [
+         0.0,
+         1.0
+        ]
+       },
+       "close": {
+        "to": "Frac",
+        "range": [
+         0.0,
+         1.0
+        ]
+       }
+      }
+     },
+     "zip_pulls": {
+      "kind": "part",
+      "label": "the zip pulls",
+      "words": [
+       "pulls",
+       "pull",
+       "tabs",
+       "sliders",
+       "zip",
+       "zipper"
+      ],
+      "ops": {
+       "insert": {
+        "into": "Ref"
+       }
+      }
+     },
+     "lock": {
+      "kind": "device",
+      "label": "the combination lock",
+      "words": [
+       "lock",
+       "padlock",
+       "combination",
+       "combination",
+       "tsa",
+       "number"
+      ],
+      "ops": {
+       "set": {
+        "value": "Code"
+       }
+      }
+     },
+     "dial_1": {
+      "kind": "control",
+      "label": "the left lock dial",
+      "words": [
+       "dial",
+       "wheel",
+       "digit",
+       "left",
+       "first",
+       "1st",
+       "lock"
+      ],
+      "ops": {
+       "turn": {
+        "to": "Digit",
+        "by": "Extent"
+       }
+      }
+     },
+     "dial_2": {
+      "kind": "control",
+      "label": "the middle lock dial",
+      "words": [
+       "dial",
+       "wheel",
+       "digit",
+       "middle",
+       "second",
+       "2nd",
+       "lock"
+      ],
+      "ops": {
+       "turn": {
+        "to": "Digit",
+        "by": "Extent"
+       }
+      }
+     },
+     "dial_3": {
+      "kind": "control",
+      "label": "the right lock dial",
+      "words": [
+       "dial",
+       "wheel",
+       "digit",
+       "right",
+       "third",
+       "3rd",
+       "lock"
+      ],
+      "ops": {
+       "turn": {
+        "to": "Digit",
+        "by": "Extent"
+       }
+      }
+     },
+     "lock_button": {
+      "kind": "control",
+      "label": "the lock's release button",
+      "words": [
+       "button",
+       "release",
+       "slider",
+       "lock",
+       "release",
+       "tsa",
+       "open"
+      ],
+      "ops": {
+       "press": {
+        "hold": "Dur",
+        "times": "Count"
+       }
+      }
+     },
+     "trolley_handle": {
+      "kind": "control",
+      "label": "the trolley handle",
+      "words": [
+       "handle",
+       "trolley",
+       "telescopic",
+       "telescoping",
+       "pull",
+       "extendable",
+       "retractable",
+       "long"
+      ],
+      "ops": {
+       "set": {
+        "value": "Level"
+       }
+      },
+      "levels": [
+       0,
+       1,
+       2
+      ]
+     },
+     "trolley_button": {
+      "kind": "control",
+      "label": "the trolley-handle button",
+      "words": [
+       "button",
+       "handle",
+       "trolley",
+       "grip"
+      ],
+      "ops": {
+       "press": {
+        "hold": "Dur",
+        "times": "Count"
+       }
+      }
+     },
+     "side_handle": {
+      "kind": "handle",
+      "label": "the side carry handle",
+      "words": [
+       "handle",
+       "side",
+       "carry",
+       "carrying"
+      ],
+      "ops": {}
+     },
+     "strap": {
+      "kind": "part",
+      "label": "the strap buckle",
+      "words": [
+       "strap",
+       "buckle",
+       "clip",
+       "front",
+       "compression",
+       "lid"
+      ],
+      "ops": {
+       "fasten": {},
+       "unfasten": {}
+      }
+     },
+     "wheels": {
+      "kind": "part",
+      "label": "the spinner wheels",
+      "words": [
+       "wheels",
+       "wheel",
+       "casters",
+       "spinner"
+      ],
+      "ops": {}
+     }
+    }
+   }
+  },
+  "anchors": {
+   "wheel_end": {
+    "label": "the wheel-end garment column",
+    "words": [
+     "wheel end",
+     "bottom end",
+     "wheel-end",
+     "bottom"
+    ],
+    "centre_cm": {
+     "from_wheel_end": 18.2,
+     "from_hinge_side": 17.3
+    }
+   },
+   "handle_end": {
+    "label": "the handle-end garment column",
+    "words": [
+     "handle end",
+     "top end",
+     "handle-end"
+    ],
+    "centre_cm": {
+     "from_wheel_end": 49.2,
+     "from_hinge_side": 17.3
+    }
+   },
+   "front_strip": {
+    "label": "the front strip",
+    "words": [
+     "front",
+     "front side",
+     "near side",
+     "front strip"
+    ],
+    "centre_cm": {
+     "from_wheel_end": 45.7,
+     "from_hinge_side": 41.1
+    }
+   },
+   "bottle_corner": {
+    "label": "the front wheel-end corner",
+    "words": [
+     "corner",
+     "front corner",
+     "wheel-end corner"
+    ],
+    "centre_cm": {
+     "from_wheel_end": 13.2,
+     "from_hinge_side": 38.1
+    }
+   },
+   "centre": {
+    "label": "the middle of the case",
+    "words": [
+     "middle",
+     "centre",
+     "center"
+    ],
+    "centre_cm": {
+     "from_wheel_end": 33.7,
+     "from_hinge_side": 24.1
+    }
+   }
+  },
+  "case_interior_cm": {
+   "along": 67.3,
+   "across": 48.3,
+   "height_closed": 33.3
+  },
+  "rejection_codes": [
+   "unknown_verb",
+   "missing_argument",
+   "bad_value",
+   "unknown_ref",
+   "ambiguous_ref",
+   "wrong_kind",
+   "unsupported_operation",
+   "unsupported_value",
+   "out_of_range"
+  ]
+ },
+ "examples": [
   {
-   "verb": "go_to",
-   "cls": "navigate",
-   "arg": "<station | item>",
-   "grounds": "a station, or the stand point in front of an item's current position",
-   "pre": "target exists; an item already in your hands cannot be a destination",
-   "skill": "turn in place (wall-aware), walk the room graph, face the station"
+   "text": "pack the t-shirts",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the t-shirts"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "tshirts",
+      "args": {},
+      "text": "go to the T-shirt pile"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "tshirts",
+      "args": {},
+      "text": "pick up the T-shirt pile"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "tshirts",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "orient": ""
+      },
+      "text": "put the T-shirt pile in the suitcase",
+      "resolved": {
+       "from_wheel_end_cm": 18.2,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "pick_up",
-   "cls": "manipulate",
-   "arg": "<item>",
-   "grounds": "a visible item on the station you face",
-   "pre": "hands free; item is on that station and you are in front of it; items in the case need take_out",
-   "skill": "two-hand side squeeze, or one-hand power grip for the bottle; lift checked by contact"
+   "text": "pick up the tees and put them in the case at the handle end",
+   "requests": [
+    {
+     "verb": "pick_up",
+     "args": {
+      "target": "the tees"
+     }
+    },
+    {
+     "verb": "place",
+     "args": {
+      "target": "them",
+      "rel": "in",
+      "dest": "suitcase",
+      "at": {
+       "anchor": "handle_end"
+      }
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "tshirts",
+      "args": {},
+      "text": "go to the T-shirt pile"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "tshirts",
+      "args": {},
+      "text": "pick up the T-shirt pile"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "tshirts",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "at": "handle_end",
+       "orient": ""
+      },
+      "text": "put the T-shirt pile in the handle-end garment column",
+      "resolved": {
+       "from_wheel_end_cm": 49.2,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "put_in",
-   "cls": "manipulate",
-   "arg": "<region> [upright|lying]",
-   "grounds": "a region of the open case; drop height from the piles already there",
-   "pre": "holding something; at the suitcase; lid open; family accepted by the region; nothing fragile underneath; height fits",
-   "skill": "lower onto the stack, open the grip, withdraw; landing checked in the region"
+   "text": "pack the striped shirts in the suitcase, 30 cm from the wheel end and 15 cm from the hinge side",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the striped shirts",
+      "at": {
+       "from_wheel_end_cm": 30.0,
+       "from_hinge_side_cm": 15.0
+      }
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "striped_shirts",
+      "args": {},
+      "text": "go to the striped shirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "striped_shirts",
+      "args": {},
+      "text": "pick up the striped shirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "striped_shirts",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "at": [
+        -0.09140000000000001,
+        -0.03660000000000002
+       ],
+       "orient": ""
+      },
+      "text": "put the striped shirts in the case 30 cm from the wheel end, 15 cm from the hinge side",
+      "resolved": {
+       "from_wheel_end_cm": 30.0,
+       "from_hinge_side_cm": 15.0,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "put_back",
-   "cls": "manipulate",
-   "arg": "-",
-   "grounds": "the held item's home spot",
-   "pre": "holding something; standing at its home station",
-   "skill": "lower onto the surface, open, withdraw"
+   "text": "pack the trousers. pack the sweatshirts on top of the trousers",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the trousers"
+     }
+    },
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the sweatshirts",
+      "rel": "on",
+      "dest": "the trousers"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "trousers",
+      "args": {},
+      "text": "go to the folded trousers"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "trousers",
+      "args": {},
+      "text": "pick up the folded trousers"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "trousers",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "orient": ""
+      },
+      "text": "put the folded trousers in the suitcase",
+      "resolved": {
+       "from_wheel_end_cm": 18.2,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "sweatshirts",
+      "args": {},
+      "text": "go to the sweatshirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "sweatshirts",
+      "args": {},
+      "text": "pick up the sweatshirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "sweatshirts",
+      "args": {
+       "rel": "on",
+       "dest": "trousers",
+       "orient": ""
+      },
+      "text": "put the sweatshirts on the folded trousers",
+      "resolved": {
+       "from_wheel_end_cm": 18.2,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "folded trousers"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "take_out",
-   "cls": "manipulate",
-   "arg": "<item>",
-   "grounds": "an item in the case",
-   "pre": "hands free; at the suitcase; lid open; the item is on top of its stack",
-   "skill": "squeeze pick inside the case"
+   "text": "pack the camera, then pack the folded towel on the camera",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the camera"
+     }
+    },
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the folded towel",
+      "rel": "on",
+      "dest": "the camera"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "camera",
+      "args": {},
+      "text": "go to the camera"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "camera",
+      "args": {},
+      "text": "pick up the camera"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "camera",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "orient": ""
+      },
+      "text": "put the camera in the suitcase",
+      "resolved": {
+       "from_wheel_end_cm": 45.7,
+       "from_hinge_side_cm": 41.1,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "towel",
+      "args": {},
+      "text": "go to the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "towel",
+      "args": {},
+      "text": "pick up the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "refused",
+     "action": {
+      "verb": "place",
+      "target": "towel",
+      "args": {
+       "rel": "on",
+       "dest": "camera",
+       "orient": ""
+      },
+      "text": "put the folded towel on the camera"
+     },
+     "feedback": "nothing can go on top of the camera"
+    }
+   ]
   },
   {
-   "verb": "close_lid",
-   "cls": "case",
-   "arg": "-",
-   "grounds": "the lid (from the foot of the bed)",
-   "pre": "hands free; lid open; nothing above the rim",
-   "skill": "hook the lid's end wall, swing past vertical, let gravity shut it"
+   "text": "pack the bottle lying down",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "orient": "lying",
+      "target": "the bottle"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bottle",
+      "args": {},
+      "text": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "bottle",
+      "args": {},
+      "text": "pick up the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "bottle",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "orient": "lying"
+      },
+      "text": "put the water bottle in the suitcase, lying",
+      "resolved": {
+       "from_wheel_end_cm": 13.2,
+       "from_hinge_side_cm": 38.1,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "zip",
-   "cls": "case",
-   "arg": "-",
-   "grounds": "the zip track (from beside the bed)",
-   "pre": "lid closed; not zipped",
-   "skill": "press the lid with both palms, run the zip along the near side; closure checked before locking"
+   "text": "pick up the shirts",
+   "requests": [
+    {
+     "verb": "pick_up",
+     "args": {
+      "target": "the shirts"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "ambiguous_ref",
+     "message": "'the shirts' could mean T-shirt pile, striped shirts"
+    }
+   ]
   },
   {
-   "verb": "unzip",
-   "cls": "case",
-   "arg": "-",
-   "grounds": "the zip track",
-   "pre": "zipped",
-   "skill": "run the zip back; hinge released"
+   "text": "grab the clothes",
+   "requests": [
+    {
+     "verb": "pick_up",
+     "args": {
+      "target": "the clothes"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "ambiguous_ref",
+     "message": "'the clothes' could mean folded trousers, T-shirt pile, sweater pile, striped shirts, sweatshirts, folded towel, stack of towels, sweatpants and socks"
+    }
+   ]
   },
   {
-   "verb": "open_lid",
-   "cls": "case",
-   "arg": "-",
-   "grounds": "the lid (from the foot of the bed)",
-   "pre": "lid closed; not zipped",
-   "skill": "fingertips under the zip-track lip on the free edge, swing past vertical, let it fall open"
+   "text": "close the lid halfway",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid",
+      "to": "halfway"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "unsupported_value",
+     "message": "the lid cannot be closed to 50%: the lid only stays put closed or lying fully open"
+    }
+   ]
   },
   {
-   "verb": "stand_up",
-   "cls": "case",
-   "arg": "-",
-   "grounds": "the trolley handle (from the foot of the bed)",
-   "pre": "zipped",
-   "skill": "two-hand overhand grip on the bar, tested with a short pull (re-grip if it slips); stand the case up with the wrists turning, lift it off the bed, set it on its wheels, let go"
+   "text": "close the lid. zip it halfway",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid"
+     }
+    },
+    {
+     "verb": "close",
+     "args": {
+      "target": "main zip",
+      "to": 0.5
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "lid",
+      "args": {
+       "to": 0.0
+      },
+      "text": "close the lid"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "main_zip",
+      "args": {
+       "to": 0.5
+      },
+      "text": "zip the case to 50% closed"
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "wait",
-   "cls": "other",
-   "arg": "<seconds>",
-   "grounds": "-",
-   "pre": "-",
-   "skill": "hold still"
+   "text": "close the lid. zip it. insert the zip pulls. set the lock to 3-7-2. press the lock button",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid"
+     }
+    },
+    {
+     "verb": "close",
+     "args": {
+      "target": "main zip",
+      "to": 0.0
+     }
+    },
+    {
+     "verb": "insert",
+     "args": {
+      "target": "zip pulls",
+      "into": "lock"
+     }
+    },
+    {
+     "verb": "set",
+     "args": {
+      "target": "lock",
+      "value": "3-7-2"
+     }
+    },
+    {
+     "verb": "press",
+     "args": {
+      "target": "the lock button"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "lid",
+      "args": {
+       "to": 0.0
+      },
+      "text": "close the lid"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "main_zip",
+      "args": {
+       "to": 0.0
+      },
+      "text": "zip the case"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "insert",
+      "target": "zip_pulls",
+      "args": {
+       "into": "lock"
+      },
+      "text": "lock the zip pulls into the lock"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "set",
+      "target": "lock",
+      "args": {
+       "value": "372"
+      },
+      "text": "set the combination lock to 372"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "press",
+      "target": "lock_button",
+      "args": {
+       "hold": 0.3,
+       "times": 1
+      },
+      "text": "press the lock's release button"
+     },
+     "feedback": ""
+    }
+   ]
   },
   {
-   "verb": "say",
-   "cls": "other",
-   "arg": "<text>",
-   "grounds": "-",
-   "pre": "-",
-   "skill": "utterance logged with its time (questions, plan changes)"
+   "text": "close the lid. turn the left dial to 7. turn the lock dial to 3",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid"
+     }
+    },
+    {
+     "verb": "turn",
+     "args": {
+      "target": "the left dial",
+      "to": "7"
+     }
+    },
+    {
+     "verb": "turn",
+     "args": {
+      "target": "the lock dial",
+      "to": "3"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "lid",
+      "args": {
+       "to": 0.0
+      },
+      "text": "close the lid"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "turn",
+      "target": "dial_1",
+      "args": {
+       "to": 7
+      },
+      "text": "turn the left lock dial to 7"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "rejected",
+     "code": "ambiguous_ref",
+     "message": "'the lock dial' could mean the left lock dial, the middle lock dial, the right lock dial"
+    }
+   ]
+  },
+  {
+   "text": "set the trolley handle to 5",
+   "requests": [
+    {
+     "verb": "set",
+     "args": {
+      "target": "trolley handle",
+      "value": "5"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "unsupported_value",
+     "message": "the trolley handle locks at stops 0, 1, 2 (0 = retracted), not 5"
+    }
+   ]
+  },
+  {
+   "text": "extend the handle to the top stop",
+   "requests": [
+    {
+     "verb": "set",
+     "args": {
+      "target": "trolley handle",
+      "value": "top"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "refused",
+     "action": {
+      "verb": "set",
+      "target": "trolley_handle",
+      "args": {
+       "value": 2
+      },
+      "text": "extend the trolley handle to stop 2"
+     },
+     "feedback": "with the case lying on the bed the handle can only be pulled out to stop 1 (it would hit the end of the bed frame)"
+    }
+   ]
+  },
+  {
+   "text": "close the lid. zip it. stand the case up. extend the handle to the top stop. roll the case to the bedroom door",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid"
+     }
+    },
+    {
+     "verb": "close",
+     "args": {
+      "target": "main zip",
+      "to": 0.0
+     }
+    },
+    {
+     "verb": "stand_up",
+     "args": {
+      "target": "suitcase"
+     }
+    },
+    {
+     "verb": "set",
+     "args": {
+      "target": "trolley handle",
+      "value": "top"
+     }
+    },
+    {
+     "verb": "roll",
+     "args": {
+      "target": "suitcase",
+      "to": "the bedroom door"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "lid",
+      "args": {
+       "to": 0.0
+      },
+      "text": "close the lid"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "close",
+      "target": "main_zip",
+      "args": {
+       "to": 0.0
+      },
+      "text": "zip the case"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "stand_up",
+      "target": "suitcase",
+      "args": {},
+      "text": "stand the case up on its wheels"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "set",
+      "target": "trolley_handle",
+      "args": {
+       "value": 2
+      },
+      "text": "extend the trolley handle to stop 2"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "roll",
+      "target": "suitcase",
+      "args": {
+       "to": "bedroom_door"
+      },
+      "text": "roll the case to the bedroom door"
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "unfasten the strap",
+   "requests": [
+    {
+     "verb": "unfasten",
+     "args": {
+      "target": "the strap"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "refused",
+     "action": {
+      "verb": "unfasten",
+      "target": "strap",
+      "args": {},
+      "text": "unfasten the strap buckle"
+     },
+     "feedback": "the strap is on the lid's front, which lies face down while the case is open"
+    }
+   ]
+  },
+  {
+   "text": "fold the beach towel in half",
+   "requests": [
+    {
+     "verb": "fold",
+     "args": {
+      "target": "the beach towel",
+      "style": "half"
+     }
+    }
+   ],
+   "cloth": true,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "kitchen_counter",
+      "args": {},
+      "text": "go to the kitchen counter"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "fold",
+      "target": "beach_towel",
+      "args": {
+       "style": "half"
+      },
+      "text": "fold the beach towel in half"
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "fold the beach towel in thirds",
+   "requests": [
+    {
+     "verb": "fold",
+     "args": {
+      "target": "the beach towel",
+      "style": "thirds"
+     }
+    }
+   ],
+   "cloth": true,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "unsupported_value",
+     "message": "only folding in half is simulated: a second fold needs the folded edge to hang over the counter's edge, and it does not"
+    }
+   ]
+  },
+  {
+   "text": "fold the t-shirts",
+   "requests": [
+    {
+     "verb": "fold",
+     "args": {
+      "target": "the t-shirts",
+      "style": "half"
+     }
+    }
+   ],
+   "cloth": true,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "wrong_kind",
+     "message": "'the t-shirts' is the T-shirt pile, which is not a loose cloth"
+    }
+   ]
+  },
+  {
+   "text": "press the lid",
+   "requests": [
+    {
+     "verb": "press",
+     "args": {
+      "target": "the lid"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "wrong_kind",
+     "message": "'the lid' is the lid, which is not a control"
+    }
+   ]
+  },
+  {
+   "text": "dance around",
+   "requests": [
+    {
+     "verb": "?",
+     "args": {
+      "text": "dance around"
+     }
+    }
+   ],
+   "cloth": false,
+   "result": [
+    {
+     "kind": "rejected",
+     "code": "unknown_verb",
+     "message": "no action matches 'dance around'"
+    }
+   ]
   }
  ],
  "families": {
@@ -145,6 +2098,19 @@
    ],
    "mass_kg": 1.2,
    "heavy": true,
+   "words": {
+    "nouns": [
+     "trousers",
+     "pants",
+     "jeans",
+     "slacks"
+    ],
+    "adjs": [
+     "blue",
+     "folded",
+     "denim"
+    ]
+   },
    "source": "BlenderKit scan: Stack of blue pants (antoine f)"
   },
   {
@@ -160,6 +2126,22 @@
    ],
    "mass_kg": 1.0,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "t-shirts",
+     "tshirts",
+     "tees",
+     "t-shirt",
+     "tshirt",
+     "tee",
+     "shirts"
+    ],
+    "adjs": [
+     "white",
+     "folded",
+     "t-shirt"
+    ]
+   },
    "source": "BlenderKit scan: Stack of folded t-shirts (Paweł Wałasiewicz)"
   },
   {
@@ -175,6 +2157,20 @@
    ],
    "mass_kg": 1.2,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "sweaters",
+     "sweater",
+     "jumpers",
+     "knits",
+     "knitwear"
+    ],
+    "adjs": [
+     "folded",
+     "wool",
+     "knit"
+    ]
+   },
    "source": "BlenderKit scan: Folded garment stack (antoine f)"
   },
   {
@@ -190,6 +2186,17 @@
    ],
    "mass_kg": 1.0,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "shirts",
+     "shirt"
+    ],
+    "adjs": [
+     "striped",
+     "folded",
+     "button"
+    ]
+   },
    "source": "BlenderKit scan: Folded Clothes Stack (Paweł Wałasiewicz)"
   },
   {
@@ -205,6 +2212,20 @@
    ],
    "mass_kg": 1.2,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "sweatshirts",
+     "sweatshirt",
+     "hoodies",
+     "hoodie",
+     "jumpers"
+    ],
+    "adjs": [
+     "grey",
+     "gray",
+     "folded"
+    ]
+   },
    "source": "BlenderKit scan: Stack of folded sweatshirts (Paweł Wałasiewicz)"
   },
   {
@@ -220,6 +2241,17 @@
    ],
    "mass_kg": 0.4,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "towel"
+    ],
+    "adjs": [
+     "folded",
+     "hand",
+     "small",
+     "white"
+    ]
+   },
    "source": "BlenderKit scan: Folded Towel (Rex Hans)"
   },
   {
@@ -235,6 +2267,16 @@
    ],
    "mass_kg": 1.2,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "towels",
+     "stack"
+    ],
+    "adjs": [
+     "bath",
+     "stacked"
+    ]
+   },
    "source": "BlenderKit scan: Stack of Towels (GL3D Gabriela Linhares)"
   },
   {
@@ -250,6 +2292,19 @@
    ],
    "mass_kg": 0.8,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "sweatpants",
+     "socks",
+     "gym",
+     "workout",
+     "kit"
+    ],
+    "adjs": [
+     "gym",
+     "sports"
+    ]
+   },
    "source": "BlenderKit scan: Folded Clothes with Socks (GL3D Gabriela Linhares)"
   },
   {
@@ -265,6 +2320,20 @@
    ],
    "mass_kg": 0.65,
    "heavy": true,
+   "words": {
+    "nouns": [
+     "bag",
+     "washbag",
+     "toiletries",
+     "kit"
+    ],
+    "adjs": [
+     "toiletry",
+     "wash",
+     "green",
+     "dopp"
+    ]
+   },
    "source": "procedural"
   },
   {
@@ -280,6 +2349,19 @@
    ],
    "mass_kg": 0.55,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "bottle",
+     "flask",
+     "thermos"
+    ],
+    "adjs": [
+     "water",
+     "steel",
+     "metal",
+     "green"
+    ]
+   },
    "source": "procedural"
   },
   {
@@ -295,6 +2377,19 @@
    ],
    "mass_kg": 0.35,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "notebook",
+     "journal",
+     "book",
+     "binder",
+     "notepad"
+    ],
+    "adjs": [
+     "leather",
+     "brown"
+    ]
+   },
    "source": "Poly Haven model"
   },
   {
@@ -310,9 +2405,32 @@
    ],
    "mass_kg": 0.62,
    "heavy": false,
+   "words": {
+    "nouns": [
+     "camera"
+    ],
+    "adjs": [
+     "black",
+     "digital"
+    ]
+   },
    "source": "Poly Haven model"
   }
  ],
+ "cloth": {
+  "name": "beach_towel",
+  "label": "beach towel",
+  "station": "kitchen_counter",
+  "size_cm": [
+   32,
+   48
+  ],
+  "vertices": [
+   5,
+   7
+  ],
+  "mass_kg": 0.25
+ },
  "stations": [
   {
    "name": "dresser",
@@ -375,39 +2493,23 @@
    "crouch": 0.86
   }
  ],
- "regions": [
-  {
-   "name": "wheel_end",
-   "label": "the wheel-end garment column",
-   "families": [
-    "folded_pile",
-    "rigid_box"
-   ]
+ "floor_spots": {
+  "bed_foot": {
+   "label": "the foot of the bed"
   },
-  {
-   "name": "handle_end",
-   "label": "the handle-end garment column",
-   "families": [
-    "folded_pile",
-    "rigid_box"
-   ]
-  },
-  {
-   "name": "front_strip",
-   "label": "the front strip",
-   "families": [
-    "rigid_box",
-    "fragile_box"
-   ]
-  },
-  {
-   "name": "bottle_corner",
-   "label": "the front wheel-end corner",
-   "families": [
-    "bottle"
-   ]
+  "bedroom_door": {
+   "label": "the bedroom door"
   }
- ],
+ },
+ "placement": {
+  "grid_mm": 5,
+  "support_fraction": 0.6,
+  "support_tol_mm": 15,
+  "headroom_mm": 8,
+  "lid_margin_mm": 5,
+  "palm_strip_mm": 35,
+  "bottle_strip_mm": 40
+ },
  "tasks": [
   {
    "name": "weekend_trip",
@@ -549,6 +2651,11 @@
   ],
   "depth_cm": 39.1,
   "inner_height_cm": 33.3,
-  "source": "BlenderKit scan: Black suitcase (L'ANE), scaled 1.4x"
+  "source": "BlenderKit scan: Black suitcase (L'ANE), scaled 1.4x",
+  "trolley_stops_cm": [
+   0,
+   20,
+   38
+  ]
  }
 }

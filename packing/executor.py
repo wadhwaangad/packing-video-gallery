@@ -11,10 +11,12 @@ the drop height in the case from the piles already in that region.
 import copy, heapq
 import numpy as np
 import scene as S
+import layout as LO
 import tasks as T
 import skills_case as C
+import skills_hw as H
 from runner import rz
-from packsim import Action, CASE_STATION, ITEM_NAMES
+from packsim import Action, ITEM_NAMES, FLOOR_SPOTS
 
 
 class ActionFailed(RuntimeError):
@@ -63,6 +65,8 @@ class Executor:
     def stand_for(self, target):
         """(station, stand xy, yaw) for a go_to target."""
         st = self.sim.state
+        if target in LO.ANCHORS:
+            target = "suitcase"
         if target in ITEM_NAMES:
             if st.in_case(target):
                 target = "suitcase"
@@ -131,26 +135,32 @@ class Executor:
         if self.persona["pause"] > 0:
             self.r.hold(self.persona["pause"])
 
-    def case_target(self, region, item, lying=False):
-        """World pose for an item placed on top of whatever is already in `region`."""
+    def case_target(self, item, x, y, yaw, orient, on):
+        """World pose for an item placed at (x, y, yaw) in the case, resting on the
+        measured tops of the items under it (live poses, not nominal heights)."""
         sp, sR = self.r.suitcase_frame()
-        rg = S.REGIONS[region]
         top = S.SUITCASE["floor"]
-        for n in self.sim.state.stacks[region]:
+        for n in on:
             p, R = self.r.body_pose(n)
             loc = sR.T @ (p - sp)
-            h = S.item(n).size[2] if n != "bottle" or self.sim.state.orient["bottle"] == "upright" else S.item(n).size[0]
-            top = max(top, loc[2] + h / 2)
-        it = S.item(item)
+            o = self.sim.state.place.get(n, {}).get("orient", "")
+            top = max(top, loc[2] + LO.dims(n, o)[2] / 2)
+        h = LO.dims(item, orient)[2]
+        pos = sp + sR @ np.array([x, y, top + h / 2])
         if item == "bottle":
-            if lying:
-                return sp + sR @ np.array([rg.xy[0], -0.20, top + it.size[0] / 2]), None
-            return sp + sR @ np.array([rg.xy[0], rg.xy[1], top + it.size[2] / 2]), None
-        return sp + sR @ np.array([rg.xy[0], rg.xy[1], top + it.size[2] / 2]), sR @ rz(np.pi / 2)
+            return pos, None
+        return pos, sR @ rz(yaw)
 
     # ------------------------------------------------------------ verbs
     def go_to(self, a):
         st = self.sim.state
+        if st.case_pose == "upright_floor" and (a.target == "suitcase" or a.target in LO.ANCHORS):
+            # the standing case: step beside it, where its handle is taken
+            fs = FLOOR_SPOTS[st.case_at]
+            self.rest()
+            self.r.stage("Walk to the suitcase")
+            self.r.walk([fs["beside"]], final_yaw=fs["beside_yaw"], speed=0.6)
+            return
         station, stand, yaw = self.stand_for(a.target)
         stand = (stand[0] + self.jitter["stand"][0], stand[1] + self.jitter["stand"][1])
         holding = st.holding
@@ -228,32 +238,51 @@ class Executor:
         if z < z0 + 0.07:
             raise ActionFailed(f"{a.target} not lifted (rose {z - z0:.3f} m)")
 
-    def put_in(self, a):
+    def place(self, a):
+        """Put the held item at a resolved spot in the case (or back on a station)."""
         st = self.sim.state
         item = st.holding
-        lying = a.arg == "lying"
-        p, R = self.case_target(a.target, item, lying)
+        dest = a.get("dest", "suitcase")
+        if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
+            self.put_back(a)
+            return None
+        r, msg, code = self.sim.place_pose(a)
+        if r is None:
+            raise ActionFailed(f"place: {msg}")
+        x, y, yaw, orient, fit = r
+        x += self.jitter["place"][0]; y += self.jitter["place"][1]
+        lying = orient == "lying"
+        p, R = self.case_target(item, x, y, yaw, orient, fit.on)
         sp, sR = self.r.suitcase_frame()
-        p = p + sR @ np.array([*self.jitter["place"], 0.0])
+        self.r.event("place_target", item=item, local_m=[round(x, 4), round(y, 4)], yaw_deg=round(float(np.degrees(yaw)), 1),
+                     orient=orient, on=list(fit.on), fit=fit.detail)
         if item == "bottle":
-            (C.place_lying if lying else C.place_upright)(self.r, item, p, side="r")
+            if lying:
+                C.place_lying(self.r, item, p, side="r", axis=sR @ np.array([np.cos(yaw), np.sin(yaw), 0.0]))
+            else:
+                C.place_upright(self.r, item, p, side="r")
         else:
             T.place_item(self.r, [item], (p, R), crouch_h=0.80, out=0.035 + self.jitter.get("release", 0.0))
         self.at_rest = False
-        # verify: resting in the region, inside the walls
+        # verify: resting near the requested centre, inside the walls
         sp, sR = self.r.suitcase_frame()
-        loc = sR.T @ (self.r.body_pose(item)[0] - sp)
-        rg = S.REGIONS[a.target]
+        pb, Rb = self.r.body_pose(item)
+        loc = sR.T @ (pb - sp)
         W, L = S.SUITCASE["outer"]
-        ok = abs(loc[0] - rg.xy[0]) < 0.07 and abs(loc[1] - (-0.20 if lying else rg.xy[1])) < 0.07 \
-            and abs(loc[0]) < W / 2 and abs(loc[1]) < L / 2
+        ok = abs(loc[0] - x) < 0.07 and abs(loc[1] - y) < 0.07 and abs(loc[0]) < W / 2 and abs(loc[1]) < L / 2
+        axis_l = sR.T @ Rb[:, 0]
+        yaw_m = float(np.arctan2(axis_l[1], axis_l[0]))
         if item == "bottle":
-            axis = sR.T @ self.r.body_pose(item)[1][:, 2]
-            tilt = float(np.degrees(np.arccos(np.clip(abs(axis[2]), -1, 1))))
+            ax = sR.T @ Rb[:, 2]
+            tilt = float(np.degrees(np.arccos(np.clip(abs(ax[2]), -1, 1))))
             ok = ok and (tilt < 10 if not lying else tilt > 70)
-        self.r.event("placed_check", item=item, region=a.target, local_m=loc.round(4).tolist(), ok=bool(ok))
+            yaw_m = float(np.arctan2(ax[1], ax[0])) if lying else yaw
+        self.r.event("placed_check", item=item, target_m=[round(x, 4), round(y, 4)], local_m=loc.round(4).tolist(), ok=bool(ok))
         if not ok:
-            raise ActionFailed(f"{item} did not land in {a.target}: {loc.round(3)}")
+            raise ActionFailed(f"{item} did not land at ({x:.3f}, {y:.3f}): {loc.round(3)}")
+        # the symbolic state keeps the measured centre and yaw, the planned support
+        return dict(x=float(loc[0]), y=float(loc[1]), yaw=yaw_m % np.pi if item != "bottle" or lying else 0.0,
+                    orient=orient, z=fit.z, on=fit.on)
 
     def put_back(self, a):
         st = self.sim.state
@@ -271,29 +300,21 @@ class Executor:
         if d > 0.08:
             raise ActionFailed(f"{item} not back in place ({d:.3f} m)")
 
-    def case_action(self, a):
+    def side_step(self, stand):
+        r = self.r
+        stand = (stand[0] + self.jitter["stand"][0], stand[1] + self.jitter["stand"][1])
+        if np.hypot(r.root["x"] - stand[0], r.root["y"] - stand[1]) > 0.03:
+            r.walk([stand], final_yaw=np.pi, speed=0.5)
+
+    def lid(self, a):
+        """open / close the lid from the foot of the bed."""
         self.rest()
         r = self.r
-        if a.verb in ("close_lid", "open_lid", "stand_up"):
-            # side-step along the foot of the bed to where this action is done from
-            if a.verb == "close_lid":
-                p_lid, R_lid = r.body_pose("suitcase_lid")
-                W, L = S.SUITCASE["outer"]
-                grip = p_lid + R_lid @ np.array([W - 0.075, L / 2, C.ZR])
-                stand = (2.48, float(grip[1]) - 0.15)
-            elif a.verb == "open_lid":
-                # in line with the lid's free edge, just outside it
-                p_lid, R_lid = r.body_pose("suitcase_lid")
-                W, L = S.SUITCASE["outer"]
-                edge = p_lid + R_lid @ np.array([W, L / 2, C.ZR])
-                stand = (2.46, float(edge[1]) - 0.04)
-            else:
-                sp, _ = r.suitcase_frame()
-                stand = (2.46, float(sp[1]))
-            stand = (stand[0] + self.jitter["stand"][0], stand[1] + self.jitter["stand"][1])
-            if np.hypot(r.root["x"] - stand[0], r.root["y"] - stand[1]) > 0.03:
-                r.walk([stand], final_yaw=np.pi, speed=0.5)
-        if a.verb == "close_lid":
+        p_lid, R_lid = r.body_pose("suitcase_lid")
+        W, L = S.SUITCASE["outer"]
+        if a.verb == "close":
+            grip = p_lid + R_lid @ np.array([W - 0.075, L / 2, C.ZR])
+            self.side_step((2.48, float(grip[1]) - 0.15))
             T0 = C.LID_SWING_T
             C.LID_SWING_T = T0 * self.jitter["time"]
             try:
@@ -302,21 +323,83 @@ class Executor:
                 C.LID_SWING_T = T0
             if C.lid_angle(r) > np.radians(3.0):
                 raise ActionFailed(f"lid not shut: {np.degrees(C.lid_angle(r)):.1f} deg")
-        elif a.verb == "open_lid":
+        else:
+            # in line with the lid's free edge, just outside it
+            edge = p_lid + R_lid @ np.array([W, L / 2, C.ZR])
+            self.side_step((2.46, float(edge[1]) - 0.04))
             C.open_lid(r, side="r")
             if C.lid_angle(r) < np.radians(150):
                 raise ActionFailed(f"lid not open: {np.degrees(C.lid_angle(r)):.1f} deg")
-        elif a.verb == "zip":
-            C.press_and_zip(r)
-        elif a.verb == "unzip":
-            C.unzip(r)
-        elif a.verb == "stand_up":
-            C.lift_from_bed_foot(r)
-            R = r.suitcase_frame()[1]
-            tilt = float(np.degrees(np.arccos(np.clip(R[2, 1], -1, 1))))
-            if tilt > 10:
-                raise ActionFailed(f"case not upright: {tilt:.1f} deg")
         self.at_rest = False
+
+    def zip(self, a):
+        """open / close the main zip to a fraction (1 = fully open): both sliders pushed
+        along the track by a fingertip; the measured fraction must match."""
+        self.rest()
+        H.run_zip(self.r, frm=self.sim.state.zip_open, to=float(a.get("to")))
+        self.at_rest = False
+
+    def lock_ops(self, a):
+        """insert / turn / set (lock) / press (lock button) at the front of the case."""
+        self.rest()
+        v, t = a.verb, a.target
+        if v == "insert":
+            H.insert_pulls(self.r)
+        elif v == "turn":
+            H.turn_dial(self.r, int(t[-1]), to=a.get("to"), by=a.get("by"))
+            H.clear_hands(self.r)
+        elif v == "set":
+            H.set_code(self.r, a.get("value"))
+        elif v == "press":
+            H.press_lock_button(self.r, hold=a.get("hold", 0.3), times=a.get("times", 1))
+        self.at_rest = False
+
+    def trolley_ops(self, a):
+        self.rest()
+        st = self.sim.state
+        if st.case_pose == "on_bed":
+            sp, _ = self.r.suitcase_frame()
+            self.side_step((2.46, float(sp[1])))
+        else:
+            # beside the standing case, where its handle is taken
+            fs = FLOOR_SPOTS[st.case_at]
+            if np.hypot(self.r.root["x"] - fs["beside"][0], self.r.root["y"] - fs["beside"][1]) > 0.05:
+                self.r.stage("Step beside the case")
+                self.r.walk([fs["beside"]], final_yaw=fs["beside_yaw"], speed=0.5)
+        if a.verb == "set":
+            H.set_trolley(self.r, int(a.get("value")))
+        else:
+            H.press_button(self.r, "trolley_btn", self.r.hw["trolley_btn"], H.HW["trolley"]["button"]["travel"],
+                           hold=a.get("hold", 0.3), times=a.get("times", 1), face=H.case_axes(self.r)[0],
+                           label="the trolley-handle button")
+            H.clear_hands(self.r)
+        self.at_rest = False
+
+    def roll(self, a):
+        fs = FLOOR_SPOTS[a.get("to")]
+        here = FLOOR_SPOTS[self.sim.state.case_at]
+        self.rest()
+        H.roll_case(self.r, here["beside"], here["beside_yaw"], fs["route"], fs["case"])
+        self.at_rest = False
+
+    def strap_ops(self, a):
+        self.rest()
+        (H.fasten_strap if a.verb == "fasten" else H.unfasten_strap)(self.r)
+        self.at_rest = False
+
+    def stand_up(self, a):
+        self.rest()
+        sp, _ = self.r.suitcase_frame()
+        self.side_step((2.46, float(sp[1])))
+        C.lift_from_bed_foot(self.r)
+        R = self.r.suitcase_frame()[1]
+        tilt = float(np.degrees(np.arccos(np.clip(R[2, 1], -1, 1))))
+        if tilt > 10:
+            raise ActionFailed(f"case not upright: {tilt:.1f} deg")
+        self.at_rest = False
+
+    def not_simulated(self, a):
+        raise ActionFailed(f"'{a.text()}' has no physical skill yet")
 
     # ------------------------------------------------------------ dispatch
     def execute(self, a, label="nominal", event=""):
@@ -331,33 +414,73 @@ class Executor:
             rec.update(t_end=rec["t_start"], frame_end=len(r.frames), state=self.sim.snapshot())
             self.records.append(rec)
             return rec
-        if a.verb == "go_to":
+        v, t = a.verb, a.target
+        pose = None
+        if v == "go_to":
             self.go_to(a)
-        elif a.verb == "pick_up":
-            self.pick_up(a)
-        elif a.verb == "take_out":
-            self.pick_up(a, from_case=True)
-        elif a.verb == "put_in":
-            self.put_in(a)
-        elif a.verb == "put_back":
+        elif v == "look_at":
+            self.look_at(a)
+        elif v == "pick_up":
+            self.pick_up(a, from_case=self.sim.state.in_case(t))
+        elif v == "place":
+            pose = self.place(a)
+        elif v == "put_back":
             self.put_back(a)
-        elif a.verb in CASE_STATION:
-            self.case_action(a)
-        elif a.verb == "wait":
+        elif v in ("open", "close") and t == "lid":
+            self.lid(a)
+        elif v in ("open", "close") and t == "main_zip":
+            self.zip(a)
+        elif v == "stand_up":
+            self.stand_up(a)
+        elif v in ("insert", "turn") or (v == "set" and t == "lock") or (v == "press" and t == "lock_button"):
+            self.lock_ops(a)
+        elif (v == "set" and t == "trolley_handle") or (v == "press" and t == "trolley_button"):
+            self.trolley_ops(a)
+        elif v in ("fasten", "unfasten"):
+            self.strap_ops(a)
+        elif v == "roll":
+            self.roll(a)
+        elif v == "fold":
+            self.rest()
+            stn = S.STATIONS[S.CLOTH["station"]]
+            self.r.walk([(stn.stand[0], S.CLOTH["centre"][1])], final_yaw=self.yaw_of(S.CLOTH["station"]), speed=0.4)
+            H.fold(self.r, a.get("style", "half"))
+            self.at_rest = False
+        elif v in SKILLS:
+            SKILLS[v](self, a)
+        elif v == "wait":
             self.rest()
             r.stage("Pause")
-            r.hold(float(a.arg))
-        elif a.verb == "say":
+            r.hold(float(a.get("seconds")))
+        elif v == "say":
             self.rest()
-            r.stage(f'"{a.arg}"')
-            r.event("utterance", text=a.arg)
+            r.stage(f'"{a.get("text")}"')
+            r.event("utterance", text=a.get("text"))
             r.hold(2.5)
-        if a.verb in ("pick_up", "take_out", "put_in", "put_back"):
+        else:
+            self.not_simulated(a)
+        if v in ("pick_up", "place", "put_back"):
             self.pause()
-        self.sim.step(a)
+        note = self.sim.feedback(a)
+        self.sim.step(a, pose)
         rec.update(t_end=round(r.d.time, 3), frame_end=len(r.frames), state=self.sim.snapshot())
+        if note:
+            rec["feedback"] = note
         self.records.append(rec)
         return rec
+
+    def look_at(self, a):
+        t = a.target
+        if t in ITEM_NAMES:
+            p = self.r.body_pose(t)[0]
+        elif t in S.STATIONS:
+            stn = S.STATIONS[t]
+            p = np.array([*stn.stand, 0.0]) + np.array([*stn.normal, 0.0]) * 0.6 + np.array([0, 0, stn.top])
+        else:
+            p = self.r.suitcase_frame()[0]
+        self.r.stage(f"Look at {a.text()[8:]}")
+        self.r.move(0.8, gaze=np.asarray(p, float))
+        self.r.hold(0.6)
 
     def rewind(self, k):
         """Undo actions k.. (physics, recordings and symbolic state are restored)."""
@@ -367,3 +490,7 @@ class Executor:
         del self.snaps[k:]
         del self.records[k:]
         self.at_rest = False
+
+
+# Skills for suitcase controls, registered by the modules that implement them.
+SKILLS = {}

@@ -322,6 +322,7 @@ class Item:
     soft: bool = False
     mesh_offset: tuple = (0, 0, 0)   # asset origin in the item body frame
     mesh_objects: tuple = ()         # asset objects to render (empty = all)
+    cloth: bool = False              # loose cloth (simulated as a flexible sheet): can be folded
 
     @property
     def room(self):
@@ -398,3 +399,33 @@ def all_static_boxes():
 
 def item(name):
     return next(i for i in ITEMS if i.name == name)
+
+
+# ---------------------------------------------------------------- suitcase hardware
+# Positions in the suitcase-base frame of the closed case, measured on the scan (lock
+# plate recessed in the lid's front wall above the seam, zip sliders on the seam, pull
+# dock above them, lid strap along the middle of the lid front).
+HARDWARE = dict(
+    wall_px_visual=0.2385,            # scan's front-wall surface around the lock (physics wall is at W/2)
+    lock_window=(-0.004, 0.136),      # y span where the lid's front wall is recessed to the scan surface
+    dial_y=(0.0185, 0.031, 0.0435), dial_z=0.237, dial_r=0.0080, dial_w=0.0050, dial_x=0.2385,
+    dial_detent=0.0025,               # N m detent torque amplitude (10 detents per turn)
+    button=dict(y=0.074, z=0.237, half=(0.004, 0.015, 0.008), travel=0.003, stiffness=400.0),
+    dock_y=0.115, dock_z=0.248,       # where the two pull tabs latch (slot under the lock plate)
+    slider=dict(x=0.2594, z=0.139, half=(0.006, 0.012, 0.008), open_a=-0.300, open_b=0.296, gap=0.012,
+                friction=1.5),        # N: zip resistance
+    tab=dict(len=0.090, r=0.0045),        # pull tab: hangs from its slider, swings up flat against the side
+    trolley=dict(levels=(0.0, 0.20, 0.38), travel=0.40, friction=3.0,
+                 button=dict(half=(0.008, 0.003, 0.006), travel=0.002, stiffness=1500.0, proud=0.0035)),
+    strap=dict(x=0.0, y_female=0.124, y_male=0.150, z=0.3906, width=0.050, travel=0.05),
+)
+
+
+# ---------------------------------------------------------------- loose cloth
+# A flat beach towel on the kitchen counter, simulated as a flexible sheet (MuJoCo flex,
+# passive in-plane and bending elasticity, no equality constraints). It is added to the
+# model only for cases that use it (it multiplies the cost of the physics).
+CLOTH = dict(name="beach_towel", label="beach towel", station="kitchen_counter",
+             centre=(6.45, 1.15),           # near edge hangs 4 cm over the counter's front edge
+             size=(0.32, 0.48), count=(5, 7), mass=0.25, thickness=0.003,
+             young=3e4, poisson=0.2, radius=0.004)

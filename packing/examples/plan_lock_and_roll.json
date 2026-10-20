@@ -1,0 +1,12 @@
+[
+  {"verb": "pack", "args": {"target": "the trousers", "at": {"anchor": "wheel_end"}}},
+  {"verb": "pack", "args": {"target": "the tees", "at": {"from_wheel_end_cm": 49, "from_hinge_side_cm": 17}}},
+  {"verb": "pack", "args": {"target": "the water bottle", "orient": "upright"}},
+  {"verb": "close", "args": {"target": "the lid"}},
+  {"verb": "close", "args": {"target": "the zip", "to": 0}},
+  {"verb": "insert", "args": {"target": "the zip pulls", "into": "the lock"}},
+  {"verb": "set", "args": {"target": "the lock", "value": "3-7-2"}},
+  {"verb": "stand_up", "args": {"target": "the suitcase"}},
+  {"verb": "set", "args": {"target": "the trolley handle", "value": "top"}},
+  {"verb": "roll", "args": {"target": "the suitcase", "to": "the bedroom door"}}
+]

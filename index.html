@@ -35,11 +35,17 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-si
 @media(max-width:900px){.grid{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}main{padding:24px 16px}}
 @media(max-width:520px){.flow{grid-template-columns:1fr}nav a{margin:0 12px 0 0}}
 button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+ol.steps{margin:0;padding-left:18px;color:var(--muted)}ol.steps li{margin:0 0 3px}
+#examples{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;margin:14px 0}
+.example{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;min-width:0}
+.example .say{color:var(--ink);margin-bottom:6px}.example .res{color:var(--muted);margin:2px 0;overflow-wrap:anywhere}.example .res.rej{color:var(--warn)}
+.clipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin:14px 0}.cap{font-size:13px;margin:8px 0 0}
+@media(max-width:520px){#examples{grid-template-columns:1fr}}
 </style></head><body><main>
-<header><span class="wordmark">PACKING / SIMULATOR</span><nav><a href="#sim">How it works</a><a href="#actions">Actions</a><a href="#families">Objects</a><a href="#events">Events</a><a href="#data">Data</a><a href="hands/index.html">Hand tests</a></nav></header>
+<header><span class="wordmark">PACKING / SIMULATOR</span><nav><a href="#sim">How it works</a><a href="#actions">Actions</a><a href="#grounding">Grounding</a><a href="#suitcase">Suitcase</a><a href="#clips">Clips</a><a href="#events">Events</a><a href="#data">Data</a><a href="hands/index.html">Hand tests</a></nav></header>
 
 <h1>A packing simulator that generates new trajectories on demand.</h1>
-<p class="intro">A person packs a suitcase in a two-room apartment. Each episode is an executable task, a persona and a private schedule of mistakes. A scripted user replans after every action, and every action is grounded in a contact-only MuJoCo simulation with anatomical hands. The same case can unfold differently, and each run is rendered and logged as training data.</p>
+<p class="intro">A person packs a suitcase in a two-room apartment, driven either by a sampled case (a task, a persona and a private schedule of mistakes) or by instructions in plain language. Every request is grounded into a typed action, refused with a reason if it cannot be, and executed in a contact-only MuJoCo simulation with anatomical hands. That covers the case's zip, combination lock, strap buckle, telescopic handle and spinner wheels, and folding a towel. Each run is rendered and logged as training data.</p>
 <div class="facts" id="facts"></div>
 
 <span class="tag">Reference trajectory · weekend away · one wrong pile picked up, then put back</span>
@@ -52,35 +58,77 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
 <p class="note">Amber chapters are scheduled events. The trajectory's full action log is in <a href="trip/actions.json">actions.json</a>, the private schedule in <a href="trip/case.json">case.json</a> and the end state in <a href="trip/goals.json">goals.json</a>.</p>
 
 <h2 id="sim">How the simulation works</h2>
-<p>The design follows the environment construction of interactive-assistant benchmarks: an executable task rather than a recorded demonstration, semantic actions with a grounder, goal predicates instead of a reference route, and progress-conditioned events. Here it is specialised to packing.</p>
+<p>The design follows the environment construction of interactive-assistant benchmarks: an executable task rather than a recorded demonstration, a typed action space with a grounder, goal predicates instead of a reference route, and progress-conditioned events. Here it is specialised to packing.</p>
 <div class="flow">
-<div><b>1 · Case</b>Task (what to pack), seed, persona and a private event schedule. Each case is dry-run symbolically first; schedules whose events cannot fire are rejected.</div>
-<div><b>2 · User</b>A replanning policy over the symbolic state. Events take over its action queue: a wrong pile, a skipped item, the lid shut early.</div>
+<div><b>1 · Request</b>A sampled case (task, persona, private event schedule), or instructions: sentences parsed into requests, or a JSON plan of actions.</div>
+<div><b>2 · Ground</b>Each request becomes a typed action: words resolved to things in the scene, values parsed and checked against the part they act on. Otherwise it is rejected with a code and a reason.</div>
 <div><b>3 · PackSim</b>Symbolic state, preconditions, effects and goal predicates. A refused action returns feedback and changes nothing.</div>
-<div><b>4 · Executor</b>Grounds each accepted action in MuJoCo with contact-only skills, verifies the physical outcome, then commits it. Any action can be rewound.</div>
-<div><b>5 · Record</b>25 Hz poses, the action log with labels and frame ranges, physical checks and goals. Blender Cycles renders the head and room cameras.</div>
+<div><b>4 · Executor</b>Grounds each accepted action in MuJoCo with contact-only skills, measures the physical outcome, then commits it. Any action can be rewound.</div>
+<div><b>5 · Record</b>25 Hz poses, the action log with labels and frame ranges, physical checks, hardware readings and goals. Blender Cycles renders head, room and close-up cameras.</div>
 </div>
 <h3>State</h3>
-<p>Where the person stands and what they face; what they hold; each item's location (home station, hands, or a region of the case) and stacking order; the bottle's orientation; whether the lid is open or closed and the case zipped; whether the case is on the bed or upright on the floor; and the current packing list, which a plan change can edit. Physical state (body poses, contacts, lid angle) lives in MuJoCo and is cross-checked against the symbolic state at the end of every run.</p>
+<p>Where the person stands and what they face; what they hold; each item's location (home station, hands, or the case) and, in the case, its measured centre, turn, height and what it rests on; the bottle's orientation; the lid; how far the zip is open; whether the zip pulls are docked in the lock and what the three dials show; the trolley handle's stop; the strap buckle; whether the case lies on the bed or stands on the floor, and where; the loose towel (flat or folded) when the scene has one; and the current packing list. Physical state lives in MuJoCo and is cross-checked against the symbolic state at the end of every run: every item, the zip, the dials, the pulls, the handle stop and the buckle.</p>
 <h3>Goal predicates</h3>
-<p>Success is a set of predicates, not a route, so any valid order passes: <code>packed(x)</code> for every listed item, <code>no_extra_items</code>, <code>bottle_upright</code>, <code>heavy_on_floor(x)</code> (the trousers and toiletry bag rest on the case floor), <code>nothing_on(camera)</code>, <code>lid_closed</code>, <code>zipped</code> and <code>case_upright</code>.</p>
+<p>Success is a set of predicates, not a route, so any valid order passes: <code>packed(x)</code> for every listed item, <code>no_extra_items</code>, <code>bottle_upright</code>, <code>heavy_on_floor(x)</code>, <code>nothing_on(camera)</code>, <code>lid_closed</code>, <code>zipped</code>, <code>case_upright</code> and, for tasks that ask for it, <code>locked</code>.</p>
 
 <h2 id="actions">Action space</h2>
-<p>Semantic actions separate the reference from the execution. Arguments in angle brackets are resolved by the grounder: a text form such as <code>pick up the T-shirt pile</code> parses to <code>pick_up(tshirts)</code>. If grounding fails or a precondition does not hold, the user gets feedback (for example "your hands are full" or "the towel is under the T-shirt pile") and the world does not change.</p>
-<div class="tablewrap"><table id="actionTable"><thead><tr><th>Class</th><th>Action</th><th>Argument</th><th>Grounds to</th><th>Preconditions (else feedback)</th><th>Physical skill</th></tr></thead><tbody></tbody></table></div>
+<p>An action is a verb applied to typed arguments, <code>a = f(θ)</code>. No object, part, place, position or amount is an action of its own: <code>place(tshirts, in, suitcase, at=(30 cm, 15 cm))</code>, <code>set(trolley_handle, 2)</code> and <code>turn(dial_1, to=7)</code> are one verb each with arguments. Every verb below is executed in physics by contact. The steps column is the algorithm the engine runs to resolve and execute the action, and the check is how success is measured on the simulation, not assumed.</p>
+<div class="tablewrap"><table id="verbTable"><thead><tr><th>Group</th><th>Verb and signature</th><th>Refers to</th><th>How it is resolved and executed</th><th>Physical check</th><th>Effect</th></tr></thead><tbody></tbody></table></div>
+<h3>Argument types</h3>
+<div class="tablewrap"><table id="typeTable"><thead><tr><th>Type</th><th>Meaning and accepted values</th></tr></thead><tbody></tbody></table></div>
+<h3>Composite requests</h3>
+<p>These are expanded into primitives before grounding. They are conveniences for instructions, not actions of their own.</p>
+<div class="tablewrap"><table id="macroTable"><thead><tr><th>Request</th><th>Expands to</th></tr></thead><tbody></tbody></table></div>
 
-<h2 id="families">Objects and action families</h2>
-<p>Each object belongs to a family. The family decides how <code>pick_up</code> and <code>put_in</code> are grounded and which constraints apply in the case. Garment piles are photo-scanned folded clothes, and the suitcase is a photo-scanned spinner cut at its zip seam into base and lid.</p>
+<h2 id="grounding">Grounding: from words to an action, or a reason why not</h2>
+<p>Grounding happens when a request is reached, against the state at that moment, so <code>it</code> or <code>the pile on the dresser</code> resolve against what is there then. Reference resolution works in four steps:</p>
+<ol class="steps">
+<li>A pronoun names the item in hand, else the last item mentioned.</li>
+<li>An exact label or phrase of an allowed kind wins.</li>
+<li>Otherwise every content word must belong to a candidate's vocabulary: its nouns, modifiers and where it is now. The last word must be one of its nouns.</li>
+<li>One match resolves the reference. None gives <code>unknown_ref</code>. Several give <code>ambiguous_ref</code> with the candidates listed, unless exactly one of them has the most modifiers matched.</li>
+</ol>
+<p>Values are parsed into their types and checked against the part's own range: the lid's allowed openings, the handle's stops, a dial's digits. Then the symbolic preconditions run. If the target is out of reach, a <code>go_to</code> is inserted first; nothing else is added silently.</p>
+<div class="tablewrap"><table id="codeTable"><thead><tr><th>Rejection code</th><th>When</th></tr></thead><tbody></tbody></table></div>
+<h3>Live examples</h3>
+<p class="note">Generated by <code>export_spec.py</code>, which runs each instruction through the parser, grounder and preconditions of the current code. Placements show the spot the placement rules resolved, in centimetres from the inside of the wheel-end wall and the hinge-side wall.</p>
+<div id="examples"></div>
+<h3>Instructions and parsers</h3>
+<pre>python packing/generate.py RUN --say "pack the t-shirts at the handle end; close the lid; zip it; lock it"
+python packing/generate.py RUN --plan plan.json          # [{"verb": "place", "args": {...}}, ...] or sentences
+python packing/generate.py RUN --say "..." --parser gemini   # needs GEMINI_API_KEY (GEMINI_MODEL optional)</pre>
+<p>Two parsers produce the same request format. The rule parser covers every verb, compound sentences ("and then") and named values ("halfway", "the top stop", "3-7-2"). The Gemini parser fills a fixed JSON schema of verbs and argument slots. It is told to copy the user's own words for every reference and never to choose between objects, so the same deterministic resolver decides what the words mean, and ambiguity is caught the same way. A step that fits no verb comes back as <code>unknown_verb</code>.</p>
+
+<h2 id="suitcase">The suitcase's own action space</h2>
+<p id="caseSource"></p>
+<p>Every part and control of the scanned case is a separate simulated body, so each operation changes the state by contact:</p>
+<ul>
+<li>The zip sliders run on slide joints.</li>
+<li>The pulls swing up on hinges into the lock's slots.</li>
+<li>The dials turn on hinges with ten detents, and buttons move on springs.</li>
+<li>The telescopic handle slides on a latch that is free only while its button is held in.</li>
+<li>The buckle slides out once both side tabs are squeezed.</li>
+<li>The four spinner wheels are spheres on ball joints.</li>
+</ul>
+<p>Values a part cannot take are rejected, with the part's own reason.</p>
+<div class="tablewrap"><table id="partTable"><thead><tr><th>Part</th><th>Kind</th><th>Operations (values)</th><th>Called</th></tr></thead><tbody></tbody></table></div>
+<p class="note" id="caseOps"></p>
+<h3>Items and cloth</h3>
+<p>Items are operated through <code>pick_up</code>, <code>place</code> and <code>put_back</code>. Their family decides the grasp and how they are set down: a two-hand side squeeze for piles and boxes, a one-hand power grip for the bottle, which stands upright or lies down. The loose beach towel is a simulated flexible sheet (a MuJoCo flex grid with in-plane and bending elasticity) on the kitchen counter, and <code>fold</code> folds it in half by contact. It is added to the scene only for cases that use it, because it multiplies the cost of the physics.</p>
+<div class="tablewrap"><table id="itemTable"><thead><tr><th>Item</th><th>Family</th><th>Home</th><th>Size (cm)</th><th>Mass</th><th>Called</th><th>Model</th></tr></thead><tbody></tbody></table></div>
 <div class="tablewrap"><table id="familyTable"><thead><tr><th>Family</th><th>Pick</th><th>Place</th><th>Hands</th><th>Stackable</th><th>Members</th></tr></thead><tbody></tbody></table></div>
-<h3>Items</h3>
-<p>Items not on a task's list stay where they are and serve as distractors for wrong-object events.</p>
-<div class="tablewrap"><table id="itemTable"><thead><tr><th>Item</th><th>Family</th><th>Home</th><th>Size (cm)</th><th>Mass</th><th>Model</th></tr></thead><tbody></tbody></table></div>
-<h3>Case regions</h3>
-<p id="caseNote"></p>
-<div class="tablewrap"><table id="regionTable"><thead><tr><th>Region</th><th>Accepts</th></tr></thead><tbody></tbody></table></div>
+
+<h2 id="placement">Where things can go in the case</h2>
+<p id="placeNote"></p>
+<ul id="placeRules"></ul>
+<div class="tablewrap"><table id="anchorTable"><thead><tr><th>Named spot</th><th>Words</th><th>Centre (cm from the wheel end, from the hinge side)</th></tr></thead><tbody></tbody></table></div>
+
+<h2 id="clips">Each operation, close up</h2>
+<p>A close-up camera follows the part each action works on, rendered from the same simulated runs as the videos above. Captions give the action and its measured outcome.</p>
+<div class="clipgrid" id="clipGrid"><p class="note">Clips are rendered from verified runs; this list fills from <a href="trip/clips.json">clips.json</a>.</p></div>
 
 <h2 id="events">Progress-conditioned events</h2>
-<p>An event has a semantic trigger (for example "about to fetch the sweatshirts" or "after three items are packed"), targets, the actions it injects, and a completion condition. While active it owns the user's action queue, then hands control back. With self-recovery on, the user corrects the mistake (puts the wrong pile back, remembers the forgotten item before closing, reopens the lid). With it off, the error stays in the world and shows up as a failed goal. Questions and plan changes use separate, non-error channels. Schedules are checked for distinct targets, events that actually fire, and separated windows.</p>
+<p>An event has a semantic trigger (for example "about to fetch the sweatshirts" or "after three items are packed"), targets, the actions it injects, and a completion condition. While active it owns the user's action queue, then hands control back. With self-recovery on, the user corrects the mistake: puts the wrong pile back, remembers the forgotten item before closing, reopens the lid. With it off, the error stays in the world and shows up as a failed goal. Questions and plan changes use separate, non-error channels.</p>
 <div class="tablewrap"><table id="eventTable"><thead><tr><th>Event</th><th>Channel</th><th>What the user does</th></tr></thead><tbody></tbody></table></div>
 
 <h2 id="data">Generating data</h2>
@@ -104,15 +152,22 @@ python packing/render_all.py runs/0012 --samples 48     # head and room cameras,
 <h2>Completion checks</h2><p class="note">From <a href="trip/validation.json">validation.json</a>. These are simulation checks, not evidence of real-world transfer.</p><div class="checks" id="checks"></div>
 
 <details><summary>What is simulated, and the limitations</summary><ul>
-<li>MuJoCo at 1 kHz with gravity. Two anatomical MyoHand hands (23 joints each) with torque-limited finger servos on force-limited wrist carriages. No welds or equality constraints: items rise, travel and settle through contact only.</li>
-<li>Targets come from the live state: stand points from where an item is now, drop heights from the piles already in a region.</li>
+<li>MuJoCo at 1 kHz with gravity. Two anatomical MyoHand hands (23 joints each) with torque-limited finger servos on force-limited wrist carriages. Nothing is welded to a hand: items, zip sliders, pulls, dials, buttons, the buckle and the handle move only through contact.</li>
+<li>Fingertip and pinch targets come from the hand model itself. The fingertip is the end of the distal collision capsule. The pinch shapes are solved so the thumb and index capsules meet, and their midpoint and axis are measured on the model before each use.</li>
+<li>Idealised mechanisms, each stated where it applies:
+<ul>
+<li><b>Zip:</b> the lid is held shut by narrowing its hinge range once more than 5% of the zip is closed, the lid is down, and the closure check passes. The sliders cover the front side of the track; they park at its front corners when open.</li>
+<li><b>Latches:</b> the lock's pull latch, the handle's stop latch and the buckle's click are narrowed joint ranges. They are released only by the measured button travel or squeeze force.</li>
+<li><b>Dial detents:</b> a periodic spring torque.</li>
+<li><b>Hinge:</b> the case's fabric hinge is a revolute joint at mid-depth. The hinge-side walls meet at its axis, so neither half sweeps into the other's packing space.</li>
+</ul></li>
+<li>The lid can only be closed or fully open. On a real case it does not stay part-way, so other values are rejected with that reason rather than faked.</li>
+<li>Rolling: the case rolls alongside the person on four ball-jointed casters, with the near hand on the extended handle. The hand corrects the case's lean from its measured tilt. It can be rolled between the foot of the bed and the bedroom door.</li>
+<li>Cloth: only the loose beach towel is cloth (a 5 × 7 vertex flex sheet, rendered as a smooth subdivided surface). Folding it in half works by sliding flat hands under its hanging edge. Folding in thirds and unfolding are rejected: the edge they need lies flat, and the coarse sheet cannot be bunched into a pinch. The scanned garment piles are compliant rigid bodies, so they cannot be folded.</li>
+<li>Not simulated, and rejected with a reason: changing the lock's combination (it needs a pen in the reset hole); carrying the case by its side handle; laying the standing case back down.</li>
 <li>The body is kinematic, solved around the simulated forearms with fixed segment lengths: no balance, foot forces or whole-body collision. Pelvis clearance is checked geometrically.</li>
-<li>Garments are compliant rigid piles, not cloth: a pile is picked and placed as one folded unit. The scans have no separate garments to unstack.</li>
-<li>The zipper is idealised: after a closure check, the lid hinge range is narrowed to the closed pose. The hinge sits at mid-depth so both halves lie flat, standing in for the fabric hinge. A thin zip-track lip on the lid is what the fingertips catch when opening it.</li>
-<li>Standing the case up uses a two-hand overhand grip on the trolley bar, tested with a short pull. A grip that slips is released and retried with the hands placed differently (a re-grip). Closing the lid works the same way. Every attempt is logged in <code>events.json</code>.</li>
-<li>If an action still fails physically (for example, the bottle tips over as it is set down), the generator rewinds physics, recordings and symbolic state to just before that action and retries it with a small variation in stand position and timing, up to three times. The saved trajectory is a single continuous run; the retries are logged as <code>action_retry</code> events. A case that still fails is rejected.</li>
-<li>The user is scripted, not a learned human model. Events cover a controlled taxonomy and do not exhaust real mistakes.</li>
-<li>Masses, friction and finger strengths are assumed values. Nothing is calibrated sim-to-real.</li>
+<li>If an action fails physically, the generator rewinds physics, recordings and state to just before it and retries with a small variation, up to three times. Retries are logged; a run that still fails is rejected.</li>
+<li>The scripted user is not a learned human model. Masses, friction and strengths are assumed values; nothing is calibrated sim-to-real.</li>
 </ul></details>
 
 <footer>All footage is simulated. Garment piles and suitcase: <span id="credits">BlenderKit scans</span> (royalty-free licence; fetched, not redistributed). Furniture, props, textures and sky: <a href="https://polyhaven.com">Poly Haven</a> (CC0), listed in <a href="trip/asset-manifest.json">asset-manifest.json</a>. Hands: <a href="https://github.com/MyoHub/myo_sim">MyoHub/myo_sim</a> (Apache-2.0), adapted. Source: <code>packing/</code>. Earlier hand-only physics tests: <a href="hands/index.html">hands</a>.</footer>
@@ -124,15 +179,49 @@ const row=(tb,cells)=>{const tr=document.createElement('tr');tr.innerHTML=cells.
 const j=u=>fetch(u).then(r=>r.json());
 j('trip/chapters.json').then(ch=>{const box=$('chapters');ch.forEach(c=>{const b=document.createElement('button');b.textContent=c.title;if(c.event)b.className='err';b.onclick=()=>{ego.currentTime=c.time;ov.currentTime=c.time;ego.play();};box.appendChild(b);});}).catch(()=>{});
 j('trip/spec.json').then(s=>{
-  let tb=$('actionTable').tBodies[0];s.actions.forEach(a=>row(tb,[a.cls,`<code>${a.verb}</code>`,esc(a.arg),esc(a.grounds),esc(a.pre),esc(a.skill)]));
+  const A=s.action_space;
+  const sig=(v,d)=>`<code>${v}(${d.signature.map(a=>a.name+': '+a.type+(a.required?'':(a.default!==null&&a.default!==''?' = '+a.default:'?'))).join(', ')})</code>`;
+  let tb=$('verbTable').tBodies[0];
+  Object.entries(A.verbs).forEach(([v,d])=>row(tb,[d.group,sig(v,d),d.ref_kinds.map(k=>`<span class="pill">${k.replace('anchor_case','spot in case')}</span>`).join(' ')||'–',
+    '<ol class="steps">'+d.steps.map(x=>`<li>${esc(x)}</li>`).join('')+'</ol>',esc(d.check),esc(d.effect)]));
+  tb=$('typeTable').tBodies[0];Object.entries(A.types).forEach(([k,v])=>row(tb,[`<code>${k}</code>`,esc(v)]));
+  tb=$('macroTable').tBodies[0];Object.entries(A.macros).forEach(([k,v])=>row(tb,[`<code>${k}</code>`,esc(v)]));
+  const codes={unknown_verb:'no verb matches the request',missing_argument:'a required argument is absent (or turn has neither a digit nor clicks)',bad_value:'a value does not parse as its type',
+    unknown_ref:'nothing in the scene matches the words',ambiguous_ref:'several things match; the candidates are returned',wrong_kind:'the words name something, but not the kind the slot needs (a lid is not a control)',
+    unsupported_operation:'the verb does not apply to that part of that asset',unsupported_value:'the right type, but this part cannot take that value',out_of_range:'outside the part\'s range'};
+  tb=$('codeTable').tBodies[0];A.rejection_codes.forEach(c=>row(tb,[`<code>${c}</code>`,esc(codes[c]||'')]));
+  const ex=$('examples');s.examples.forEach(e=>{const d=document.createElement('div');d.className='example';
+    d.innerHTML=`<div class="say">“${esc(e.text)}”${e.cloth?' <span class="pill">scene with the towel</span>':''}</div>`+e.result.map(r=>{
+      if(r.kind==='rejected')return `<div class="res rej"><span class="pill error">${r.code}</span> ${esc(r.message)}</div>`;
+      if(r.kind==='refused')return `<div class="res rej"><span class="pill error">refused</span> <code>${esc(r.action.verb)}</code> ${esc(r.action.text)}: ${esc(r.feedback)}</div>`;
+      const rs=r.action.resolved?` <span class="note">→ ${r.action.resolved.from_wheel_end_cm} cm, ${r.action.resolved.from_hinge_side_cm} cm, on ${esc(r.action.resolved.rests_on.join(', '))}</span>`:'';
+      const args=Object.entries(r.action.args||{}).map(([k,v])=>k+'='+(Array.isArray(v)?'('+v.map(x=>typeof x==='number'?x.toFixed(3):x).join(', ')+')':v)).join(', ');
+      return `<div class="res"><code>${r.action.verb}(${esc([r.action.target,args].filter(x=>x).join(', '))})</code> ${esc(r.action.text)}${rs}</div>`;}).join('');
+    ex.appendChild(d);});
+  const parts=A.assets.suitcase.parts;
+  tb=$('partTable').tBodies[0];Object.entries(parts).forEach(([k,p])=>{
+    const ops=Object.entries(p.ops).map(([o,d])=>{let v='';if(d.values)v=' to '+d.values.join(' / ');else if(d.range)v=' to '+d.range.join('–');else if(o==='set')v=p.levels?' to stop '+p.levels.join(' / '):' to a code';else if(o==='turn')v=' to a digit, or by clicks';else if(o==='press')v=' (hold, times)';else if(o==='insert')v=' into the lock';return `<code>${o}</code>${v}`;}).join('<br>')||'<span class="note">grip point only</span>';
+    row(tb,[`<code>${k}</code> · ${esc(p.label)}`,p.kind,ops,esc(p.words.join(', '))]);});
+  $('caseSource').textContent=`${s.suitcase.source}. Outside ${s.suitcase.outer_cm.join(' × ')} cm and ${s.suitcase.depth_cm} cm deep; inside the liner ${s.suitcase.inner_height_cm} cm deep with the lid closed. The parts and their operations come from the scan (a three-dial lock with a zip-pull dock on the front side, a lengthwise strap with a side-release buckle on the lid, a side carry handle, a telescopic handle, four spinner wheels) and from spinner-case manuals (${A.assets.suitcase.source.slice(1).join('; ')}).`;
+  $('caseOps').innerHTML=`The case as a whole: ${A.assets.suitcase.case_ops.map(o=>'<code>'+o+'</code>').join(', ')}. The handle stops are ${s.suitcase.trolley_stops_cm.join(', ')} cm out. With the case lying on the bed only the first stop is reachable (the bed frame is in the way). A rolled case ends at ${Object.values(s.floor_spots).map(f=>f.label).join(' or ')}. Not simulated: changing the lock's combination, which needs a pen in the reset hole (there is no pen in the scene), and carrying the case by its side handle, which has a grip but no skill yet.`;
+  tb=$('itemTable').tBodies[0];const st=Object.fromEntries(s.stations.map(x=>[x.name,x]));
+  s.items.forEach(i=>row(tb,[esc(i.label)+(i.heavy?' <span class="pill">heavy</span>':''),`<code>${i.family}</code>`,esc(st[i.station].label)+' · '+i.room,i.size_cm.join(' × '),i.mass_kg+' kg',esc(((i.words.nouns||[]).concat(i.words.adjs||[])).join(', ')),esc(i.source)]));
+  row(tb,[esc(s.cloth.label)+' <span class="pill">cloth</span>','flex sheet',esc(st[s.cloth.station].label),s.cloth.size_cm.join(' × '),s.cloth.mass_kg+' kg','towel, beach, loose',`simulated cloth, ${s.cloth.vertices.join(' × ')} vertices`]);
   tb=$('familyTable').tBodies[0];Object.entries(s.families).forEach(([k,f])=>row(tb,[`<code>${k}</code>`,esc(f.pick),esc(f.place),f.hands,f.stackable?'yes':'no',s.items.filter(i=>i.family===k).map(i=>esc(i.label)).join(', ')]));
-  tb=$('itemTable').tBodies[0];const st=Object.fromEntries(s.stations.map(x=>[x.name,x]));s.items.forEach(i=>row(tb,[esc(i.label)+(i.heavy?' <span class="pill">heavy</span>':''),`<code>${i.family}</code>`,esc(st[i.station].label)+' · '+i.room,i.size_cm.join(' × '),i.mass_kg+' kg',esc(i.source)]));
-  tb=$('regionTable').tBodies[0];s.regions.forEach(r=>row(tb,[esc(r.label),r.families.map(f=>`<code>${f}</code>`).join(' ')]));
-  $('caseNote').textContent=`The case is ${s.suitcase.outer_cm.join(' × ')} cm and ${s.suitcase.depth_cm} cm deep (${s.suitcase.source}). Inside the liner it is ${s.suitcase.inner_height_cm} cm deep with the lid closed. Two garment columns lie against the hinge side, with a palm's width at the ends and between them. A strip on the person's side holds the toiletry bag, with the camera on top, and the bottle standing in a corner.`;
+  const P=s.placement;
+  $('placeNote').textContent=`A place request resolves to a pose in the case: a named spot, a measured centre, on top of a packed item, or beside one. The pose is checked on a ${P.grid_mm} mm height map of what is already packed. A relation or a named spot is approximate: the nearest pose within 8 cm that passes is used. A measured spot is taken as given, or rejected.`;
+  [`inside the liner walls`,
+   `resting on the highest surface under it, with at least ${Math.round(P.support_fraction*100)}% of its footprint and its centre within ${P.support_tol_mm} mm of that height; nothing fragile or unstackable underneath`,
+   `its top at least ${P.headroom_mm} mm below the closed lid's liner`,
+   `clear of the arc the closing lid sweeps (with a ${P.lid_margin_mm} mm margin)`,
+   `room for the grip: two ${P.palm_strip_mm} mm strips beside the squeezed faces (two-hand items), or a ${P.bottle_strip_mm} mm strip on one side (the bottle)`].forEach(t=>{const li=document.createElement('li');li.textContent=t;$('placeRules').appendChild(li);});
+  tb=$('anchorTable').tBodies[0];Object.entries(A.anchors).forEach(([k,a])=>row(tb,[`<code>${k}</code> · ${esc(a.label)}`,esc(a.words.join(', ')),`${a.centre_cm.from_wheel_end}, ${a.centre_cm.from_hinge_side}`]));
   tb=$('eventTable').tBodies[0];s.events.forEach(e=>row(tb,[`<code>${e.type}</code>`,`<span class="pill ${e.channel}">${e.channel.replace('_',' ')}</span>`,esc(e.description)]));
   tb=$('taskTable').tBodies[0];s.tasks.forEach(t=>row(tb,[esc(t.title),esc(t.pack.join(', '))]));
   tb=$('personaTable').tBodies[0];s.personas.forEach(p=>row(tb,[`<code>${p.name}</code>`,Math.round(p.walk*100)+'% of nominal',p.pause+' s']));
-}).catch(()=>{});
+}).catch(e=>console.error(e));
+j('trip/clips.json').then(cl=>{const g=$('clipGrid');g.innerHTML='';cl.forEach(c=>{const d=document.createElement('article');d.className='card';
+  d.innerHTML=`<span class="tag">${esc(c.verb)}</span><div class="screen"><video controls playsinline preload="none" poster="${c.poster}" src="${c.file}"></video></div><p class="cap"><code>${esc(c.action)}</code><br>${esc(c.outcome)}</p>`;g.appendChild(d);});}).catch(()=>{});
 j('trip/actions.json').then(acts=>{const tb=$('timeline').tBodies[0];acts.forEach(a=>{const lab=a.label==='nominal'?'nominal':`<span class="pill ${a.label==='recovery'?'':'error'}">${a.label}${a.event?' · '+a.event:''}</span>`;row(tb,[a.t_start.toFixed(1)+' s',lab,esc(a.action.text)+(a.ok?'':` <span class="pill error">refused: ${esc(a.feedback)}</span>`),`${a.frame_start}–${a.frame_end}`]);});}).catch(()=>{});
 j('trip/samples.json').then(rows=>{const tb=$('sampleTable').tBodies[0];rows.forEach(r=>{const base='trip/samples/'+r.name+'/';
   const ev=r.events.map(e=>`<span class="pill ${e.channel}">${e.type.replace('_',' ')}${e.channel==='error'?(e.recover?' ✓':' ✗'):''}</span>`).join(' ');

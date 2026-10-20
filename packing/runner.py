@@ -14,6 +14,7 @@ import hands as H
 PHYS_DT = 0.001
 CTRL_EVERY = 2          # 500 Hz
 FRAME_EVERY = 40        # 25 Hz
+TIP_R = 0.007           # fingertip capsule radius
 PALM = {"r": np.array([0.021, -0.283, 0.003]), "l": np.array([-0.021, -0.283, 0.003])}
 
 THUMB_OPEN = dict(cmc_flexion=0.6, cmc_abduction=0.7, mp_flexion=0.4, ip_flexion=0.2)
@@ -84,13 +85,43 @@ def rz(yaw):
     return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
 
 
+# Index finger straight, the others curled into the palm, thumb tucked: a fingertip for
+# buttons, dials and zip sliders. 'point_curl' bends the index slightly (pad forward).
+SHAPES["point"] = dict(mcp=(0.10, 1.35, 1.40, 1.40), pm=(0.10, 1.50, 1.55, 1.55), md=(0.05, 1.10, 1.10, 1.10),
+                       abd=(0.0, 0.0, 0.0, 0.0), cmc_flexion=0.70, cmc_abduction=-0.50, mp_flexion=-0.78, ip_flexion=0.43)
+SHAPES["point_curl"] = dict(SHAPES["point"], mcp=(0.45, 1.35, 1.40, 1.40), pm=(0.45, 1.50, 1.55, 1.55),
+                            md=(0.25, 1.10, 1.10, 1.10))
+# Thumb-index pinch, the other fingers curled. Joint values solved on the hand model for
+# the distance between the thumb's and the index finger's distal collision capsules
+# (solve: mj_geomDistance): pinch -2 mm (squeezes whatever is between the pads),
+# pinch_mid 12 mm, pinch_open 30 mm; the pads meet 34 cm along the forearm.
+_CURL = dict(mcp=(None, 1.35, 1.40, 1.40), pm=(None, 1.50, 1.55, 1.55), md=(None, 1.10, 1.10, 1.10))
+
+
+def _pinch(cmc_f, cmc_a, mp, ip, mcp2, pm2, md2):
+    return dict(mcp=(mcp2, 1.35, 1.40, 1.40), pm=(pm2, 1.50, 1.55, 1.55), md=(md2, 1.10, 1.10, 1.10),
+                abd=(0.0, 0.0, 0.0, 0.0), cmc_flexion=cmc_f, cmc_abduction=cmc_a, mp_flexion=mp, ip_flexion=ip)
+
+
+SHAPES["pinch"] = _pinch(-0.193, 0.104, -0.139, -0.471, 0.822, 0.795, 0.787)
+SHAPES["pinch_mid"] = _pinch(-0.081, 0.129, -0.067, -0.445, 0.792, 0.784, 0.786)
+SHAPES["pinch_open"] = _pinch(0.068, 0.157, 0.019, -0.410, 0.774, 0.778, 0.778)
+SHAPES["pinch_wide"] = _pinch(0.341, 0.223, 0.179, -0.360, 0.652, 0.704, 0.734)    # 65 mm: round a buckle
+for _k in range(1, 5):                     # wide -> squeezed, for closing on something wide
+    SHAPES[f"pinch_w{_k}"] = {kk: (tuple(a + (b - a) * _k / 5 for a, b in zip(SHAPES["pinch_wide"][kk], SHAPES["pinch"][kk]))
+                                    if isinstance(SHAPES["pinch"][kk], tuple) else
+                                    SHAPES["pinch_wide"][kk] + (SHAPES["pinch"][kk] - SHAPES["pinch_wide"][kk]) * _k / 5)
+                               for kk in SHAPES["pinch"]}
+
+
 def shape_targets(shape, side):
     sh = SHAPES[shape]
     out = {}
-    for k in "2345":
-        out[f"mcp{k}_flexion_{side}"] = sh["mcp"]
-        out[f"pm{k}_flexion_{side}"] = sh["pm"]
-        out[f"md{k}_flexion_{side}"] = sh["md"]
+    per = lambda v, i: v[i] if isinstance(v, (tuple, list)) else v
+    for i, k in enumerate("2345"):
+        out[f"mcp{k}_flexion_{side}"] = per(sh["mcp"], i)
+        out[f"pm{k}_flexion_{side}"] = per(sh["pm"], i)
+        out[f"md{k}_flexion_{side}"] = per(sh["md"], i)
         out[f"mcp{k}_abduction_{side}"] = sh["abd"]["2345".index(k)]
     for k in ["cmc_flexion", "cmc_abduction", "mp_flexion", "ip_flexion"]:
         out[f"{k}_{side}"] = sh[k]
@@ -100,8 +131,9 @@ def shape_targets(shape, side):
 
 
 class Runner:
-    def __init__(self, seed=7):
-        self.m, self.xml = B.build()
+    def __init__(self, seed=7, with_cloth=False):
+        self.m, self.xml = B.build(with_cloth=with_cloth)
+        self.with_cloth = with_cloth
         m = self.m
         self.d = mujoco.MjData(m)
         d = self.d
@@ -114,7 +146,8 @@ class Runner:
         self.radius = {s: m.body(f"radius_{s}").id for s in "rl"}
         self.hand_bodies = {s: self._subtree(self.radius[s]) for s in "rl"}
         self.item_ids = {it.name: m.body(it.name).id for it in S.ITEMS}
-        self.soft_ids = {m.body(it.name).id for it in S.ITEMS if it.soft}
+        # compliant contacts (penetration is deflection): folded piles and the buckle's sprung prongs
+        self.soft_ids = {m.body(it.name).id for it in S.ITEMS if it.soft} | {m.body("buckle_male").id}
         self.suit_ids = [m.body("suitcase").id, m.body("suitcase_lid").id]
         self.frames, self.events, self.stages = [], [], []
         self.diag = dict(max_penetration=0.0, worst_penetration=None, max_joint_excursion=0.0, worst_joint=None,
@@ -136,6 +169,7 @@ class Runner:
         self.root_log = []
         self.zip_progress = 0.0
         self.zip_locked = False
+        self._init_mechanisms()
 
     # ------------------------------------------------------------ wrist kinematics
     WRIST_GRID = np.linspace(-0.75, 0.75, 151)
@@ -233,13 +267,15 @@ class Runner:
         m, d = self.m, self.d
         for c in d.contact[: d.ncon]:
             # Folded garment piles are deliberately compliant: their contacts are tracked apart.
-            soft = m.geom_bodyid[c.geom1] in self.soft_ids or m.geom_bodyid[c.geom2] in self.soft_ids
+            b1, b2 = self.contact_bodies(c)
+            soft = b1 in self.soft_ids or b2 in self.soft_ids or c.geom1 < 0 or c.geom2 < 0   # cloth is soft too
             key = "max_penetration_soft" if soft else "max_penetration"
             if -c.dist > self.diag.get(key, 0.0):
                 self.diag[key] = float(-c.dist)
                 self.diag["worst_penetration_soft" if soft else "worst_penetration"] = dict(
-                    t=round(d.time, 4), stage=self.label, geoms=[m.geom(c.geom1).name, m.geom(c.geom2).name])
-        for j in range(m.njnt):
+                    t=round(d.time, 4), stage=self.label,
+                    geoms=[m.geom(g).name if g >= 0 else "cloth" for g in (c.geom1, c.geom2)])
+        for j in self._anat_joints:
             if m.jnt_limited[j] and m.jnt_type[j] == 3:
                 q = d.qpos[m.jnt_qposadr[j]]
                 ex = max(m.jnt_range[j, 0] - q, q - m.jnt_range[j, 1], 0.0)
@@ -282,6 +318,8 @@ class Runner:
         for _ in range(n):
             if self.step_count % CTRL_EVERY == 0:
                 self._apply()
+                self._mechanisms()
+            self._detents()
             self._rot_torque()
             mujoco.mj_step(m, d)
             self.step_count += 1
@@ -295,7 +333,186 @@ class Runner:
         self.frames.append(dict(t=round(d.time, 4), stage=self.label, xpos=d.xpos.astype(np.float32).tolist(),
                                 xquat=d.xquat.astype(np.float32).tolist(), root=dict(self.root),
                                 gaze=self.gaze.tolist(), lid=float(d.qpos[self.m.joint("lid_hinge").qposadr[0]]), zip_progress=float(self.zip_progress),
-                                zip=bool(getattr(self, "zip_locked", False))))
+                                zip=bool(getattr(self, "zip_locked", False)), hw=self.hardware_reading(),
+                                **({"cloth": np.round(d.flexvert_xpos, 4).tolist()} if self.with_cloth else {})))
+
+    # ------------------------------------------------------------ suitcase mechanisms
+    def _init_mechanisms(self):
+        m = self.m
+        hand = set(self.hand_bodies["r"]) | set(self.hand_bodies["l"])
+        self._anat_joints = [j for j in range(m.njnt) if m.jnt_bodyid[j] in hand or m.joint(j).name == "lid_hinge"]
+        jid = lambda n: m.joint(n).id
+        self.hw = dict(
+            dial=[(jid(f"dial_{k}_hinge"), int(m.jnt_dofadr[jid(f"dial_{k}_hinge")]), int(m.jnt_qposadr[jid(f"dial_{k}_hinge")]))
+                  for k in (1, 2, 3)],
+            trolley=(jid("trolley_slide"), int(m.jnt_qposadr[jid("trolley_slide")])),
+            trolley_btn=int(m.jnt_qposadr[jid("trolley_btn_slide")]),
+            lock_btn=int(m.jnt_qposadr[jid("lock_btn_slide")]),
+            slider={k: (jid(f"slider_{k}_slide"), int(m.jnt_qposadr[jid(f"slider_{k}_slide")])) for k in "ab"},
+            tab={k: (jid(f"tab_{k}_hinge"), int(m.jnt_qposadr[jid(f"tab_{k}_hinge")])) for k in "ab"},
+            buckle=(jid("buckle_slide"), int(m.jnt_qposadr[jid("buckle_slide")])),
+            buckle_tabs=[m.geom(f"buckle_tab_{k}").id for k in (0, 1)],
+            lid=jid("lid_hinge"),
+        )
+        self.hw_range0 = m.jnt_range.copy()
+        tr = S.HARDWARE["trolley"]
+        self.mech = dict(trolley_level=0, tabs={"a": False, "b": False}, tab_block={}, buckle=True, code="000", lock_events=0)
+        self._latch_trolley(0)
+        self._latch_buckle(True)
+
+    def _latch_trolley(self, level):
+        j, _ = self.hw["trolley"]
+        if level is None:
+            self.m.jnt_range[j] = self.hw_range0[j]
+        else:
+            q = S.HARDWARE["trolley"]["levels"][level]
+            self.m.jnt_range[j] = [q - 0.0005, q + 0.0005]
+        self.mech["trolley_level"] = level
+
+    def _latch_tab(self, k, on):
+        jt, _ = self.hw["tab"][k]
+        js, qs = self.hw["slider"][k]
+        if on:
+            self.m.jnt_range[jt] = [np.pi - 0.04, np.pi]
+            q = self.d.qpos[qs]
+            self.m.jnt_range[js] = [q - 0.0005, q + 0.0005]
+        else:
+            self.m.jnt_range[jt] = self.hw_range0[jt]
+            self.m.jnt_range[js] = self.hw_range0[js]
+        self.mech["tabs"] = dict(self.mech["tabs"], **{k: on})
+
+    def _latch_buckle(self, on):
+        j, _ = self.hw["buckle"]
+        self.m.jnt_range[j] = [0.0, 0.0008] if on else self.hw_range0[j]
+        self.mech["buckle"] = on
+
+    def dial_digits(self):
+        return [int(round(self.d.qpos[qa] / (2 * np.pi / 10))) % 10 for _, _, qa in self.hw["dial"]]
+
+    def zip_closed_fraction(self):
+        """Fraction of the reachable zip track closed, from the two slider positions."""
+        out = []
+        for k in "ab":
+            j, qa = self.hw["slider"][k]
+            lo, hi = self.hw_range0[j]
+            span = hi - lo
+            q = self.d.qpos[qa]
+            out.append((q - lo) / span if k == "a" else (hi - q) / span)
+        return float(np.clip(np.mean(out), 0, 1))
+
+    def hardware_reading(self):
+        d = self.d
+        return dict(dials=self.dial_digits(), trolley=round(float(d.qpos[self.hw["trolley"][1]]), 4),
+                    trolley_level=self.mech["trolley_level"], zip_closed=round(self.zip_closed_fraction(), 3),
+                    tabs={k: round(float(d.qpos[self.hw["tab"][k][1]]), 3) for k in "ab"},
+                    docked=dict(self.mech["tabs"]), buckle=round(float(d.qpos[self.hw["buckle"][1]]), 4),
+                    buckled=self.mech["buckle"])
+
+    def _detents(self):
+        """Ten detents per turn on each lock dial (a spring-loaded ball in a notched wheel)."""
+        K = S.HARDWARE["dial_detent"]
+        for _, dof, qa in self.hw["dial"]:
+            self.d.qfrc_applied[dof] = -K * np.sin(10 * self.d.qpos[qa])
+
+    def _mechanisms(self):
+        m, d, hw = self.m, self.d, self.hw
+        # trolley latch: free while the grip button is held in, catches at the next stop
+        tr = S.HARDWARE["trolley"]
+        q = d.qpos[hw["trolley"][1]]
+        bq = d.qpos[hw["trolley_btn"]]
+        if bq > 0.75 * tr["button"]["travel"]:
+            if self.mech["trolley_level"] is not None:
+                self._latch_trolley(None)
+                self.event("trolley_unlatched", q=round(float(q), 4))
+        elif self.mech["trolley_level"] is None and bq < 0.3 * tr["button"]["travel"]:
+            # the latch pin drops back only once the button is let out (hysteresis)
+            for i, lv in enumerate(tr["levels"]):
+                if abs(q - lv) < 0.003:
+                    self._latch_trolley(i)
+                    self.event("trolley_latched", level=i, q=round(float(q), 4))
+                    break
+        # pull tabs: latch when flipped up into the dock with the slider at the dock
+        for k in "ab":
+            jt, qt = hw["tab"][k]
+            js, qs = hw["slider"][k]
+            lo, hi = self.hw_range0[js]
+            at_dock = abs(d.qpos[qs] - (hi if k == "a" else lo)) < 0.004
+            if self.mech["tab_block"].get(k) and d.qpos[qt] < np.pi - 0.4:
+                self.mech["tab_block"] = dict(self.mech["tab_block"], **{k: False})   # it has dropped out of the slot
+            if not self.mech["tabs"][k] and not self.mech["tab_block"].get(k) and at_dock and d.qpos[qt] > np.pi - 0.10:
+                self._latch_tab(k, True)
+                self.event("pull_docked", tab=k)
+        # release button: frees the pulls only if the dials show the code
+        if d.qpos[hw["lock_btn"]] > 0.7 * S.HARDWARE["button"]["travel"]:
+            if any(self.mech["tabs"].values()):
+                if "".join(map(str, self.dial_digits())) == self.mech["code"]:
+                    for k in "ab":
+                        self._latch_tab(k, False)
+                    self.mech["tab_block"] = {"a": True, "b": True}
+                    self.event("pulls_released", dials=self.dial_digits())
+                elif self.mech["lock_events"] < 1:
+                    self.mech["lock_events"] += 1
+                    self.event("lock_button_blocked", dials=self.dial_digits())
+        else:
+            self.mech["lock_events"] = 0
+        # buckle: clicks shut when pushed home; opens when both side tabs are squeezed
+        jb, qb = hw["buckle"]
+        if not self.mech["buckle"] and d.qpos[qb] < 0.0015:
+            self._latch_buckle(True)
+            self.event("buckle_latched")
+        elif self.mech["buckle"]:
+            squeezed = 0
+            hand = set(self.hand_bodies["r"]) | set(self.hand_bodies["l"])
+            f = np.zeros(6)
+            for i, c in enumerate(d.contact[: d.ncon]):
+                g = c.geom1 if c.geom1 in hw["buckle_tabs"] else c.geom2 if c.geom2 in hw["buckle_tabs"] else -1
+                other = c.geom2 if g == c.geom1 else c.geom1
+                if g >= 0 and m.geom_bodyid[other] in hand:
+                    mujoco.mj_contactForce(m, d, i, f)
+                    if abs(f[0]) > 1.5:
+                        squeezed |= 1 << hw["buckle_tabs"].index(g)
+            if squeezed == 3:
+                self._latch_buckle(False)
+                self.event("buckle_released")
+        # idealised zipper: the lid is held shut once part of the zip is closed and the
+        # lid is down (closure check); it is freed when the zip is opened again
+        zc = self.zip_closed_fraction()
+        lid_q = d.qpos[m.jnt_qposadr[hw["lid"]]]
+        if not self.zip_locked and zc > 0.05 and lid_q < np.radians(2.5):
+            m.jnt_range[hw["lid"]] = [0.0, 0.003]
+            self.zip_locked = True
+            self.event("zipper_engaged", lid_angle_deg=round(float(np.degrees(lid_q)), 2), closed_fraction=round(zc, 3))
+        elif self.zip_locked and zc < 0.04:
+            m.jnt_range[hw["lid"]] = self.hw_range0[hw["lid"]]
+            self.zip_locked = False
+            self.event("zipper_released", lid_angle_deg=round(float(np.degrees(lid_q)), 2))
+        self.zip_progress = zc
+
+    def contact_bodies(self, c):
+        """Bodies of a contact's two sides (flex contacts name a vertex, not a geom)."""
+        m = self.m
+        out = []
+        for k in (0, 1):
+            g = c.geom[k]
+            if g >= 0:
+                out.append(int(m.geom_bodyid[g]))
+            else:
+                f, v = c.flex[k], c.vert[k]
+                out.append(int(m.flex_vertbodyid[m.flex_vertadr[f] + v]) if f >= 0 and v >= 0 else -1)
+        return out[0], out[1]
+
+    def cloth_vertices(self):
+        return self.d.flexvert_xpos.reshape(-1, 3).copy()
+
+    def fingertip(self, side="r", finger=2):
+        """Centre of the end sphere of a finger's distal collision capsule (radius
+        TIP_R): the fingertip that touches buttons, dials and sliders."""
+        g = self.m.geom(f"distph{finger}_coll_{side}" if finger != 1 else f"distal_thumb_coll_{side}").id
+        c = self.d.geom_xpos[g]
+        ax = self.d.geom_xmat[g].reshape(3, 3)[:, 2] * self.m.geom_size[g][1]
+        b = self.m.body(f"midph{finger}_{side}" if finger != 1 else f"proximal_thumb_{side}").id
+        # the distal end is the one away from the middle phalanx
+        return c + ax if np.linalg.norm(c + ax - self.d.xpos[b]) > np.linalg.norm(c - ax - self.d.xpos[b]) else c - ax
 
     # ------------------------------------------------------------ primitives
     def stage(self, label):
@@ -424,7 +641,7 @@ class Runner:
         """Light checkpoint (physics + commanded state + log lengths) for rewinding an action."""
         d, m = self.d, self.m
         return dict(qpos=d.qpos.copy(), qvel=d.qvel.copy(), act=d.act.copy(), ctrl=d.ctrl.copy(), time=d.time,
-                    qacc_warmstart=d.qacc_warmstart.copy(), lid_range=m.jnt_range[m.joint("lid_hinge").id].copy(),
+                    qacc_warmstart=d.qacc_warmstart.copy(), jnt_range=m.jnt_range.copy(), mech=dict(self.mech),
                     root=dict(self.root), hand={s: (self.hand[s][0].copy(), self.hand[s][1].copy()) for s in "rl"},
                     finger={s: dict(self.finger[s]) for s in "rl"}, gaze=self.gaze.copy(), zip=self.zip_progress,
                     zip_locked=self.zip_locked, label=self.label, step_count=self.step_count,
@@ -434,7 +651,8 @@ class Runner:
         d, m = self.d, self.m
         d.qpos[:] = snap["qpos"]; d.qvel[:] = snap["qvel"]; d.act[:] = snap["act"]; d.ctrl[:] = snap["ctrl"]
         d.time = snap["time"]; d.qacc_warmstart[:] = snap["qacc_warmstart"]
-        m.jnt_range[m.joint("lid_hinge").id] = snap["lid_range"]
+        m.jnt_range[:] = snap["jnt_range"]
+        self.mech = dict(snap["mech"])
         self.root = dict(snap["root"]); self.hand = {s: (v[0].copy(), v[1].copy()) for s, v in snap["hand"].items()}
         self.finger = {s: dict(v) for s, v in snap["finger"].items()}; self.gaze = snap["gaze"].copy()
         self.zip_progress, self.zip_locked = snap["zip"], snap["zip_locked"]
@@ -450,7 +668,7 @@ class Runner:
         n, force = 0, 0.0
         f = np.zeros(6)
         for i, c in enumerate(d.contact[: d.ncon]):
-            b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+            b1, b2 = self.contact_bodies(c)
             if (b1 in sa and b2 in sb) or (b2 in sa and b1 in sb):
                 mujoco.mj_contactForce(m, d, i, f)
                 n += 1
@@ -471,7 +689,7 @@ class Runner:
         for s_ in "rl":
             hb = set(self.hand_bodies[s_])
             for c in d.contact[: d.ncon]:
-                b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+                b1, b2 = self.contact_bodies(c)
                 if (b1 in hb) != (b2 in hb):
                     print("  contact", s_, m.geom(c.geom1).name, m.geom(c.geom2).name, round(-c.dist * 1000, 2), "mm")
             p, _ = self.hand_pose(s_)

@@ -61,24 +61,17 @@ def suitcase(world):
     E.SubElement(base, "geom", name="base_floor_shadow", type="box", pos=fmt((0, 0, fl - 0.03)),
                  size=fmt((W / 2 - t, L / 2 - t, 0.03)), mass="0.001", **shadow)
     box(base, "base_wall_px", (W / 2 - t / 2, 0, D / 2), (t, L, D), m * 0.12)
-    box(base, "base_wall_nx", (-W / 2 + t / 2, 0, D / 2), (t, L, D), m * 0.12)
+    # The hinge-side wall: the base's goes up to the hinge axis and the lid's starts there,
+    # so neither half swings into the other's packing space (a fabric hinge at the seam).
+    hh = c["hinge_h"]
+    box(base, "base_wall_nx", (-W / 2 + t / 2, 0, hh / 2), (t, L, hh), m * 0.12)
     box(base, "base_wall_py", (0, L / 2 - t / 2, D / 2), (W - 2 * t, t, D), m * 0.08)
     box(base, "base_wall_ny", (0, -L / 2 + t / 2, D / 2), (W - 2 * t, t, D), m * 0.08)
-    # Retracted trolley bar on the top end (+y), resting just above the shell.
-    hb = c["bar"]
-    hc = dict(contype="2", conaffinity="2", friction=".8 .01 .001", group="2", rgba=".05 .05 .05 1", mass=".08",
-              solref=".004 1", solimp=".95 .99 .001", solmix="50")   # stiff bar dominates the soft skin under load
-    E.SubElement(base, "geom", name="top_handle", type="capsule", size=str(hb["r"]),
-                 fromto=fmt((hb["x"] - hb["half"], hb["y"], hb["z"], hb["x"] + hb["half"], hb["y"], hb["z"])), **hc)
-    post_len = hb["y"] - L / 2
-    for k, sx in enumerate((hb["x"] - hb["half"] - 0.016, hb["x"] + hb["half"] + 0.016)):
-        E.SubElement(base, "geom", name=f"trolley_post_{k}", type="box", size=fmt((0.011, post_len / 2, 0.011)),
-                     pos=fmt((sx, L / 2 + post_len / 2, hb["z"])), **hc)
+    trolley(base)
     # Spinner casters: two on each half.
     wc = dict(contype="2", conaffinity="2", friction=".9 .01 .001", group="2", rgba=".05 .05 .05 1", mass=".12")
     for sx in (-c["wheel_x"], c["wheel_x"]):
-        E.SubElement(base, "geom", name=f"wheel_base_{'p' if sx > 0 else 'n'}", type="sphere", size=str(c["wheel_r"]),
-                     pos=fmt((sx, c["wheel_y"], c["wheel_z_base"])), **wc)
+        caster(base, f"wheel_base_{'p' if sx > 0 else 'n'}", (sx, c["wheel_y"], c["wheel_z_base"]), wc)
     # Lid: hinge along the -x long edge at the rim (opens over towards -x).
     hh = c["hinge_h"]; zr = D - hh             # lid rim height in the lid frame
     lid = E.SubElement(base, "body", name="suitcase_lid", pos=fmt((-W / 2, 0, hh)))
@@ -88,18 +81,147 @@ def suitcase(world):
     box(lid, "lid_panel", (W / 2, 0, zr + Dl - lfl / 2), (W, L, lfl), ml * 0.45)
     E.SubElement(lid, "geom", name="lid_panel_shadow", type="box", pos=fmt((W / 2, 0, zr + Dl - lfl + 0.03)),
                  size=fmt((W / 2 - t, L / 2 - t, 0.03)), mass="0.001", **shadow)
-    box(lid, "lid_wall_px", (W - t / 2, 0, zr + Dl / 2), (t, L, Dl), ml * 0.15)
-    box(lid, "lid_wall_nx", (t / 2, 0, zr + Dl / 2), (t, L, Dl), ml * 0.15)
+    lid_front_wall(lid, box, ml * 0.15)
+    box(lid, "lid_wall_nx", (t / 2, 0, (zr + Dl) / 2), (t, L, zr + Dl), ml * 0.15)
     box(lid, "lid_wall_py", (W / 2, L / 2 - t / 2, zr + Dl / 2), (W - 2 * t, t, Dl), ml * 0.1)
     box(lid, "lid_wall_ny", (W / 2, -L / 2 + t / 2, zr + Dl / 2), (W - 2 * t, t, Dl), ml * 0.1)
     # Zip-track lip along the free long edge: what fingertips catch to lift the lid open.
     box(lid, "lid_lip_px", (W + 0.006, 0, zr + 0.007), (0.012, L, 0.012), 0.02)
     for sx in (W / 2 - c["wheel_x"], W / 2 + c["wheel_x"]):
-        E.SubElement(lid, "geom", name=f"wheel_lid_{'p' if sx > W / 2 else 'n'}", type="sphere", size=str(c["wheel_r"]),
-                     pos=fmt((sx, c["wheel_y"], zr + c["wheel_z_lid"])), **wc)
+        caster(lid, f"wheel_lid_{'p' if sx > W / 2 else 'n'}", (sx, c["wheel_y"], zr + c["wheel_z_lid"]), wc)
+    lock_hardware(lid)
+    zip_hardware(base)
+    strap_hardware(lid)
     # Idealised zipper: once the closure test passes, the run narrows the lid hinge range
-    # to [0, 0.003] rad (no equality constraint; see skills_case.press_and_zip).
+    # to [0, 0.003] rad (no equality constraint; see runner._mechanisms).
     return base
+
+
+HW_TOUCH = dict(contype="0", conaffinity="1", group="2")      # hardware the hands touch (nothing else)
+
+
+def caster(parent, name, pos, wc):
+    """A 360-degree spinner wheel: a sphere on a ball joint, so it rolls in any direction.
+    Joint friction is the wheel's rolling resistance (about 1 N per wheel at the floor),
+    so a standing case stays put until it is pushed."""
+    c = S.SUITCASE
+    b = E.SubElement(parent, "body", name=f"{name}_body", pos=fmt(pos))
+    E.SubElement(b, "joint", name=f"{name}_ball", type="ball", damping=".002", frictionloss=".035", armature="2e-4")
+    E.SubElement(b, "geom", name=name, type="sphere", size=str(c["wheel_r"]), **wc)
+
+
+def trolley(base):
+    """Telescopic handle: the bar and its posts slide out along +y (the case length) on a
+    slide joint whose range the runner narrows to a stop (the latch) unless the button in
+    the grip is held in."""
+    c = S.SUITCASE; hb = c["bar"]; tr = S.HARDWARE["trolley"]
+    L = c["outer"][1]
+    hc = dict(contype="2", conaffinity="2", friction=".8 .01 .001", group="2", rgba=".05 .05 .05 1", mass=".10",
+              solref=".004 1", solimp=".95 .99 .001", solmix="50")   # stiff bar dominates the soft skin under load
+    body = E.SubElement(base, "body", name="trolley", pos=fmt((hb["x"], hb["y"], hb["z"])))
+    E.SubElement(body, "joint", name="trolley_slide", type="slide", axis="0 1 0", range=f"0 {tr['travel']}",
+                 limited="true", damping="15", frictionloss=str(tr["friction"]), armature=".01", solreflimit=".004 1")
+    E.SubElement(body, "geom", name="top_handle", type="capsule", size=str(hb["r"]),
+                 fromto=fmt((-hb["half"], 0, 0, hb["half"], 0, 0)), **hc)
+    post_len = hb["y"] - L / 2 + tr["travel"] + 0.02
+    for k, sx in enumerate((-hb["half"] - 0.016, hb["half"] + 0.016)):
+        E.SubElement(body, "geom", name=f"trolley_post_{k}", type="box", size=fmt((0.011, post_len / 2, 0.011)),
+                     pos=fmt((sx, -post_len / 2 + 0.011, 0)), contype="0", conaffinity="0", group="2",
+                     rgba=".05 .05 .05 1", mass=".08")
+        # the top of each post (always outside the case) stops a hand sliding off the bar's ends
+        E.SubElement(body, "geom", name=f"trolley_post_top_{k}", type="box", size=fmt((0.011, 0.03, 0.011)),
+                     pos=fmt((sx, -0.03 + 0.011, 0)), mass=".001", rgba=".05 .05 .05 1", friction=".8 .01 .001",
+                     **HW_TOUCH)
+    bt = tr["button"]
+    btn = E.SubElement(body, "body", name="trolley_btn", pos=fmt((0, hb["r"] - bt["half"][1] + bt["proud"], 0)))
+    E.SubElement(btn, "joint", name="trolley_btn_slide", type="slide", axis="0 -1 0", range=f"0 {bt['travel']}",
+                 limited="true", stiffness=str(bt["stiffness"]), springref="0", damping="2", armature=".001")
+    E.SubElement(btn, "geom", name="trolley_button", type="box", size=fmt(bt["half"]), mass=".005",
+                 rgba=".25 .25 .27 1", friction="1 .01 .001", **HW_TOUCH)
+
+
+def lid_front_wall(lid, box, mass):
+    """The free-edge wall of the lid, recessed to the scan surface where the lock sits."""
+    c = S.SUITCASE; hw = S.HARDWARE
+    W, L = c["outer"]; D, Dl, t = c["base_depth"], c["lid_depth"], c["shell"]
+    zr = D - c["hinge_h"]
+    y0, y1 = hw["lock_window"]
+    zl0, zl1 = hw["dial_z"] - c["hinge_h"] - 0.040, hw["dial_z"] - c["hinge_h"] + 0.045   # recessed band round the lock (lid frame)
+
+    def seg(name, ya, yb, za, zb, xa=W - t, xb=W):
+        # mass by face area, so the segmented wall weighs what the plain wall did
+        box(lid, name, ((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2), (xb - xa, yb - ya, zb - za),
+            mass * (yb - ya) * (zb - za) / (L * Dl))
+    seg("lid_wall_px", -L / 2, y0, zr, zr + Dl)
+    seg("lid_wall_px_b", y1, L / 2, zr, zr + Dl)
+    seg("lid_wall_px_lo", y0, y1, zr, zl0)
+    seg("lid_wall_px_hi", y0, y1, zl1, zr + Dl)
+    xs = hw["wall_px_visual"] + W / 2           # lock plate surface (lid frame)
+    seg("lid_wall_px_lock", y0, y1, zl0, zl1, xa=xs - 0.004, xb=xs)
+
+
+def lock_hardware(lid):
+    """Three-dial combination lock with a release button, in the front wall of the lid."""
+    c = S.SUITCASE; hw = S.HARDWARE
+    W = c["outer"][0]
+    xs = hw["wall_px_visual"] + W / 2
+    zl = hw["dial_z"] - c["hinge_h"]
+    for k, y in enumerate(hw["dial_y"]):
+        b = E.SubElement(lid, "body", name=f"dial_{k + 1}", pos=fmt((xs - hw["dial_r"] + 0.0045, y, zl)))
+        E.SubElement(b, "joint", name=f"dial_{k + 1}_hinge", type="hinge", axis="0 1 0", damping="2e-4",
+                     frictionloss="3e-4", armature="2e-5")
+        E.SubElement(b, "geom", name=f"dial_{k + 1}_geom", type="cylinder", size=fmt((hw["dial_r"], hw["dial_w"] / 2)),
+                     quat=fmt((0.7071068, 0.7071068, 0, 0)), mass=".002", rgba=".55 .55 .57 1", friction="1.4 .01 .001",
+                     **HW_TOUCH)
+    bt = hw["button"]
+    b = E.SubElement(lid, "body", name="lock_btn", pos=fmt((xs + bt["half"][0] - 0.001, bt["y"], zl)))
+    E.SubElement(b, "joint", name="lock_btn_slide", type="slide", axis="-1 0 0", range=f"0 {bt['travel']}", limited="true",
+                 stiffness=str(bt["stiffness"]), springref="0", damping="1", armature=".001")
+    E.SubElement(b, "geom", name="lock_button", type="box", size=fmt(bt["half"]), mass=".004", rgba=".6 .1 .1 1",
+                 friction="1 .01 .001", **HW_TOUCH)
+
+
+def zip_hardware(base):
+    """Two zip sliders on the front side of the seam; each carries a pull tab that flips
+    up into the dock of the lock. Slider A closes from the wheel end, B from the handle end."""
+    hw = S.HARDWARE; sl = hw["slider"]; tb = hw["tab"]
+    ends = {"a": (sl["open_a"], hw["dock_y"] - sl["gap"]), "b": (sl["open_b"], hw["dock_y"] + sl["gap"])}
+    for k, (y_open, y_shut) in ends.items():
+        b = E.SubElement(base, "body", name=f"slider_{k}", pos=fmt((sl["x"], y_open, sl["z"])))
+        lo, hi = sorted((0.0, y_shut - y_open))
+        E.SubElement(b, "joint", name=f"slider_{k}_slide", type="slide", axis="0 1 0", range=f"{lo} {hi}", limited="true",
+                     damping="3", frictionloss=str(sl["friction"]), armature=".002")
+        E.SubElement(b, "geom", name=f"slider_{k}_geom", type="box", size=fmt(sl["half"]), mass=".008",
+                     rgba=".7 .72 .74 1", friction="1.2 .01 .001", **HW_TOUCH)
+        # The pull hangs flat against the side and swings up in that plane (about the wall
+        # normal): A towards the wheel end, B towards the handle end, so they pass clear.
+        t = E.SubElement(b, "body", name=f"tab_{k}", pos=fmt((sl["half"][0] + tb["r"] + 0.004, 0, -sl["half"][2] + 0.002)))
+        E.SubElement(t, "joint", name=f"tab_{k}_hinge", type="hinge", axis="-1 0 0" if k == "a" else "1 0 0",
+                     range=f"0 {np.pi:.5f}", limited="true", damping="5e-4", armature="2e-5")
+        E.SubElement(t, "geom", name=f"tab_{k}_geom", type="capsule", size=str(tb["r"]),
+                     fromto=fmt((0, 0, -0.004, 0, 0, -tb["len"])), mass=".005", rgba=".1 .1 .1 1",
+                     friction="1.2 .01 .001", **HW_TOUCH)
+
+
+def strap_hardware(lid):
+    """Side-release buckle of the strap along the lid front: the male half slides out
+    along the strap (+y) once its two side tabs are squeezed."""
+    c = S.SUITCASE; st = S.HARDWARE["strap"]
+    W = c["outer"][0]
+    zl = st["z"] - c["hinge_h"]
+    E.SubElement(lid, "geom", name="buckle_female", type="box", size=fmt((st["width"] / 2 + 0.003, 0.017, 0.006)),
+                 pos=fmt((W / 2 + st["x"], st["y_female"], zl + 0.006)), mass=".01", rgba=".08 .08 .08 1",
+                 friction="1 .01 .001", **HW_TOUCH)
+    b = E.SubElement(lid, "body", name="buckle_male", pos=fmt((W / 2 + st["x"], st["y_male"], zl + 0.005)))
+    E.SubElement(b, "joint", name="buckle_slide", type="slide", axis="0 1 0", range=f"0 {st['travel']}", limited="true",
+                 damping="2", frictionloss=".3", armature=".002")
+    E.SubElement(b, "geom", name="buckle_male_geom", type="box", size=fmt((st["width"] / 2 - 0.004, 0.020, 0.0045)),
+                 mass=".008", rgba=".08 .08 .08 1", friction="1.2 .01 .001", **HW_TOUCH)
+    for k, sx in enumerate((-1, 1)):
+        # side-release prongs: plastic springs that flex a few millimetres when squeezed
+        E.SubElement(b, "geom", name=f"buckle_tab_{k}", type="box", size=fmt((0.003, 0.008, 0.004)),
+                     pos=fmt((sx * (st["width"] / 2 - 0.001), 0.004, 0)), mass=".001", rgba=".08 .08 .08 1",
+                     friction="1.4 .01 .001", solref=".012 1", solimp=".8 .95 .004", **HW_TOUCH)
 
 
 def item_body(world, it):
@@ -135,7 +257,24 @@ def item_body(world, it):
     return b
 
 
-def build(start_hands=None):
+def cloth(world):
+    """The loose towel: a flex grid lying flat on its station (x across the counter
+    depth, y along it)."""
+    c = S.CLOTH
+    nx, ny = c["count"]
+    sx, sy = c["size"][0] / (nx - 1), c["size"][1] / (ny - 1)
+    top = S.STATIONS[c["station"]].top
+    fc = E.SubElement(world, "flexcomp", name=c["name"], type="grid", count=f"{nx} {ny} 1",
+                      spacing=fmt((sx, sy, 0.05)), pos=fmt((c["centre"][0], c["centre"][1], top + c["radius"] + 0.001)),
+                      radius=str(c["radius"]), dim="2", mass=str(c["mass"]), rgba=".85 .55 .35 1")
+    E.SubElement(fc, "edge", equality="false", damping=".002")
+    E.SubElement(fc, "elasticity", young=str(c["young"]), poisson=str(c["poisson"]), thickness=str(c["thickness"]),
+                 damping=".0005", elastic2d="both")
+    E.SubElement(fc, "contact", condim="3", friction=".9", solref=".003 1", selfcollide="auto", internal="false",
+                 contype="2", conaffinity="3")
+
+
+def build(start_hands=None, with_cloth=False):
     root = E.Element("mujoco", model="Apartment suitcase packing")
     for node in H.source_defaults():
         root.append(node)
@@ -155,6 +294,8 @@ def build(start_hands=None):
     suitcase(world)
     for it in S.ITEMS:
         item_body(world, it)
+    if with_cloth:
+        cloth(world)
     actuator = E.SubElement(root, "actuator")
     hp = start_hands or {"r": (1.7, 0.75, 0.95), "l": (1.4, 0.75, 0.95)}
     for side in "rl":

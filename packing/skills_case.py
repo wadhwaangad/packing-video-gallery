@@ -1,4 +1,5 @@
-"""Thermos wrap grasp, lid closing, zipper pass and the final suitcase lift."""
+"""Thermos wrap grasp, lid opening and closing, and the final suitcase lift.
+(The zip, lock, strap and trolley-handle controls are in skills_hw.py.)"""
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
 import scene as S
@@ -103,8 +104,8 @@ def place_upright(r, name, p_slot, side="r", raise_h=0.08):
     r.event("placed", item=name, pos=pp.tolist(), speed=r.item_speed(name))
 
 
-def place_lying(r, name, p_slot, side="r", raise_h=0.10):
-    """Rotate a wrapped cylinder to lie along the suitcase length, palm on top, and set it down."""
+def place_lying(r, name, p_slot, side="r", raise_h=0.10, axis=None):
+    """Rotate a wrapped cylinder to lie along `axis` (default: the suitcase length), palm on top, and set it down."""
     p, R = r.body_pose(name)
     hp, hR = r.hand[side]
     relp, relR = R.T @ (hp - p), R.T @ hR
@@ -116,7 +117,7 @@ def place_lying(r, name, p_slot, side="r", raise_h=0.10):
     F, _ = facing(r)
     best = None
     for sgn in (1, -1):
-        a = sR[:, 1] * sgn                        # suitcase length direction
+        a = (sR[:, 1] if axis is None else np.asarray(axis, float)) * sgn   # lying direction
         A = np.column_stack([z_i, n_i, np.cross(z_i, n_i)])
         B = np.column_stack([a, [0, 0, -1.0], np.cross(a, [0, 0, -1.0])])
         Rd = B @ A.T
@@ -251,119 +252,6 @@ def _swing_lid(r, side):
     return lid_angle(r) < np.radians(62)
 
 
-def press_and_zip(r):
-    """Both palms press the lid; the right hand then runs the zipper round three sides."""
-    sp, sR = r.suitcase_frame()
-    top = sp + sR @ np.array([0, 0, D + DL])
-    F, right = facing(r)
-    down = np.array([0, 0, -1.0])
-    f = F.copy()                       # flat hands: forearms level so the palms land first
-    R_press = {"r": hand_R(f, down), "l": hand_R(f, down)}
-    pr, pl = top + right * 0.16 - F * 0.03, top - right * 0.16 - F * 0.03
-    r.stage("Press the lid down")
-    approach(r, {"r": (pr + [0, 0, 0.06], R_press["r"]), "l": (pl + [0, 0, 0.06], R_press["l"])},
-             fingers={"r": "press", "l": "press"}, root=dict(h=0.86), gaze=top)
-    # Gentle, purely vertical press: ~4 mm past first contact.
-    r.move(1.0, hands={"r": (pr - [0, 0, 0.004], R_press["r"]), "l": (pl - [0, 0, 0.004], R_press["l"])})
-    r.hold(0.4)
-    c = r.contacts_between(r.hand_bodies["r"] + r.hand_bodies["l"], r.suit_ids)
-    r.event("lid_press", contacts=c[0], force_N=round(c[1], 1), lid_angle_deg=float(np.degrees(lid_angle(r))))
-    # The left hand keeps pressing while the right hand runs the zipper.
-    # The hand runs the zip along the near long side (the reachable part of the track);
-    # the weld idealises closure of the full perimeter.
-    path_local = [(W / 2, -L / 2 + 0.04, D), (W / 2, 0.0, D), (W / 2, L / 2 - 0.05, D)]   # near side; stops short of the top handle
-    pts = [sp + sR @ np.array(p) for p in path_local]
-    seg = [np.linalg.norm(b - a) for a, b in zip(pts[:-1], pts[1:])]
-    cum = np.concatenate([[0], np.cumsum(seg)]); Ltot = cum[-1]
-
-    def at(sv):
-        i = min(np.searchsorted(cum, sv, side="right") - 1, len(seg) - 1)
-        return pts[i] + (pts[i + 1] - pts[i]) * ((sv - cum[i]) / seg[i])
-
-    centre = sp + sR @ np.array([0, 0, D])
-    # Fingers down beside the track, palm towards the case: nothing points into the shell.
-    out0 = unit((at(0.0) - centre) * np.array([1, 1, 0]))
-    pinch = hand_R(down, -out0)
-    r.stage("Run the zipper along the case")
-
-    def zp(sv):
-        p = at(sv)
-        out = unit((p - centre) * np.array([1, 1, 0]))
-        return p + out * 0.085 + np.array([0, 0, 0.03])       # traces the track just clear of the shell
-
-    approach(r, {"r": (zp(0.0) + [0, 0, 0.04], pinch)}, fingers={"r": "squeeze"}, gaze=at(0.0))
-    r.move(0.5, hands={"r": (zp(0.0), pinch)})
-    n = 9000
-    for k in range(n):
-        sv = Ltot * minjerk((k + 1) / n)
-        r.hand["r"] = (zp(sv), pinch)
-        r.zip_progress = sv / Ltot
-        r.gaze = at(sv)
-        r.step()
-    ok = lid_angle(r) < np.radians(2.5)
-    r.event("zip_check", lid_angle_deg=float(np.degrees(lid_angle(r))), closed=bool(ok))
-    if not ok:
-        raise RuntimeError(f"lid not closed: {np.degrees(lid_angle(r)):.2f} deg")
-    # Idealised zipper: lock the lid by narrowing its hinge range to the closed pose.
-    j = r.m.joint("lid_hinge").id
-    r.m.jnt_range[j] = [0.0, 0.003]
-    r.zip_locked = True
-    r.event("zipper_engaged", lid_angle_deg=float(np.degrees(lid_angle(r))))
-    r.stage("Zipped shut")
-    # Back the zip hand straight out from the case (fingers open) before anything rises.
-    hp, hR = r.hand["r"]
-    out = unit((hp - centre) * np.array([1, 1, 0]))
-    r.move(0.5, hands={"r": (hp + [0, 0, 0.04], hR)}, fingers={"r": "open"})
-    r.move(0.6, hands={"r": (hp + [0, 0, 0.04] + out * 0.07, hR)})
-    r.move(0.9, hands={s: (r.hand[s][0] + [0, 0, 0.14], r.hand[s][1]) for s in "rl"},
-           fingers={"r": "relaxed", "l": "relaxed"})
-
-
-def _zip_track(r):
-    """The near-side zip track as traced by press_and_zip: point at arc length, hand pose."""
-    sp, sR = r.suitcase_frame()
-    path_local = [(W / 2, -L / 2 + 0.04, D), (W / 2, 0.0, D), (W / 2, L / 2 - 0.05, D)]
-    pts = [sp + sR @ np.array(p) for p in path_local]
-    seg = [np.linalg.norm(b - a) for a, b in zip(pts[:-1], pts[1:])]
-    cum = np.concatenate([[0], np.cumsum(seg)])
-
-    def at(sv):
-        i = min(np.searchsorted(cum, sv, side="right") - 1, len(seg) - 1)
-        return pts[i] + (pts[i + 1] - pts[i]) * ((sv - cum[i]) / seg[i])
-
-    centre = sp + sR @ np.array([0, 0, D])
-
-    def zp(sv):
-        p = at(sv)
-        out = unit((p - centre) * np.array([1, 1, 0]))
-        return p + out * 0.085 + np.array([0, 0, 0.03])
-
-    pinch = hand_R(np.array([0, 0, -1.0]), -unit((at(0.0) - centre) * np.array([1, 1, 0])))
-    return at, zp, pinch, cum[-1], centre
-
-
-def unzip(r):
-    """Run the zipper back along the near side and free the lid hinge."""
-    at, zp, pinch, Ltot, centre = _zip_track(r)
-    r.stage("Unzip the case")
-    approach(r, {"r": (zp(Ltot) + [0, 0, 0.04], pinch)}, fingers={"r": "squeeze"}, root=dict(h=0.86), gaze=at(Ltot))
-    r.move(0.5, hands={"r": (zp(Ltot), pinch)})
-    n = 6000
-    for k in range(n):
-        sv = Ltot * (1 - minjerk((k + 1) / n))
-        r.hand["r"] = (zp(sv), pinch)
-        r.zip_progress = sv / Ltot
-        r.gaze = at(sv)
-        r.step()
-    j = r.m.joint("lid_hinge").id
-    r.m.jnt_range[j] = [0.0, np.pi + 0.35]
-    r.zip_locked = False
-    r.event("zipper_released", lid_angle_deg=float(np.degrees(lid_angle(r))))
-    hp, hR = r.hand["r"]
-    r.move(0.5, hands={"r": (hp + [0, 0, 0.04], hR)}, fingers={"r": "open"})
-    r.move(0.8, hands={"r": (hp + [0, 0, 0.18], hR)}, fingers={"r": "relaxed"})
-
-
 def open_lid(r, side="r"):
     """From the foot of the bed: hook the fingertips under the zip-track lip on the lid's
     free long edge near the handle end, swing the lid up past its balance point and let it fall open."""
@@ -440,8 +328,7 @@ def lift_from_bed_foot(r, floor_x=2.52):
     Every pull (up, or towards the body) seats the bar deeper in the curled fingers."""
     sp, sR = r.suitcase_frame()
     hb = S.SUITCASE["bar"]
-    top_bar = np.array([hb["x"], hb["y"], hb["z"]])
-    bar = lambda: r.suitcase_frame()[0] + r.suitcase_frame()[1] @ top_bar
+    bar = lambda: r.body_pose("trolley")[0]          # the bar on its (latched) telescopic slide
     bar0 = bar()
     away = bar0 - np.array([r.root["x"], r.root["y"], bar0[2]]); away[2] = 0; away = unit(away)
     up = np.array([0, 0, 1.0])

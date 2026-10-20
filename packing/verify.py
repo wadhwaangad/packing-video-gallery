@@ -15,9 +15,10 @@ from scipy.spatial.transform import Rotation as Rot
 import scene as S
 
 HERE = Path(__file__).resolve().parent
-CODE = ["scene.py", "hands.py", "build_model.py", "runner.py", "tasks.py", "skills_case.py", "packsim.py",
-        "episodes.py", "executor.py", "generate.py", "operator_model.py", "export_poses.py", "render_blender.py",
-        "item_assets.py", "prepare_assets.py", "encode.py", "verify.py", "fetch_assets.py"]
+CODE = ["scene.py", "hands.py", "build_model.py", "runner.py", "tasks.py", "skills_case.py", "skills_hw.py", "packsim.py",
+        "actionspace.py", "layout.py", "instruct.py", "episodes.py", "executor.py", "generate.py", "operator_model.py",
+        "export_poses.py", "render_blender.py", "item_assets.py", "prepare_assets.py", "encode.py", "verify.py",
+        "fetch_assets.py"]
 
 
 def sha(p):
@@ -59,7 +60,7 @@ def main(run):
     for it in S.ITEMS:
         loc = sR.T @ (P[bid[it.name]] - sp)
         phys = bool(abs(loc[0]) < W / 2 - t and abs(loc[1]) < L / 2 - t and 0 < loc[2] < depth)
-        logged = final_state["loc"][it.name].startswith("case:")
+        logged = final_state["loc"][it.name] == "case"
         inside[it.name] = dict(local_m=loc.round(4).tolist(), inside_physically=phys, packed_in_log=logged)
     detail["items"] = inside
     checks["log_matches_physics_for_every_item"] = all(v["inside_physically"] == v["packed_in_log"] for v in inside.values())
@@ -67,31 +68,51 @@ def main(run):
     detail["goals_satisfied"] = goals["satisfied"]
     expected = {e["id"]: e for e in goals["schedule"]}
     checks["every_scheduled_event_fired"] = all(e["fired"] for e in expected.values())
-    checks["no_refused_actions"] = all(a["ok"] for a in actions)
+    case = json.loads((run / "case.json").read_text()) if (run / "case.json").exists() else {}
+    instructed = case.get("mode") == "instructions"
+    detail["refused_or_rejected"] = [dict(text=a["action"]["text"], feedback=a["feedback"]) for a in actions if not a["ok"]]
+    if not instructed:
+        # a sampled case is legal by construction; with instructions, refusals are outputs
+        checks["no_refused_actions"] = all(a["ok"] for a in actions)
     detail["action_retries"] = [dict(t=e["t"], action=e["action"]["text"], reason=e["reason"]) for e in events
                                 if e["event"] == "action_retry"]
     places = [e for e in events if e["event"] == "placed_check"]
     checks["every_placement_landed_in_its_region"] = all(e["ok"] for e in places)
     detail["placements"] = places
 
-    # -- the case at the end
+    # -- the case at the end: every part where the log says it is
     lid_deg = float(np.degrees(last["lid"]))
     detail["final_lid_angle_deg"] = lid_deg
-    checks["lid_closed_under_2deg"] = abs(lid_deg) < 2.0
+    if final_state["lid"] == "closed":
+        checks["lid_closed_under_2deg"] = abs(lid_deg) < 2.0
+    else:
+        checks["lid_open_over_150deg"] = lid_deg > 150
     zip_ev = [e for e in events if e["event"] == "zipper_engaged"]
-    zcheck = [e for e in events if e["event"] == "zip_check"]
-    checks["zipper_engaged_only_after_closure_check"] = bool(zip_ev and zcheck and zcheck[-1]["closed"]
-                                                            and zcheck[-1]["t"] <= zip_ev[-1]["t"])
+    checks["zipper_engaged_only_with_lid_down"] = all(abs(e["lid_angle_deg"]) < 2.5 for e in zip_ev)
+    hw = last.get("hw")
+    if hw:
+        detail["final_hardware"] = hw
+        zc_log = 1 - final_state["zip_open"]
+        checks["zip_matches_log"] = abs(hw["zip_closed"] - zc_log) < 0.05
+        checks["lock_dials_match_log"] = hw["dials"] == final_state["dials"]
+        checks["zip_pulls_match_log"] = all(hw["docked"].values()) == (final_state["pulls"] == "docked") and             (any(hw["docked"].values()) == (final_state["pulls"] == "docked"))
+        checks["trolley_stop_matches_log"] = hw["trolley_level"] == final_state["trolley"]
+        checks["strap_matches_log"] = hw["buckled"] == (final_state["strap"] == "fastened")
     tilt = float(np.degrees(np.arccos(np.clip(sR[2, 1], -1, 1))))
     detail["final_suitcase_tilt_deg"] = tilt
-    checks["suitcase_upright_under_5deg"] = tilt < 5.0
     wheel_z = []
     for g in range(m.ngeom):
         if m.geom(g).name.startswith("wheel_"):
             b = m.geom_bodyid[g]
             wheel_z.append(float((P[b] + quat_R(Q[b]) @ m.geom_pos[g])[2] - m.geom_size[g][0]))
     detail["wheel_bottom_heights_m"] = wheel_z
-    checks["four_wheels_on_floor"] = len(wheel_z) == 4 and max(abs(z) for z in wheel_z) < 0.008
+    if final_state["case_pose"] == "upright_floor":
+        checks["suitcase_upright_under_5deg"] = tilt < 5.0
+        checks["four_wheels_on_floor"] = len(wheel_z) == 4 and max(abs(z) for z in wheel_z) < 0.008
+    else:
+        lie = float(np.degrees(np.arccos(np.clip(sR[2, 2], -1, 1))))
+        detail["final_suitcase_lie_deg"] = lie
+        checks["suitcase_lying_on_its_back_under_10deg"] = lie < 10.0
     k = min(50, len(frames) - 1)
     drift = {n: float(np.linalg.norm(np.array(frames[-1]["xpos"][bid[n]]) - np.array(frames[-1 - k]["xpos"][bid[n]])))
              for n in ["suitcase"] + [it.name for it in S.ITEMS]}
@@ -102,7 +123,8 @@ def main(run):
     # While packing the case must stay put; flipping the heavy lid over may shift it a little
     # on the soft mattress (as a real case does), up to the final lift.
     t_lift = next((f["t"] for f in frames if f["stage"].startswith(("Hook the trolley handle", "Hook the top handle"))), ts[-1])
-    t_lid = next((a["t_start"] for a in actions if a["action"]["verb"] == "close_lid" and a["ok"]), t_lift)
+    t_lid = next((a["t_start"] for a in actions if a["action"]["verb"] == "close" and a["action"].get("target") == "lid"
+                  and a["ok"]), t_lift)
     s0 = np.array(frames[0]["xpos"][bid["suitcase"]])
     dist = lambda f: float(np.linalg.norm(np.array(f["xpos"][bid["suitcase"]]) - s0))
     disp_pack = max([dist(f) for f in frames if f["t"] < t_lid] or [0.0])
@@ -114,7 +136,7 @@ def main(run):
 
     # -- grasps
     lifts = [e for e in events if e["event"] == "lift_check"]
-    picks = [a for a in actions if a["action"]["verb"] in ("pick_up", "take_out")]
+    picks = [a for a in actions if a["action"]["verb"] == "pick_up" and a["ok"]]
     detail["lift_checks"] = [dict(t=e["t"], items=e["items"], rise_m=e["rise_m"], normal_force_N=e["normal_force_N"]) for e in lifts]
     checks["every_pick_lifted_by_contact"] = len(lifts) == len(picks)
     drops = []

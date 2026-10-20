@@ -1,58 +1,26 @@
 """PackSim: the symbolic layer of the packing simulator.
 
-It holds the task-level world state, defines the semantic action space, checks each
-action's preconditions (returning feedback instead of silently changing the world),
-applies effects, and evaluates goal predicates. It has no physics: the executor
-(executor.py) grounds each accepted action in the MuJoCo simulation and commits the
-effect here only after the physical outcome has been verified.
+It holds the task-level world state, checks each grounded action's preconditions
+(returning feedback instead of silently changing the world), applies effects, and
+evaluates goal predicates. It has no physics: the executor (executor.py) grounds each
+accepted action in the MuJoCo simulation and commits the effect here only after the
+physical outcome has been verified.
 
-Action space (verbs and arguments; angle brackets are resolved by the grounder):
-  navigate     go_to <station | item>
-  manipulate   pick_up <item>      put_in <region> [upright|lying]     put_back
-               take_out <item>
-  case         close_lid   zip   unzip   open_lid   stand_up
-  other        wait <seconds>      say <text>
+The action space itself (verbs, typed arguments, asset parts, reference resolution)
+is defined in actionspace.py; where things fit in the case in layout.py.
 """
 from dataclasses import dataclass, field, asdict
-import copy, re
+import copy
+import numpy as np
 import scene as S
+import layout as LO
+from actionspace import Action, VERBS, SUITCASE_PARTS, ground, Rejection, describe
 
-
-# ---------------------------------------------------------------- actions
-@dataclass
-class Action:
-    verb: str
-    target: str = ""        # station, item or region
-    arg: str = ""           # orientation for put_in, text for say, seconds for wait
-
-    def text(self):
-        lab = lambda n: S.item(n).label if n in ITEM_NAMES else S.STATIONS[n].label if n in S.STATIONS else \
-            S.REGIONS[n].label if n in S.REGIONS else n
-        return {
-            "go_to": lambda: f"go to {lab(self.target)}",
-            "pick_up": lambda: f"pick up the {lab(self.target)}",
-            "put_in": lambda: f"put it in {lab(self.target)}" + (f", {self.arg}" if self.arg else ""),
-            "put_back": lambda: "put it back where it was",
-            "take_out": lambda: f"take the {lab(self.target)} out of the suitcase",
-            "close_lid": lambda: "close the lid", "zip": lambda: "zip the case", "unzip": lambda: "unzip the case",
-            "open_lid": lambda: "open the lid", "stand_up": lambda: "stand the case up on its wheels",
-            "wait": lambda: f"pause for {self.arg} s", "say": lambda: f'say "{self.arg}"',
-        }[self.verb]()
-
-    def to_dict(self):
-        return dict(verb=self.verb, target=self.target, arg=self.arg, text=self.text())
-
-
-VERBS = {
-    "go_to": "navigate", "pick_up": "manipulate", "put_in": "manipulate", "put_back": "manipulate",
-    "take_out": "manipulate", "close_lid": "case", "zip": "case", "unzip": "case", "open_lid": "case",
-    "stand_up": "case", "wait": "other", "say": "other",
-}
 ITEM_NAMES = [it.name for it in S.ITEMS]
 
-# Station each case action is performed from.
-CASE_STATION = {"close_lid": "bed_foot", "open_lid": "bed_foot", "stand_up": "bed_foot",
-                "zip": "suitcase", "unzip": "suitcase"}
+# Station each case action is performed from (while the case lies on the bed).
+CASE_STATION = {"open_lid": "bed_foot", "close_lid": "bed_foot", "stand_up": "bed_foot", "set_trolley": "bed_foot",
+                "zip": "suitcase", "lock": "suitcase", "strap": "suitcase"}
 
 
 # ---------------------------------------------------------------- tasks
@@ -62,13 +30,15 @@ class Task:
     title: str
     pack: tuple                      # items that must end up in the case
     note: str = ""
+    lock: str = ""                   # if set: finish by docking the zip pulls and scrambling the dials
 
 
 TASKS = {t.name: t for t in [
     Task("weekend_trip", "Weekend away", ("trousers", "tshirts", "sweatshirts", "towel", "toiletry_bag", "bottle",
                                          "notebook", "camera"), "the reference task shown on the page"),
     Task("gym_weekend", "Gym weekend", ("gym_clothes", "tshirts", "towel", "toiletry_bag", "bottle")),
-    Task("work_trip", "Work trip", ("trousers", "striped_shirts", "toiletry_bag", "notebook", "bottle")),
+    Task("work_trip", "Work trip", ("trousers", "striped_shirts", "toiletry_bag", "notebook", "bottle"),
+         "locked before it leaves: pulls docked, dials scrambled", lock="yes"),
     Task("beach_holiday", "Beach holiday", ("tshirts", "striped_shirts", "towel_stack", "toiletry_bag", "bottle", "camera")),
     Task("winter_visit", "Winter visit", ("sweater_pile", "sweatshirts", "trousers", "toiletry_bag", "bottle", "notebook")),
 ]}
@@ -80,164 +50,398 @@ class State:
     station: str = "suitcase"
     facing: str = ""                                  # item the person stands in front of
     holding: str = ""
-    loc: dict = field(default_factory=dict)           # item -> "station:<name>" | "held" | "case:<region>"
-    stacks: dict = field(default_factory=dict)        # region -> [items bottom..top]
+    loc: dict = field(default_factory=dict)           # item -> "station:<name>" | "held" | "case"
+    place: dict = field(default_factory=dict)         # item in the case -> x, y, yaw, z, orient, on
     orient: dict = field(default_factory=dict)        # bottle -> upright | lying
     lid: str = "open"
-    zipped: bool = False
+    zip_open: float = 1.0                             # opening of the main zip: 1 fully open, 0 zipped shut
+    pulls: str = "free"                               # zip pulls: free | docked (in the lock)
+    dials: list = field(default_factory=lambda: [0, 0, 0])
+    code: str = "000"                                 # the lock's combination (factory setting)
+    trolley: int = 0                                  # telescopic handle stop
+    strap: str = "fastened"                           # lid strap buckle: fastened | open
     case_pose: str = "on_bed"                         # on_bed | upright_floor
+    case_at: str = "bed"                              # where the case is: bed | bed_foot | bedroom_door
     pack: tuple = ()                                  # current goal list (plan changes may edit it)
+    cloth: dict = field(default_factory=dict)         # loose cloth in the scene -> flat | folded_half
+
+    # derived
+    @property
+    def zipped(self):
+        return self.zip_open <= 1e-6
+
+    @property
+    def locked(self):
+        return self.pulls == "docked" and "".join(map(str, self.dials)) != self.code
 
     def where(self, item):
         return self.loc[item]
 
     def in_case(self, item):
-        return self.loc[item].startswith("case:")
+        return self.loc[item] == "case"
 
-    def region_of(self, item):
-        return self.loc[item].split(":", 1)[1] if self.in_case(item) else ""
+    def on_top_of(self, item):
+        return LO.nothing_on(self.place, item)
 
-    def height(self, region):
-        return sum(S.item(n).size[2] for n in self.stacks[region])
+    def top_height(self):
+        return max([p["z"] + LO.dims(n, p.get("orient", ""))[2] for n, p in self.place.items()] + [LO.FLOOR])
 
 
 def initial_state(task):
     st = State(pack=tuple(TASKS[task].pack))
     st.loc = {it.name: f"station:{it.station}" for it in S.ITEMS}
-    st.stacks = {r: [] for r in S.REGIONS}
     st.orient = {"bottle": "upright"}
     return st
+
+
+def _home(n):
+    return S.item(n).station
 
 
 class PackSim:
     """Legality, effects and goals over State. `check` never changes the world."""
 
-    def __init__(self, task="weekend_trip"):
+    def __init__(self, task="weekend_trip", cloth=False):
         self.task = task
         self.state = initial_state(task)
+        if cloth:
+            self.state.cloth = {S.CLOTH["name"]: "flat"}
         self.log = []
+
+    # ------------------------------------------------------------ placement
+    def place_pose(self, a):
+        """(x, y, yaw, orient, Fit) for a place-in-case action, or (None, reason, code)."""
+        st = self.state
+        item = a.target or st.holding
+        orient = a.get("orient", "") or ("upright" if item == "bottle" else "")
+        if orient == "flat":
+            orient = ""
+        rel, dest = a.get("rel", "in"), a.get("dest", "suitcase")
+        yaw = np.radians(a.get("yaw")) if a.get("yaw") is not None else None
+        at = a.get("at")
+        if rel == "in" and at is None:
+            at = LO.choose_spot(st.place, item)
+        try:
+            if rel in ("on", "beside"):
+                if dest not in st.place:
+                    return None, f"the {S.item(dest).label} is not in the case", "precondition"
+                x, y, yw = LO.resolve_spot(st.place, item, rel=rel, ref=dest, side=a.get("side"), yaw=yaw, orient=orient)
+            else:
+                x, y, yw = LO.resolve_spot(st.place, item, at=at, yaw=yaw, orient=orient)
+        except ValueError as e:
+            return None, e.args[1], e.args[0]
+        if rel in ("on", "beside") or isinstance(at, str):
+            # a relation or a named spot is approximate: take the nearest pose that fits
+            nx, ny, fit = LO.nudge(st.place, item, x, y, yw, orient, keep_on=dest if rel == "on" else None)
+            if nx is None:
+                return None, fit.reason, fit.code
+            x, y = nx, ny
+        else:
+            fit = LO.evaluate(st.place, item, x, y, yw, orient)
+            if not fit.ok:
+                return None, fit.reason, fit.code
+        if rel == "on" and dest not in fit.on:
+            return None, f"it would not rest on the {S.item(dest).label} there (it would rest on " \
+                         f"{', '.join(S.item(o).label for o in fit.on) or 'the case floor'})", "unstable"
+        return (x, y, yw, orient, fit), "", ""
 
     # ------------------------------------------------------------ preconditions
     def check(self, a):
         st = self.state
-        it = lambda n: S.item(n)
-        if a.verb not in VERBS:
-            return False, f"unknown action '{a.verb}'"
-        if a.verb in ("pick_up", "take_out") and a.target not in ITEM_NAMES:
-            return False, f"there is no '{a.target}' here"
-        if st.case_pose != "on_bed" and a.verb not in ("go_to", "wait", "say"):
-            return False, "the case is already standing on the floor"
-        if a.verb == "go_to":
-            if a.target not in S.STATIONS and a.target not in ITEM_NAMES:
-                return False, f"cannot find '{a.target}'"
-            if a.target in ITEM_NAMES and st.loc[a.target] == "held":
-                return False, f"you are already holding the {it(a.target).label}"
+        lab = lambda n: S.item(n).label
+        v = a.verb
+        if v not in VERBS:
+            return False, f"unknown action '{v}'"
+        upright = st.case_pose == "upright_floor"
+        near_case = st.station in ("suitcase", "bed_foot") if not upright else st.station == "case_floor"
+        if v == "go_to":
+            t = a.target
+            if t in LO.ANCHORS:
+                return True, ""
+            if t not in S.STATIONS and t not in ITEM_NAMES:
+                return False, f"cannot find '{t}'"
+            if t in ITEM_NAMES and st.loc[t] == "held":
+                return False, f"you are already holding the {lab(t)}"
+            if t == "suitcase" and upright:
+                return True, ""
             return True, ""
-        if a.verb == "pick_up":
+        if v == "look_at":
+            return True, ""
+        if v == "pick_up":
+            t = a.target
             if st.holding:
-                return False, f"your hands are full (holding the {it(st.holding).label})"
-            if st.in_case(a.target):
-                return False, f"the {it(a.target).label} is in the suitcase: take it out instead"
-            home = st.loc[a.target].split(":", 1)[1]
-            if st.station != home or st.facing != a.target:
-                return False, f"the {it(a.target).label} is not within reach (you are at {S.STATIONS[st.station].label})"
+                return False, f"your hands are full (holding the {lab(st.holding)})"
+            if st.in_case(t):
+                if upright or st.lid != "open":
+                    return False, "the case is closed"
+                if st.station != "suitcase":
+                    return False, "you are not at the suitcase"
+                top = st.on_top_of(t)
+                if top:
+                    return False, f"the {lab(top[0])} is on top of it"
+                if t == "bottle" and st.orient["bottle"] != "upright":
+                    return False, "a lying bottle cannot be gripped from above in the case: it is wedged against the wall"
+                return True, ""
+            home = st.loc[t].split(":", 1)[1]
+            if st.station != home or st.facing != t:
+                return False, f"the {lab(t)} is not within reach (you are at {S.STATIONS[st.station].label})"
             return True, ""
-        if a.verb == "take_out":
-            if st.holding:
-                return False, f"your hands are full (holding the {it(st.holding).label})"
-            if not st.in_case(a.target):
-                return False, f"the {it(a.target).label} is not in the suitcase"
-            if st.station != "suitcase":
-                return False, "you are not at the suitcase"
-            if st.lid != "open":
-                return False, "the lid is closed"
-            stack = st.stacks[st.region_of(a.target)]
-            if stack[-1] != a.target:
-                return False, f"the {it(stack[stack.index(a.target) + 1]).label} is on top of it"
-            return True, ""
-        if a.verb == "put_in":
+        if v == "place":
+            item = a.target or st.holding
             if not st.holding:
                 return False, "you are not holding anything"
+            if item != st.holding:
+                return False, f"you are holding the {lab(st.holding)}, not the {lab(item)}"
+            dest = a.get("dest", "suitcase")
+            if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
+                if st.station != dest:
+                    return False, f"you are not at {S.STATIONS[dest].label}"
+                if dest != _home(item):
+                    return False, f"there is no free spot for the {lab(item)} on {S.STATIONS[dest].label}; " \
+                                  f"it can go back on {S.STATIONS[_home(item)].label}"
+                return True, ""
             if st.station != "suitcase":
                 return False, "you are not at the suitcase"
-            if st.lid != "open":
+            if upright or st.lid != "open":
                 return False, "the lid is closed"
-            if a.target not in S.REGIONS:
-                return False, f"there is no place called '{a.target}' in the case"
-            reg, item = S.REGIONS[a.target], it(st.holding)
-            if item.family not in reg.families:
-                return False, f"the {item.label} does not fit in {reg.label}"
-            if st.stacks[a.target] and not S.FAMILIES[it(st.stacks[a.target][-1]).family]["stackable"]:
-                return False, f"nothing can go on top of the {it(st.stacks[a.target][-1]).label}"
-            if st.height(a.target) + item.size[2] > S.INNER_H - 0.008:
-                return False, f"{reg.label} is full"
-            if a.arg and item.family != "bottle":
+            if a.get("orient") in ("upright", "lying") and item != "bottle":
                 return False, "only the bottle can be stood upright or laid down"
+            r, msg, code = self.place_pose(a)
+            if r is None:
+                return False, msg
             return True, ""
-        if a.verb == "put_back":
+        if v == "put_back":
             if not st.holding:
                 return False, "you are not holding anything"
-            home = it(st.holding).station
+            home = _home(st.holding)
             if st.station != home:
-                return False, f"the {it(st.holding).label} belongs at {S.STATIONS[home].label}"
+                return False, f"the {lab(st.holding)} belongs at {S.STATIONS[home].label}"
             return True, ""
-        if a.verb in CASE_STATION:
+        if v in ("wait", "say"):
+            return True, ""
+        if v in ("fold", "unfold"):
+            if a.target not in st.cloth:
+                return False, f"there is no loose {S.CLOTH['label']} in this scene"
             if st.holding:
                 return False, "put down what you are holding first"
-            if st.station != CASE_STATION[a.verb]:
-                return False, f"do that from {S.STATIONS[CASE_STATION[a.verb]].label}"
-            need = {"close_lid": (st.lid == "open", "the lid is already closed"),
-                    "open_lid": (st.lid == "closed" and not st.zipped, "unzip the case first" if st.zipped else "the lid is already open"),
-                    "zip": (st.lid == "closed" and not st.zipped, "close the lid first" if st.lid == "open" else "already zipped"),
-                    "unzip": (st.zipped, "the case is not zipped"),
-                    "stand_up": (st.zipped, "zip the case before standing it up")}[a.verb]
-            if not need[0]:
-                return False, need[1]
-            if a.verb == "close_lid" and max(st.height(r) for r in S.REGIONS) > S.INNER_H:
+            if st.station != S.CLOTH["station"]:
+                return False, f"go to {S.STATIONS[S.CLOTH['station']].label} first"
+            if v == "fold" and st.cloth[a.target] != "flat":
+                return False, f"the {S.CLOTH['label']} is already folded"
+            return True, ""
+        # -------- suitcase parts
+        if st.holding and v not in ("roll",):
+            return False, "put down what you are holding first"
+        if v == "roll":
+            if st.holding:
+                return False, "put down what you are holding first"
+            if not upright:
+                return False, "stand the case up on its wheels first"
+            if st.trolley < 1:
+                return False, "extend the trolley handle first"
+            if st.station != "case_floor":
+                return False, "go to the suitcase first"
+            if a.get("to") == st.case_at:
+                return False, "the case is already there"
+            if a.get("to") not in FLOOR_SPOTS:
+                return False, f"the case can be rolled to: {', '.join(FLOOR_SPOTS)}"
+            return True, ""
+        t = a.target
+        if v in ("stand_up", "lay_down"):
+            if v == "stand_up":
+                if upright:
+                    return False, "the case is already standing"
+                if st.station != "bed_foot":
+                    return False, "do that from the foot of the bed"
+                if not st.zipped:
+                    return False, "zip the case before standing it up"
+                return True, ""
+            if not upright:
+                return False, "the case is already lying down"
+            if st.case_at != "bed_foot":
+                return False, "roll the case back to the foot of the bed first"
+            if st.station != "case_floor":
+                return False, "go to the suitcase first"
+            if st.trolley != 0:
+                return False, "retract the trolley handle first"
+            return True, ""
+        if v in ("open", "close") and t == "lid":
+            if upright:
+                return False, "lay the case down on the bed first"
+            if st.station != "bed_foot":
+                return False, "do that from the foot of the bed"
+            if v == "open":
+                if st.lid == "open":
+                    return False, "the lid is already open"
+                if st.zip_open < 0.95:
+                    return False, "unzip the case first" if st.zip_open < 0.05 else f"the zip is still {1 - st.zip_open:.0%} closed"
+                return True, ""
+            if st.lid == "closed":
+                return False, "the lid is already closed"
+            if st.top_height() > LO.TOP:
                 return False, "the case is too full to close"
             return True, ""
-        return True, ""
+        if v in ("open", "close") and t == "main_zip":
+            to = a.get("to")
+            if upright:
+                return False, "lay the case down on the bed first"
+            if st.station != "suitcase":
+                return False, "go to the suitcase first"
+            if st.lid != "closed":
+                return False, "close the lid first"
+            if st.pulls == "docked":
+                return False, "the zip pulls are locked in the lock" if st.locked else \
+                    "the zip pulls are in the lock: press the lock's release button"
+            if v == "open" and to <= st.zip_open + 1e-6:
+                return False, f"the zip is already {st.zip_open:.0%} open"
+            if v == "close" and to >= st.zip_open - 1e-6:
+                return False, "the zip is already closed that far"
+            if st.strap != "fastened" and False:
+                return False, ""
+            return True, ""
+        if v == "insert":
+            if st.station not in ("suitcase", "case_floor"):
+                return False, "go to the suitcase first"
+            if not st.zipped:
+                return False, "zip the case shut first: the pulls meet at the lock only when it is closed"
+            if st.pulls == "docked":
+                return False, "the zip pulls are already in the lock"
+            return True, ""
+        if v in ("turn", "set") and t.startswith(("dial_", "lock")):
+            if st.station not in ("suitcase", "case_floor"):
+                return False, "go to the suitcase first"
+            if st.lid != "closed":
+                return False, "the lock is on the lid's side wall, which lies face down while the case is open"
+            return True, ""
+        if v == "press" and t == "lock_button":
+            if st.station not in ("suitcase", "case_floor"):
+                return False, "go to the suitcase first"
+            if st.lid != "closed":
+                return False, "the lock is on the lid's side wall, which lies face down while the case is open"
+            return True, ""
+        if (v == "set" and t == "trolley_handle") or (v == "press" and t == "trolley_button"):
+            if upright:
+                if st.station != "case_floor":
+                    return False, "go to the suitcase first"
+            elif st.station != "bed_foot":
+                return False, "do that from the foot of the bed"
+            if v == "set" and a.get("value") == st.trolley:
+                return False, f"the handle is already at stop {st.trolley}"
+            if v == "set" and not upright and a.get("value") > 1:
+                return False, "with the case lying on the bed the handle can only be pulled out to stop 1 " \
+                              "(it would hit the end of the bed frame)"
+            return True, ""
+        if v in ("fasten", "unfasten"):
+            if st.lid != "closed":
+                return False, "the strap is on the lid's front, which lies face down while the case is open"
+            if upright:
+                return False, "lay the case down on the bed first"
+            if st.station != "suitcase":
+                return False, "go to the suitcase first"
+            if v == "fasten" and st.strap == "fastened":
+                return False, "the strap is already fastened"
+            if v == "unfasten" and st.strap != "fastened":
+                return False, "the strap is already open"
+            return True, ""
+        if v in ("fold", "unfold"):
+            if a.target not in st.cloth:
+                return False, f"there is no loose {S.CLOTH['label']} in this scene"
+            if st.holding:
+                return False, "put down what you are holding first"
+            if st.station != S.CLOTH["station"]:
+                return False, f"go to {S.STATIONS[S.CLOTH['station']].label} first"
+            if v == "fold" and st.cloth[a.target] != "flat":
+                return False, f"the {S.CLOTH['label']} is already folded"
+            return True, ""
+        return False, f"{describe(a)}: not possible here"
 
     # ------------------------------------------------------------ effects
-    def apply(self, a):
+    def apply(self, a, pose=None):
+        """Commit an action. `pose` (x, y, yaw, orient, z, on) is the placement as measured
+        by the executor; without it the planned pose is used."""
         st = self.state
-        if a.verb == "go_to":
-            if a.target in ITEM_NAMES:
-                where = st.loc[a.target]
-                st.station = "suitcase" if where.startswith("case:") else where.split(":", 1)[1]
-                st.facing = "" if where.startswith("case:") else a.target
+        v, t = a.verb, a.target
+        if v == "go_to":
+            if t in LO.ANCHORS or t == "suitcase":
+                st.station = "case_floor" if st.case_pose == "upright_floor" else "suitcase"
+                st.facing = ""
+            elif t in ITEM_NAMES:
+                where = st.loc[t]
+                st.station = "suitcase" if where == "case" else where.split(":", 1)[1]
+                st.facing = "" if where == "case" else t
             else:
-                st.station, st.facing = a.target, ""
-        elif a.verb in ("pick_up", "take_out"):
-            if st.in_case(a.target):
-                st.stacks[st.region_of(a.target)].remove(a.target)
-            st.loc[a.target] = "held"; st.holding = a.target
-        elif a.verb == "put_in":
-            st.loc[st.holding] = f"case:{a.target}"; st.stacks[a.target].append(st.holding)
-            if st.holding == "bottle":
-                st.orient["bottle"] = a.arg or "upright"
+                st.station, st.facing = t, ""
+        elif v == "pick_up":
+            if st.in_case(t):
+                st.place.pop(t, None)
+            st.loc[t] = "held"; st.holding = t
+        elif v == "place":
+            item = st.holding
+            dest = a.get("dest", "suitcase")
+            if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
+                st.loc[item] = f"station:{dest}"
+                st.facing = item
+            else:
+                if pose is None:
+                    r, _, _ = self.place_pose(a)
+                    x, y, yw, orient, fit = r
+                    pose = dict(x=x, y=y, yaw=yw, orient=orient, z=fit.z, on=fit.on)
+                st.place[item] = dict(pose)
+                st.loc[item] = "case"
+                if item == "bottle":
+                    st.orient["bottle"] = pose.get("orient") or "upright"
             st.holding = ""
-        elif a.verb == "put_back":
-            st.loc[st.holding] = f"station:{S.item(st.holding).station}"
+        elif v == "put_back":
+            st.loc[st.holding] = f"station:{_home(st.holding)}"
             if st.holding == "bottle":
                 st.orient["bottle"] = "upright"
             st.facing = st.holding; st.holding = ""
-        elif a.verb == "close_lid":
-            st.lid = "closed"
-        elif a.verb == "open_lid":
-            st.lid = "open"
-        elif a.verb == "zip":
-            st.zipped = True
-        elif a.verb == "unzip":
-            st.zipped = False
-        elif a.verb == "stand_up":
-            st.case_pose = "upright_floor"
+        elif v in ("open", "close") and t == "lid":
+            st.lid = "open" if v == "open" else "closed"
+        elif v in ("open", "close") and t == "main_zip":
+            st.zip_open = float(a.get("to"))
+        elif v == "insert":
+            st.pulls = "docked"
+        elif v == "turn":
+            k = int(t[-1]) - 1
+            st.dials[k] = a.get("to") if a.get("to") is not None else (st.dials[k] + a.get("by")) % 10
+        elif v == "set" and t == "lock":
+            st.dials = [int(c) for c in a.get("value")]
+        elif v == "press" and t == "lock_button":
+            if st.pulls == "docked" and not st.locked:
+                st.pulls = "free"
+        elif v == "set" and t == "trolley_handle":
+            st.trolley = int(a.get("value"))
+        elif v == "fasten":
+            st.strap = "fastened"
+        elif v == "unfasten":
+            st.strap = "open"
+        elif v == "stand_up":
+            st.case_pose = "upright_floor"; st.case_at = "bed_foot"; st.station = "case_floor"
+        elif v == "lay_down":
+            st.case_pose = "on_bed"; st.case_at = "bed"; st.station = "bed_foot"
+        elif v == "roll":
+            st.case_at = a.get("to"); st.station = "case_floor"
+        elif v == "fold":
+            st.cloth[t] = "folded_" + a.get("style", "half")
 
-    def step(self, a):
+    def feedback(self, a):
+        """What the person notices after an accepted action that changes nothing."""
+        st = self.state
+        if a.verb == "press" and a.target == "lock_button":
+            if st.pulls != "docked":
+                return "nothing is in the lock"
+            if st.locked:
+                return "the button does not move: the dials do not show the code"
+        if a.verb == "press" and a.target == "trolley_button":
+            return "the handle is free to move only while the button is held"
+        return ""
+
+    def step(self, a, pose=None):
         ok, msg = self.check(a)
         self.log.append(dict(action=a.to_dict(), ok=ok, feedback=msg))
         if ok:
-            self.apply(a)
+            self.apply(a, pose)
         return ok, msg
 
     # ------------------------------------------------------------ goals
@@ -253,74 +457,41 @@ class PackSim:
         for n in ITEM_NAMES:
             it = S.item(n)
             if st.in_case(n) and it.heavy:
-                g[f"heavy_on_floor({n})"] = st.stacks[st.region_of(n)][0] == n
+                g[f"heavy_on_floor({n})"] = not st.place[n].get("on")
             if st.in_case(n) and S.FAMILIES[it.family]["fragile"]:
-                g[f"nothing_on({n})"] = st.stacks[st.region_of(n)][-1] == n
+                g[f"nothing_on({n})"] = not st.on_top_of(n)
         g["lid_closed"] = st.lid == "closed"
         g["zipped"] = st.zipped
         g["case_upright"] = st.case_pose == "upright_floor"
+        task = TASKS[self.task]
+        if task.lock:
+            g["locked"] = st.locked
         return g
 
     def done(self):
         return all(self.goals().values())
 
     def snapshot(self):
-        return copy.deepcopy(asdict(self.state))
+        d = copy.deepcopy(asdict(self.state))
+        d["zipped"] = self.state.zipped
+        d["locked"] = self.state.locked
+        d.pop("code", None)                  # the combination is private to the person
+        return d
 
 
-# ---------------------------------------------------------------- text grounder
-_SYN = {
-    "t-shirts": "tshirts", "t-shirt": "tshirts", "tees": "tshirts", "shirts": "striped_shirts", "pants": "trousers",
-    "jeans": "trousers", "jumpers": "sweatshirts", "hoodies": "sweatshirts", "sweater": "sweater_pile",
-    "towels": "towel_stack", "washbag": "toiletry_bag", "wash bag": "toiletry_bag", "water bottle": "bottle",
-    "journal": "notebook", "sweatpants": "gym_clothes", "socks": "gym_clothes",
+# Floor spots the upright case can be rolled to. The person walks beside the case with
+# the left hand on the handle (the case rolls alongside, as spinner manuals recommend):
+# `stand` is where they take the handle, `route` their path, `case` where the case ends.
+FLOOR_SPOTS = {
+    # case: where the standing case is; beside / beside_yaw: where the person takes its
+    # handle (facing the way out); route: the person's path when rolling the case here
+    "bed_foot": dict(label="the foot of the bed", case=(2.55, 1.26), beside=(2.86, 1.30), beside_yaw=np.pi / 2,
+                     route=((3.0, 2.2), (2.86, 1.30))),
+    "bedroom_door": dict(label="the bedroom door", case=(3.05, 2.95), beside=(3.35, 2.95), beside_yaw=-np.pi / 2,
+                         route=((2.98, 2.05), (3.35, 2.95))),
 }
 
 
-def resolve(phrase, kinds=("item", "station", "region")):
-    """Map a noun phrase to an item, station or region name (None if ambiguous or unknown)."""
-    p = re.sub(r"^(the|a|an|my)\s+", "", phrase.strip().lower())
-    cands = []
-    if "item" in kinds:
-        cands += [(it.name, [it.name.replace("_", " "), it.label.lower()]) for it in S.ITEMS]
-    if "station" in kinds:
-        cands += [(st.name, [st.name.replace("_", " "), st.label.lower().replace("the ", "")]) for st in S.STATIONS.values()]
-    if "region" in kinds:
-        cands += [(rg.name, [rg.name.replace("_", " "), rg.label.lower().replace("the ", "")]) for rg in S.REGIONS.values()]
-    exact = [n for n, names in cands if p in names]
-    if len(exact) == 1:
-        return exact[0]
-    if p in _SYN and "item" in kinds:
-        return _SYN[p]
-    part = [n for n, names in cands if any(p in x or x in p for x in names)]
-    return part[0] if len(set(part)) == 1 else None
-
-
-def parse(text):
-    """'pick up the T-shirt pile' -> Action. Returns (Action | None, feedback)."""
-    t = text.strip().lower().rstrip(".")
-    pats = [
-        (r"^(go|walk) to (.+)$", lambda m: ("go_to", m.group(2), ("item", "station"))),
-        (r"^(pick up|grab|take) (.+?)( from .+)?$", lambda m: ("pick_up", m.group(2), ("item",))),
-        (r"^take (.+) out( of the (suit)?case)?$", lambda m: ("take_out", m.group(1), ("item",))),
-        (r"^(put|place) (it|.+) (in|into) (.+?)(, (upright|lying))?$", lambda m: ("put_in", m.group(4), ("region",), m.group(6) or "")),
-        (r"^(put|place) (it|.+) back.*$", lambda m: ("put_back", "", ())),
-        (r"^close (the )?lid$", lambda m: ("close_lid", "", ())), (r"^open (the )?lid$", lambda m: ("open_lid", "", ())),
-        (r"^zip.*$", lambda m: ("zip", "", ())), (r"^unzip.*$", lambda m: ("unzip", "", ())),
-        (r"^stand (the case|it) up.*$", lambda m: ("stand_up", "", ())),
-        (r"^(wait|pause)( for)? ([0-9.]+).*$", lambda m: ("wait", "", (), m.group(3))),
-    ]
-    for pat, f in pats:
-        m = re.match(pat, t)
-        if not m:
-            continue
-        r = f(m)
-        verb, phrase, kinds = r[0], r[1], r[2]
-        arg = r[3] if len(r) > 3 else ""
-        if not kinds:
-            return Action(verb, "", arg), ""
-        name = resolve(phrase, kinds)
-        if name is None:
-            return None, f"cannot tell what '{phrase}' refers to"
-        return Action(verb, name, arg), ""
-    return None, f"no action matches '{text}'"
+# ---------------------------------------------------------------- compatibility helpers
+def act(verb, target="", **args):
+    return Action(verb, target, args)

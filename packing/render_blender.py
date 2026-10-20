@@ -321,25 +321,187 @@ def build_suitcase():
     ll = liner("liner_lid", t + 0.008, W - t - 0.008, L - 2 * t - 0.016, zr + 0.002, zr + DL - c["lid_floor"],
                open_low=True, r=0.06, mat=lining)
     ll.parent = lid
-    # zipper pull: driven by the recorded zipper progress along the same rim path the hand traced
-    metal = principled("brushed alu", (0.7, 0.72, 0.74), 0.3, 1.0)
-    pull = box_mesh("zip_pull", (0.012, 0.03, 0.006), bevel=0.003, material=metal)
-    pull.parent = base
-    base["zip_path"] = [W / 2, -L / 2 + 0.06, D, W / 2, 0.0, D, W / 2, L / 2 - 0.07, D]
     return base, lid
 
 
-def place_zip_pull(base, u):
-    pts = np.array(base["zip_path"]).reshape(-1, 3)
-    seg = np.linalg.norm(np.diff(pts, axis=0), axis=1); cum = np.concatenate([[0], np.cumsum(seg)])
-    sv = u * cum[-1]
-    i = min(np.searchsorted(cum, sv, side="right") - 1, len(seg) - 1)
-    p = pts[i] + (pts[i + 1] - pts[i]) * ((sv - cum[i]) / seg[i])
-    d = pts[i + 1] - pts[i]
-    out = np.array([d[1], -d[0], 0.0]); out /= np.linalg.norm(out) + 1e-9
-    ob = bpy.data.objects["zip_pull"]
-    ob.location = Vector(p + out * 0.012)
-    ob.rotation_euler = (0, 0, math.atan2(d[1], d[0]) + math.pi / 2)
+# ------------------------------------------------------------------ suitcase hardware
+def digits_texture():
+    """A strip of the digits 0-9 (white on dark grey) for the lock dials, made once."""
+    path = TEX / "dial_digits.png"
+    if not path.exists():
+        from PIL import Image, ImageDraw, ImageFont
+        W_, H_ = 1000, 120
+        im = Image.new("RGB", (W_, H_), (38, 38, 40))
+        dr = ImageDraw.Draw(im)
+        try:
+            font = ImageFont.truetype("arialbd.ttf", 84)
+        except OSError:
+            font = ImageFont.load_default()
+        for k in range(10):
+            cx = (k + 0.5) * W_ / 10
+            dr.text((cx, H_ / 2), str(k), fill=(235, 235, 230), font=font, anchor="mm")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        im.save(path)
+    return path
+
+
+def dial_mesh(name, r, w, mat):
+    """Cylinder about local y; the side is UV-mapped so digit k faces local +x when the
+    dial's joint angle is k * 36 deg (the angle runs from +x towards +z)."""
+    bm = bmesh.new()
+    n = 40
+    uv = bm.loops.layers.uv.new()
+    rings = []
+    for yy in (-w / 2, w / 2):
+        rings.append([bm.verts.new((r * math.cos(2 * math.pi * k / n), yy, r * math.sin(2 * math.pi * k / n)))
+                      for k in range(n)])
+    for k in range(n):
+        a, b = rings[0][k], rings[0][(k + 1) % n]
+        c_, d_ = rings[1][(k + 1) % n], rings[1][k]
+        f = bm.faces.new((a, b, c_, d_))
+        for loop, (u, v) in zip(f.loops, ((k / n, 0), ((k + 1) / n, 0), ((k + 1) / n, 1), (k / n, 1))):
+            # digit k is centred at angle k*36 deg: u = angle / 360 + half a digit
+            loop[uv].uv = (u + 0.05, v)
+    for ring in rings:
+        f = bm.faces.new(ring)
+        for loop in f.loops:
+            loop[uv].uv = (0.01, 0.5)
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    ob = link(bpy.data.objects.new(name, me))
+    me.materials.append(mat)
+    for p in me.polygons:
+        p.use_smooth = True
+    return ob
+
+
+def digits_material():
+    if "dial digits" in _mat_cache:
+        return _mat_cache["dial digits"]
+    m = bpy.data.materials.new("dial digits"); m.use_nodes = True
+    nt = m.node_tree; bs = nt.nodes["Principled BSDF"]
+    tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = bpy.data.images.load(str(digits_texture()))
+    tex.extension = "REPEAT"
+    nt.links.new(tex.outputs["Color"], bs.inputs["Base Color"])
+    bs.inputs["Roughness"].default_value = 0.45
+    bs.inputs["Metallic"].default_value = 0.2
+    _mat_cache["dial digits"] = m
+    return m
+
+
+def strap_mesh(name, length, width, thick, mat):
+    """A flat strap hanging along local -z from the origin (a zip pull)."""
+    ob = box_mesh(name, (thick, width, length), bevel=0.0012, segments=2, material=mat)
+    ob.data.transform(Matrix.Translation((0, 0, -length / 2 - 0.004)))
+    return ob
+
+
+def build_hardware(base):
+    """Moving parts of the case that follow their own simulated bodies: the telescopic
+    bar (cut from the scan) with its inner tubes, the lock dials and button, the two zip
+    sliders and their pulls, and the male half of the strap buckle (cut from the scan)."""
+    c = S.SUITCASE; hw = S.HARDWARE
+    W, L = c["outer"]
+    hb = c["bar"]
+    objs = {o.name: o for o in bpy.data.objects}
+    parts = {}
+    for nm, body in (("scan_trolley", "trolley"), ("scan_buckle_male", "buckle_male")):
+        if nm in objs:
+            ob = objs[nm]
+            ob.data.materials.clear()
+            for mat in base.data.materials[:1]:
+                ob.data.materials.append(mat)
+            for p in ob.data.polygons:
+                p.use_smooth = True
+            parts[body] = ob
+    alu = principled("anodised tube", (0.08, 0.08, 0.085), 0.35, 0.8)
+    tubes = []
+    for k, sx in enumerate((hb["x"] - hb["half"] - 0.016, hb["x"] + hb["half"] + 0.016)):
+        t = box_mesh(f"trolley_tube_{k}", (0.016, 1.0, 0.016), bevel=0.003, segments=3, material=alu)
+        t.parent = base
+        t["sx"] = sx
+        tubes.append(t)
+    parts["_tubes"] = tubes
+    dmat = digits_material()
+    for k in (1, 2, 3):
+        parts[f"dial_{k}"] = dial_mesh(f"dial_{k}_vis", hw["dial_r"], hw["dial_w"], dmat)
+    parts["lock_btn"] = box_mesh("lock_btn_vis", [2 * x for x in hw["button"]["half"]], bevel=0.0015,
+                                 material=principled("lock button", (0.55, 0.06, 0.05), 0.4))
+    metal = principled("zip slider", (0.62, 0.63, 0.65), 0.28, 1.0)
+    leather = principled("zip pull", (0.025, 0.025, 0.027), 0.55)
+    sl = hw["slider"]
+    for k in "ab":
+        parts[f"slider_{k}"] = box_mesh(f"slider_{k}_vis", [2 * x for x in sl["half"]], bevel=0.002, segments=3,
+                                        material=metal)
+        parts[f"tab_{k}"] = strap_mesh(f"tab_{k}_vis", hw["tab"]["len"] - 0.004, 0.011, 0.003, leather)
+    return parts
+
+
+def update_hardware(parts, P, Q, bid, fr):
+    for body, ob in parts.items():
+        if body.startswith("_") or body not in bid:
+            continue
+        set_pose(ob, P[bid[body]], Q[bid[body]])
+    # inner tubes: from the shell end up to the bottom of the bar's own (scanned) posts
+    q = fr.get("hw", {}).get("trolley", 0.0)
+    c = S.SUITCASE; hb = c["bar"]
+    L = c["outer"][1]
+    y0 = L / 2 - 0.01
+    y1 = hb["y"] - 0.07 + q
+    for t in parts["_tubes"]:
+        t.scale = (1.0, max(y1 - y0, 0.001), 1.0)
+        t.location = (t["sx"], (y0 + y1) / 2, hb["z"])
+        t.hide_render = q < 0.004
+
+
+# ------------------------------------------------------------------ cloth
+def build_cloth(frames):
+    """The loose towel as a smooth mesh over the simulated vertex grid (terry cloth
+    shading, two subdivision levels, 3 mm thick)."""
+    if not frames or "cloth" not in frames[0]:
+        return None
+    c = S.CLOTH
+    nx, ny = c["count"]
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new()
+    vs = [[bm.verts.new((0, 0, 0)) for j in range(ny)] for i in range(nx)]
+    for i in range(nx - 1):
+        for j in range(ny - 1):
+            f = bm.faces.new((vs[i][j], vs[i + 1][j], vs[i + 1][j + 1], vs[i][j + 1]))
+            for loop, (a, b) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                loop[uv].uv = (b / (ny - 1), a / (nx - 1))
+    me = bpy.data.meshes.new("towel_cloth"); bm.to_mesh(me); bm.free()
+    ob = link(bpy.data.objects.new("towel_cloth", me))
+    m = bpy.data.materials.new("terry towel"); m.use_nodes = True
+    nt = m.node_tree; bs = nt.nodes["Principled BSDF"]
+    # terry: soft sheen, fine pile noise for colour and bump, a woven border stripe
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    noise = nt.nodes.new("ShaderNodeTexNoise"); noise.inputs["Scale"].default_value = 900.0
+    nt.links.new(tc.outputs["UV"], noise.inputs["Vector"])
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (0.70, 0.30, 0.16, 1); ramp.color_ramp.elements[1].color = (0.86, 0.45, 0.25, 1)
+    nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], bs.inputs["Base Color"])
+    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.35
+    nt.links.new(noise.outputs["Fac"], bump.inputs["Height"]); nt.links.new(bump.outputs["Normal"], bs.inputs["Normal"])
+    bs.inputs["Roughness"].default_value = 0.92
+    try:
+        bs.inputs["Sheen Weight"].default_value = 0.6
+    except KeyError:
+        pass
+    me.materials.append(m)
+    sub = ob.modifiers.new("smooth", "SUBSURF"); sub.levels = 2; sub.render_levels = 3
+    sol = ob.modifiers.new("thick", "SOLIDIFY"); sol.thickness = 0.004; sol.offset = 0
+    for p in me.polygons:
+        p.use_smooth = True
+    return ob
+
+
+def update_cloth(ob, fr):
+    if ob is None:
+        return
+    v = np.asarray(fr["cloth"], float).reshape(-1)
+    ob.data.vertices.foreach_set("co", v)
+    ob.data.update()
 
 
 # ------------------------------------------------------------------ items
@@ -522,6 +684,56 @@ class Body:
 
 
 # ------------------------------------------------------------------ cameras / lights / world
+def detail_targets(frames, actions, bid):
+    """Per frame: the point a close-up camera looks at, from the action being performed
+    (the part it works on), smoothed over about a second. None outside such actions."""
+    by_frame = [None] * len(frames)
+    for a in actions:
+        if not a.get("ok"):
+            continue
+        v, t = a["action"]["verb"], a["action"].get("target", "")
+        for i in range(a["frame_start"], min(a["frame_end"], len(frames))):
+            by_frame[i] = (v, t)
+    pts = []
+    for i, fr in enumerate(frames):
+        act = by_frame[i]
+        P = fr["xpos"]
+        pick = None
+        if act:
+            v, t = act
+            if v in ("turn", "insert") or (v == "set" and t == "lock") or (v == "press" and t == "lock_button"):
+                pick = P[bid["dial_2"]]
+            elif v in ("open", "close") and t == "main_zip":
+                # the slider that is moving now (the nearer one to the working fingertip)
+                a_, b_ = np.array(P[bid["slider_a"]]), np.array(P[bid["slider_b"]])
+                hand = np.array(P[bid["distph2_r"]]) if "distph2_r" in bid else a_
+                hl = np.array(P[bid["distph2_l"]]) if "distph2_l" in bid else b_
+                d = [min(np.linalg.norm(a_ - hand), np.linalg.norm(a_ - hl)), min(np.linalg.norm(b_ - hand), np.linalg.norm(b_ - hl))]
+                pick = (a_ if d[0] < d[1] else b_).tolist()
+            elif v in ("fasten", "unfasten"):
+                pick = P[bid["buckle_male"]]
+            elif v in ("set", "press") and t.startswith("trolley"):
+                pick = P[bid["trolley"]]
+            elif v in ("open", "close") and t == "lid":
+                pick = P[bid["suitcase_lid"]]
+            elif v in ("fold", "unfold") and "cloth" in fr:
+                pick = np.mean(np.array(fr["cloth"]).reshape(-1, 3), axis=0).tolist()
+            elif v in ("stand_up", "roll", "lay_down"):
+                pick = P[bid["suitcase"]]
+        pts.append(None if pick is None else np.array(pick, float))
+    # fill gaps by holding the last target, then smooth
+    out, last = [], None
+    for p_ in pts:
+        last = p_ if p_ is not None else last
+        out.append(last)
+    first = next((p_ for p_ in out if p_ is not None), np.array([1.55, 1.26, 0.7]))
+    out = [first if p_ is None else p_ for p_ in out]
+    arr = np.array(out)
+    k = 25
+    sm = np.array([arr[max(0, i - k):i + k + 1].mean(0) for i in range(len(arr))])
+    return sm
+
+
 OVERVIEW_CAMS = {
     "bedroom": ((3.60, 3.20, 2.25), (1.75, 1.20, 0.60), 16),
     "bathroom": ((3.95, 2.05, 2.25), (5.10, 0.70, 0.85), 16),
@@ -595,7 +807,7 @@ def look_at(cam, eye, target):
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("run_dir"); ap.add_argument("view", choices=["ego", "overview"])
+    ap.add_argument("run_dir"); ap.add_argument("view", choices=["ego", "overview", "detail"])
     ap.add_argument("--stride", type=int, default=4); ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--stop", type=int, default=-1); ap.add_argument("--samples", type=int, default=48)
     ap.add_argument("--out", default=None); ap.add_argument("--indices", default="")
@@ -610,7 +822,9 @@ def main():
     build_apartment(a.view)
     build_furniture()
     base, lid = build_suitcase()
+    hw_parts = build_hardware(base)
     items = build_items()
+    cloth = build_cloth(frames)
     hands = build_hands(run / "model.xml")
     body = Body()
     cam_data = bpy.data.cameras.new("cam"); cam = link(bpy.data.objects.new("cam", cam_data))
@@ -623,6 +837,9 @@ def main():
     if a.indices:
         idx = [int(x) for x in a.indices.split(",")]
     room_prev, room_since = None, -1e9
+    if a.view == "detail":
+        acts = json.loads((run / "actions.json").read_text())
+        dtgt = detail_targets(frames, acts, bid)
     sc = bpy.context.scene
     sc.render.image_settings.file_format = "JPEG"; sc.render.image_settings.quality = 93
     for i in idx:
@@ -632,7 +849,8 @@ def main():
         Rb = np.array([np.array(Quaternion(q).to_matrix()) for q in Q])
         set_pose(base, P[bid["suitcase"]], Q[bid["suitcase"]])
         set_pose(lid, P[bid["suitcase_lid"]], Q[bid["suitcase_lid"]])
-        place_zip_pull(base, fr.get("zip_progress", 0.0))
+        update_hardware(hw_parts, P, Q, bid, fr)
+        update_cloth(cloth, fr)
         for name, ob in items.items():
             set_pose(ob, P[bid[name]], Q[bid[name]])
         for s in "rl":
@@ -645,6 +863,14 @@ def main():
             cam.location = Vector(eye); cam.rotation_mode = "QUATERNION"
             cam.rotation_quaternion = Matrix(Rc.tolist()).to_quaternion()
             cam_data.lens = 15
+        elif a.view == "detail":
+            rt = fr["root"]
+            yaw = rt["yaw"]
+            F = np.array([math.cos(yaw), math.sin(yaw), 0.0]); right = np.array([math.sin(yaw), -math.cos(yaw), 0.0])
+            tgt = dtgt[i]
+            # over the right shoulder, close in: the hands and the part fill the frame
+            eye = tgt - F * 0.42 + right * 0.48 + np.array([0, 0, 0.30])
+            look_at(cam, eye, tgt); cam_data.lens = 32
         else:
             rt = fr["root"]
             room = room_of(rt["x"], rt["y"])

@@ -125,6 +125,41 @@ def garment(item, g, measure):
     return info
 
 
+def split_off(bm, inside, origin, name):
+    """Move the faces whose vertices all satisfy inside(co) into a new mesh object,
+    expressed relative to `origin` (the rest position of the body it will follow)."""
+    bm.faces.ensure_lookup_table()
+    sel = [f for f in bm.faces if all(inside(v.co) for v in f.verts)]
+    b2 = bmesh.new()
+    vmap = {}
+    for f in sel:
+        vs = []
+        for v in f.verts:
+            if v not in vmap:
+                vmap[v] = b2.verts.new(v.co - Vector(origin))
+            vs.append(vmap[v])
+        try:
+            nf = b2.faces.new(vs)
+            nf.smooth = True
+            nf.material_index = f.material_index
+        except ValueError:
+            pass
+    # carry the UVs of the selected faces
+    uv_src = bm.loops.layers.uv.active
+    if uv_src is not None:
+        uv_dst = b2.loops.layers.uv.new()
+        b2.faces.ensure_lookup_table()
+        for f_old, f_new in zip(sel, b2.faces):
+            for l_old, l_new in zip(f_old.loops, f_new.loops):
+                l_new[uv_dst].uv = l_old[uv_src].uv
+    me = bpy.data.meshes.new(name)
+    b2.to_mesh(me); b2.free()
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    bmesh.ops.delete(bm, geom=sel, context="FACES")
+    return ob
+
+
 def suitcase(measure):
     c = S.SUITCASE_SCAN
     s = c["scale"]
@@ -145,6 +180,25 @@ def suitcase(measure):
     zc = (c["z_top"] + c["z_bottom"]) / 2
     T = Matrix(((s, 0, 0, -s * c["x_centre"]), (0, 0, s, -s * zc), (0, -s, 0, s * c["back_y"]), (0, 0, 0, 1)))
     bm.transform(T)
+    # Moving hardware becomes its own mesh, in the frame of the physics body it follows:
+    # the telescopic bar (and the visible top of its posts) and the male half of the lid
+    # strap's buckle. The two zip pulls baked into the scan (docked in the lock) are cut
+    # away where they stand proud of the side: modelled pulls follow the simulated ones.
+    hb = S.SUITCASE["bar"]
+    trolley = split_off(bm, lambda co: co.y > L / 2 + 0.003 and 0.036 < co.z < 0.09 and -0.14 < co.x < 0.12,
+                        (hb["x"], hb["y"], hb["z"]), "scan_trolley")
+    st = S.HARDWARE["strap"]
+    buckle = split_off(bm, lambda co: st["y_male"] - 0.013 < co.y < st["y_male"] + 0.016 and abs(co.x - st["x"]) < 0.034
+                       and co.z > 0.3865, (st["x"], st["y_male"], st["z"] + 0.005), "scan_buckle_male")
+    dock = S.HARDWARE["dock_y"]
+    pulls = [f for f in bm.faces if all(v.co.x > 0.2525 and dock - 0.022 < v.co.y < dock + 0.022 and 0.13 < v.co.z < 0.262
+                                        for v in f.verts)]
+    bmesh.ops.delete(bm, geom=pulls, context="FACES")
+    print("hardware split:", len(trolley.data.vertices), "trolley verts,", len(buckle.data.vertices), "buckle verts,",
+          len(pulls), "pull faces removed", flush=True)
+    for o in (trolley, buckle):
+        for mat in ob.data.materials:
+            o.data.materials.append(mat)
     # Cut the shell exactly at the seam plane z' = D.
     geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
     bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(0, 0, D), plane_no=(0, 0, 1))
@@ -173,7 +227,8 @@ def suitcase(measure):
             b2.transform(Matrix.Translation((W / 2, 0, -S.SUITCASE["hinge_h"])))
         b2.to_mesh(me); b2.free()
     for o in list(bpy.data.objects):
-        bpy.data.objects.remove(o)
+        if o not in (trolley, buckle):
+            bpy.data.objects.remove(o)
     base = bpy.data.objects.new("scan_case_base", me_base)
     lid = bpy.data.objects.new("scan_case_lid", me_lid)
     for o in (base, lid):
@@ -187,7 +242,7 @@ def suitcase(measure):
     print("suitcase base", lo.round(3), hi.round(3), "lid", lo2.round(3), hi2.round(3), flush=True)
     if not measure:
         cap_textures()
-        bpy.data.libraries.write(str(OUT / "suitcase.blend"), {base, lid}, fake_user=True, compress=True)
+        bpy.data.libraries.write(str(OUT / "suitcase.blend"), {base, lid, trolley, buckle}, fake_user=True, compress=True)
     return info
 
 

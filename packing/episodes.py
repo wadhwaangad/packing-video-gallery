@@ -13,6 +13,7 @@ whose events cannot fire, or whose actions would be refused, are rejected.
 from dataclasses import dataclass, field
 import json, random
 import scene as S
+import layout as LO
 from packsim import PackSim, Action, TASKS, ITEM_NAMES, initial_state
 
 PERSONAS = {
@@ -80,23 +81,25 @@ def pack_order(task, rng):
     return sorted(items, key=phase)
 
 
-def choose_region(st, item):
-    it = S.item(item)
-    if it.family == "bottle":
-        return "bottle_corner"
-    cols = ["wheel_end", "handle_end"]
-    fits = lambda r: st.height(r) + it.size[2] <= S.INNER_H - 0.008 and \
-        (not st.stacks[r] or S.FAMILIES[S.item(st.stacks[r][-1]).family]["stackable"])
-    if item == "toiletry_bag" or it.family == "fragile_box":
-        return "front_strip" if fits("front_strip") else min(cols, key=st.height)
-    if it.heavy:
-        empty = [r for r in cols if not st.stacks[r]]
-        if empty:
-            return empty[0]
-    ok = [r for r in cols if fits(r)]
-    if ok:
-        return min(ok, key=st.height)
-    return "front_strip"
+COLUMNS = LO.COLUMNS
+
+
+def _rest_z(st, item, anchor):
+    return LO.rest_z(st.place, item, anchor)
+
+
+def choose_spot(st, item):
+    return LO.choose_spot(st.place, item)
+
+
+def topmost_over(st, n):
+    """The item at the top of whatever rests on n (n itself if nothing does)."""
+    top = n
+    while True:
+        above = st.on_top_of(top)
+        if not above:
+            return top
+        top = above[0]
 
 
 class User:
@@ -118,39 +121,51 @@ class User:
 
     def nominal(self, st):
         h = st.holding
+        go = lambda where: Action("go_to", where)
         if h:
             if h in self.intended(st):
                 if st.station != "suitcase":
-                    return Action("go_to", "suitcase")
-                return Action("put_in", choose_region(st, h), "upright" if h == "bottle" else "")
+                    return go("suitcase")
+                args = dict(rel="in", dest="suitcase", at=choose_spot(st, h))
+                if h == "bottle":
+                    args["orient"] = "upright"
+                return Action("place", h, args)
             home = S.item(h).station
             if st.station != home:
-                return Action("go_to", home)
-            return Action("put_back")
+                return go(home)
+            return Action("put_back", h)
         extra = [n for n in ITEM_NAMES if st.in_case(n) and n not in self.intended(st)]
         if extra and st.lid == "open":
-            n = extra[0]
-            stack = st.stacks[st.region_of(n)]
-            top = stack[-1]
+            top = topmost_over(st, extra[0])
             if st.station != "suitcase":
-                return Action("go_to", "suitcase")
-            return Action("take_out", top)
+                return go("suitcase")
+            return Action("pick_up", top)
         todo = [n for n in self.intended(st) if not st.in_case(n)]
         if todo:
             if st.lid == "closed":
-                if st.zipped:
-                    return Action("go_to", "suitcase") if st.station != "suitcase" else Action("unzip")
-                return Action("go_to", "bed_foot") if st.station != "bed_foot" else Action("open_lid")
+                if st.pulls == "docked":
+                    if st.station != "suitcase":
+                        return go("suitcase")
+                    if st.locked:
+                        return Action("set", "lock", dict(value=st.code))
+                    return Action("press", "lock_button", dict(hold=0.3, times=1))
+                if st.zip_open < 0.95:
+                    return go("suitcase") if st.station != "suitcase" else Action("open", "main_zip", dict(to=1.0))
+                return go("bed_foot") if st.station != "bed_foot" else Action("open", "lid", dict(to=1.0))
             n = todo[0]
             if st.facing != n:
-                return Action("go_to", n)
+                return go(n)
             return Action("pick_up", n)
         if st.lid == "open":
-            return Action("go_to", "bed_foot") if st.station != "bed_foot" else Action("close_lid")
+            return go("bed_foot") if st.station != "bed_foot" else Action("close", "lid", dict(to=0.0))
         if not st.zipped:
-            return Action("go_to", "suitcase") if st.station != "suitcase" else Action("zip")
+            return go("suitcase") if st.station != "suitcase" else Action("close", "main_zip", dict(to=0.0))
+        if TASKS[self.task].lock and st.pulls == "free":
+            return go("suitcase") if st.station != "suitcase" else Action("insert", "zip_pulls", dict(into="lock"))
+        if TASKS[self.task].lock and not st.locked:
+            return Action("turn", "dial_1", dict(by=3))
         if st.case_pose == "on_bed":
-            return Action("go_to", "bed_foot") if st.station != "bed_foot" else Action("stand_up")
+            return go("bed_foot") if st.station != "bed_foot" else Action("stand_up", "suitcase")
         return None
 
     # ------------------------------------------------------------ events
@@ -160,7 +175,7 @@ class User:
         if ev.type == "wrong_object":
             acts = [E(Action("go_to", ev.other)), E(Action("pick_up", ev.other))]
             if ev.recover:
-                acts += [E(Action("put_back"), "recovery")]
+                acts += [E(Action("put_back", ev.other), "recovery")]
             else:
                 self.believed.add(ev.other)
             return acts
@@ -168,28 +183,29 @@ class User:
             self.omitted.add(ev.target)
             return []
         if ev.type == "repetition":
-            return [E(Action("go_to", S.item(ev.target).station)), E(Action("wait", "", "2"))]
+            return [E(Action("go_to", S.item(ev.target).station)), E(Action("wait", "", dict(seconds=2.0)))]
         if ev.type == "nav_deviation":
-            return [E(Action("go_to", ev.other)), E(Action("wait", "", "1.5"))]
+            return [E(Action("go_to", ev.other)), E(Action("wait", "", dict(seconds=1.5)))]
         if ev.type == "heavy_on_top":
-            col = max(["wheel_end", "handle_end"], key=st.height)
-            acts = [E(Action("put_in", col))]
+            col = max(COLUMNS, key=lambda a: _rest_z(st, ev.target, a))
+            acts = [E(Action("place", ev.target, dict(rel="in", dest="suitcase", at=col)))]
             if ev.recover:
-                acts += [E(Action("take_out", ev.target), "recovery"), E(Action("put_in", "front_strip"), "recovery")]
+                acts += [E(Action("pick_up", ev.target), "recovery"),
+                         E(Action("place", ev.target, dict(rel="in", dest="suitcase", at="front_strip")), "recovery")]
             return acts
         if ev.type == "bottle_lying":
-            return [E(Action("put_in", "bottle_corner", "lying"))]
+            return [E(Action("place", "bottle", dict(rel="in", dest="suitcase", at=(0.140, -0.200), orient="lying")))]
         if ev.type == "premature_close":
-            acts = [E(Action("go_to", "bed_foot")), E(Action("close_lid"))]
+            acts = [E(Action("go_to", "bed_foot")), E(Action("close", "lid", dict(to=0.0)))]
             if not ev.recover:
                 self.omitted |= {n for n in self.intended(st) if not st.in_case(n)}
             return acts
         if ev.type == "stall":
-            return [E(Action("wait", "", "6"))]
+            return [E(Action("wait", "", dict(seconds=6.0)))]
         if ev.type == "question":
-            return [E(Action("say", "", ev.text), "question"), E(Action("wait", "", "1.5"), "question")]
+            return [E(Action("say", "", dict(text=ev.text)), "question"), E(Action("wait", "", dict(seconds=1.5)), "question")]
         if ev.type == "plan_change":
-            return [E(Action("say", "", ev.text), "plan_change")]
+            return [E(Action("say", "", dict(text=ev.text)), "plan_change")]
         return []
 
     def _triggered(self, ev, st, nxt):
@@ -204,10 +220,10 @@ class User:
         if ev.type == "repetition":
             return st.in_case(ev.target) and nxt.verb == "go_to" and not st.holding and st.station == "suitcase"
         if ev.type == "heavy_on_top":
-            return nxt.verb == "put_in" and st.holding == ev.target and \
-                any(st.stacks[r] for r in ("wheel_end", "handle_end"))
+            return nxt.verb == "place" and st.holding == ev.target and \
+                any(_rest_z(st, ev.target, a) > LO.FLOOR + 1e-6 for a in COLUMNS)
         if ev.type == "bottle_lying":
-            return nxt.verb == "put_in" and st.holding == "bottle"
+            return nxt.verb == "place" and st.holding == "bottle"
         if ev.type in ("premature_close", "stall", "question", "plan_change"):
             return self.n_packed(st) >= ev.after and nxt.verb == "go_to" and not st.holding and st.lid == "open"
         return False
@@ -221,8 +237,8 @@ class User:
             return self.queue.pop(0)
         nxt = self.nominal(st)
         # A forgotten item is remembered just before the lid is closed (self-recovery).
-        closing = nxt is not None and (nxt.verb == "close_lid" or (nxt.verb == "go_to" and nxt.target == "bed_foot"
-                                                                   and st.lid == "open"))
+        closing = nxt is not None and ((nxt.verb == "close" and nxt.target == "lid") or
+                                       (nxt.verb == "go_to" and nxt.target == "bed_foot" and st.lid == "open"))
         for ev in self.events:
             if ev.type == "omission" and ev.fired and ev.recover and not ev.done and closing:
                 self.omitted.discard(ev.target); ev.done = True
@@ -248,8 +264,8 @@ class User:
         if nxt is None:
             return None
         # Corrective steps the policy takes on its own after an error are recoveries.
-        if self.last_error and (nxt.verb in ("open_lid", "unzip", "put_back") or
-                                (nxt.verb == "take_out" and nxt.target not in self.intended(st))):
+        if self.last_error and ((nxt.verb == "open" and nxt.target in ("lid", "main_zip")) or nxt.verb == "put_back" or
+                                (nxt.verb == "pick_up" and st.in_case(nxt.target))):
             return (nxt, "recovery", self.last_error)
         return (nxt, "nominal", "")
 
