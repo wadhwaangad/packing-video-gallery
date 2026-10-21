@@ -1,0 +1,119 @@
+{
+ "instruction": "pack the bottle. pack the camera",
+ "playback_speed": 4,
+ "verified": true,
+ "steps": [
+  {
+   "time": 0.5,
+   "verb": "enter",
+   "target": "living",
+   "text": "walk into the living room",
+   "parent": "go to the water bottle"
+  },
+  {
+   "time": 2.41,
+   "verb": "enter",
+   "target": "hall",
+   "text": "walk into the hall",
+   "parent": "go to the water bottle"
+  },
+  {
+   "time": 3.88,
+   "verb": "look_at",
+   "target": "bottle",
+   "text": "look at the water bottle",
+   "parent": "go to the water bottle"
+  },
+  {
+   "time": 4.23,
+   "verb": "go_to",
+   "target": "bottle",
+   "text": "go to the water bottle",
+   "parent": "go to the water bottle"
+  },
+  {
+   "time": 5.42,
+   "verb": "pick_up",
+   "target": "bottle",
+   "text": "pick up the water bottle",
+   "parent": ""
+  },
+  {
+   "time": 7.35,
+   "verb": "enter",
+   "target": "hall",
+   "text": "walk into the hall",
+   "parent": "go to the suitcase"
+  },
+  {
+   "time": 8.63,
+   "verb": "enter",
+   "target": "living",
+   "text": "walk into the living room",
+   "parent": "go to the suitcase"
+  },
+  {
+   "time": 9.99,
+   "verb": "go_to",
+   "target": "suitcase",
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  {
+   "time": 12.71,
+   "verb": "place",
+   "target": "bottle",
+   "text": "put the water bottle in the suitcase, upright",
+   "parent": ""
+  },
+  {
+   "time": 14.6,
+   "verb": "enter",
+   "target": "living",
+   "text": "walk into the living room",
+   "parent": "go to the camera"
+  },
+  {
+   "time": 16.75,
+   "verb": "look_at",
+   "target": "camera",
+   "text": "look at the camera",
+   "parent": "go to the camera"
+  },
+  {
+   "time": 17.1,
+   "verb": "go_to",
+   "target": "camera",
+   "text": "go to the camera",
+   "parent": "go to the camera"
+  },
+  {
+   "time": 18.21,
+   "verb": "pick_up",
+   "target": "camera",
+   "text": "pick up the camera",
+   "parent": ""
+  },
+  {
+   "time": 19.82,
+   "verb": "enter",
+   "target": "bedroom",
+   "text": "walk into the bedroom",
+   "parent": "go to the suitcase"
+  },
+  {
+   "time": 21.06,
+   "verb": "go_to",
+   "target": "suitcase",
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  {
+   "time": 22.75,
+   "verb": "place",
+   "target": "camera",
+   "text": "put the camera in the suitcase",
+   "parent": ""
+  }
+ ]
+}

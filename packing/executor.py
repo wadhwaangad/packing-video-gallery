@@ -8,39 +8,22 @@ its region, lid angle, case upright). Only a verified action is committed to Pac
 Targets are computed from the live simulation: stand poses from where the item is now,
 the drop height in the case from the piles already in that region.
 """
-import copy, heapq
+import copy
+import mujoco
 import numpy as np
 import scene as S
 import layout as LO
 import tasks as T
 import skills_case as C
 import skills_hw as H
+import rooms as R
+from rooms import nav_path
 from runner import rz
-from packsim import Action, ITEM_NAMES, FLOOR_SPOTS
+from packsim import Action, ITEM_NAMES, FLOOR_SPOTS, access_node
 
 
 class ActionFailed(RuntimeError):
     pass
-
-
-def nav_path(a, b):
-    """Shortest node path on the walking graph."""
-    adj = {n: [] for n in S.NAV_NODES}
-    for u, v in S.NAV_EDGES:
-        d = float(np.hypot(*np.subtract(S.NAV_NODES[u], S.NAV_NODES[v])))
-        adj[u].append((v, d)); adj[v].append((u, d))
-    dist, prev, pq = {a: 0.0}, {}, [(0.0, a)]
-    while pq:
-        d, u = heapq.heappop(pq)
-        if u == b:
-            break
-        for v, w in adj[u]:
-            if d + w < dist.get(v, 1e9):
-                dist[v] = d + w; prev[v] = u; heapq.heappush(pq, (d + w, v))
-    path = [b]
-    while path[-1] != a:
-        path.append(prev[path[-1]])
-    return path[::-1]
 
 
 class Executor:
@@ -85,12 +68,14 @@ class Executor:
         return target, tuple(stn.stand), self.yaw_of(target)
 
     def route(self, frm, to, stand):
+        """Waypoints from where the person is (`frm`: a station, node:<n> or case_floor) to
+        `stand` at `to` (a station, or node:<n> for a point of the walking graph)."""
         if frm == to:
             return [stand]
-        a, b = S.STATIONS[frm], S.STATIONS[to]
-        pts = list(reversed(a.via))
-        pts += [S.NAV_NODES[n] for n in nav_path(a.access, b.access)]
-        pts += list(b.via) + [stand]
+        via_a = list(reversed(S.STATIONS[frm].via)) if frm in S.STATIONS else []
+        b_access, via_b = (to[5:], []) if to.startswith("node:") else (S.STATIONS[to].access, list(S.STATIONS[to].via))
+        pts = via_a + [S.NAV_NODES[n] for n in nav_path(access_node(self.sim.state), b_access)]
+        pts += via_b + [stand]
         here = np.array([self.r.root["x"], self.r.root["y"]])
         seq = [here]
         for p in pts:
@@ -175,6 +160,48 @@ class Executor:
         self.r.walk(pts, final_yaw=yaw, speed=speed, yaw_rate=1.4 if holding == "bottle" else 3.0)
         if holding:
             self.check_in_hand(holding)
+
+    def enter(self, a):
+        """Walk through to the entry point of the next room (on the way to a target)."""
+        st = self.sim.state
+        node = a.get("via") or __import__("packsim").entry_node(st, a.target)
+        holding = st.holding
+        if not holding:
+            self.rest()
+        self.r.stage(f"Walk into {R.LABEL[a.target]}")
+        speed = 0.85 * self.persona["walk"] * (0.82 if holding == "bottle" else 1.0)
+        pts = self.route(st.station, "node:" + node, tuple(S.NAV_NODES[node]))
+        if pts:
+            self.face(pts[0])
+        self.r.walk(pts, speed=speed, yaw_rate=1.4 if holding == "bottle" else 3.0)
+        here = (self.r.root["x"], self.r.root["y"])
+        if R.room_at(here) != a.target:
+            raise ActionFailed(f"ended at {here[0]:.2f}, {here[1]:.2f}, not in {R.LABEL[a.target]}")
+        self.r.event("entered_room", room=a.target, node=node, xy=list(map(float, here)))
+        if holding:
+            self.check_in_hand(holding)
+
+    def in_sight(self, p):
+        """(visible, what blocks): a ray in the physics scene from the eyes to p. Anything
+        welded to the world (walls, door frames, furniture) blocks it; hands, items and the
+        case do not (they are passed through)."""
+        m, d = self.r.m, self.r.d
+        eye = np.array([self.r.root["x"], self.r.root["y"], R.EYE_H])
+        p = np.asarray(p, float)
+        L = float(np.linalg.norm(p - eye))
+        start, gid = eye.copy(), np.array([-1], dtype=np.int32)
+        u = (p - eye) / L
+        travelled = 0.0
+        for _ in range(40):
+            dist = mujoco.mj_ray(m, d, start, u, None, 1, -1, gid)
+            if gid[0] < 0 or dist < 0 or travelled + dist >= L - 0.30:
+                return True, ""
+            b = int(m.geom_bodyid[gid[0]])
+            if int(m.body_weldid[b]) == 0 and int(m.body_mocapid[b]) < 0:
+                return False, mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_GEOM, gid[0]) or                     mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_BODY, b) or f"geom {gid[0]}"
+            travelled += dist + 1e-3
+            start = eye + u * travelled
+        return True, ""
 
     def check_in_hand(self, item):
         mid = (self.r.hand_pose("r")[0] + self.r.hand_pose("l")[0]) / 2
@@ -418,6 +445,8 @@ class Executor:
         pose = None
         if v == "go_to":
             self.go_to(a)
+        elif v == "enter":
+            self.enter(a)
         elif v == "look_at":
             self.look_at(a)
         elif v == "pick_up":
@@ -478,9 +507,12 @@ class Executor:
             p = np.array([*stn.stand, 0.0]) + np.array([*stn.normal, 0.0]) * 0.6 + np.array([0, 0, stn.top])
         else:
             p = self.r.suitcase_frame()[0]
-        self.r.stage(f"Look at {a.text()[8:]}")
+        self.r.stage(f"Look at {a.text()[8:]}" if not a.parent else f"Look for {a.text()[8:]}")
         self.r.move(0.8, gaze=np.asarray(p, float))
         self.r.hold(0.6)
+        vis, by = self.in_sight(p)
+        self.r.event("look_check", target=t, visible=vis, blocked_by=by,
+                     distance_m=float(np.linalg.norm(np.asarray(p)[:2] - [self.r.root["x"], self.r.root["y"]])))
 
     def rewind(self, k):
         """Undo actions k.. (physics, recordings and symbolic state are restored)."""

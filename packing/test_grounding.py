@@ -9,11 +9,11 @@ from actionspace import Rejection
 import instruct as I
 
 
-def run(text, task="weekend_trip", setup=()):
+def run(text, task="weekend_trip", setup=(), auto_reach=True):
     sim = PackSim(task)
     for s in setup:
         sim.step(s)
-    ins = I.Instructions(I.parse_rules(text))
+    ins = I.Instructions(I.parse_rules(text), auto_reach=auto_reach)
     out = []
     for _ in range(60):
         n = ins.next(sim.state)
@@ -61,10 +61,26 @@ CASES = [
     "dance around",
     "press the lid",
     "open the suitcase",
+    # navigation: one go_to reaches only what is in this room or in view
+    "go to the water bottle",
+    "go to the kitchen. pick up the bottle on the counter",
+    "enter the kitchen",
+    "walk into the living room then go to the camera",
+    "go to the bedroom",
+    "go into the bathroom then pick up the toiletry bag then pack it",
+]
+STRICT = [  # auto_reach off: nothing is inserted or expanded (evaluating an agent)
+    "go to the water bottle",
+    "walk into the living room. walk into the hall. go to the water bottle",
+    "enter the kitchen",
 ]
 
 if __name__ == "__main__":
     for c in CASES:
         print(">>", c)
         for line in run(c):
+            print("     ", line)
+    for c in STRICT:
+        print(">> [strict]", c)
+        for line in run(c, auto_reach=False):
             print("     ", line)

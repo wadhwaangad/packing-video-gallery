@@ -26,6 +26,7 @@ import re
 import numpy as np
 import scene as S
 import layout as LO
+import rooms as R
 
 
 # ---------------------------------------------------------------- action
@@ -34,6 +35,7 @@ class Action:
     verb: str
     target: str = ""              # resolved id of the main reference
     args: dict = field(default_factory=dict)
+    parent: str = ""              # the request this step was expanded from (navigation)
 
     def get(self, k, default=None):
         return self.args.get(k, default)
@@ -42,11 +44,14 @@ class Action:
         return describe(self)
 
     def to_dict(self):
-        return dict(verb=self.verb, target=self.target, args=dict(self.args), text=self.text())
+        d = dict(verb=self.verb, target=self.target, args=dict(self.args), text=self.text())
+        if self.parent:
+            d["parent"] = self.parent
+        return d
 
     @staticmethod
     def from_dict(d):
-        return Action(d["verb"], d.get("target", ""), dict(d.get("args", {})))
+        return Action(d["verb"], d.get("target", ""), dict(d.get("args", {})), d.get("parent", ""))
 
 
 @dataclass
@@ -139,9 +144,9 @@ GARMENTS = {"trousers", "tshirts", "sweater_pile", "striped_shirts", "sweatshirt
 
 STATION_WORDS = {
     "dresser": ["dresser", "drawers", "chest"], "bed": ["bed", "mattress"], "bed_far": ["far side of the bed", "other side of the bed"],
-    "nightstand": ["nightstand", "bedside table", "night table"], "vanity": ["vanity", "sink", "bathroom counter", "bathroom"],
-    "towel_shelf": ["towel shelf", "shelf", "bathroom shelf", "bathroom"], "kitchen_counter": ["kitchen counter", "kitchen", "counter"],
-    "coffee_table": ["coffee table", "living room table", "living room", "table"], "suitcase": ["suitcase", "case", "luggage"],
+    "nightstand": ["nightstand", "bedside table", "night table"], "vanity": ["vanity", "sink", "bathroom counter"],
+    "towel_shelf": ["towel shelf", "shelf", "bathroom shelf"], "kitchen_counter": ["kitchen counter", "counter"],
+    "coffee_table": ["coffee table", "living room table", "table"], "suitcase": ["suitcase", "case", "luggage"],
     "bed_foot": ["foot of the bed", "end of the bed", "bed foot"],
     "bedroom_door": ["bedroom door", "door", "doorway", "door of the bedroom"],
 }
@@ -165,17 +170,33 @@ ASSETS = {
 # reference may resolve to. `steps` is the grounding and execution algorithm, shown on
 # the page; `check` is the physical success test; `effect` the symbolic change.
 VERBS = {
-    "go_to": dict(group="navigate", sig=[("target", "Ref", True, None)], ref=("station", "item", "anchor_case"),
+    "go_to": dict(group="navigate", sig=[("target", "Ref", True, None)], ref=("station", "item", "anchor_case", "room"),
                   steps=["Resolve the place, or the item (then its current place).",
+                         "Reachable in one step only if it is in the person's room, or in view: an unobstructed line "
+                         "from eye height (1.55 m) to it past walls, door frames and furniture. Otherwise the request "
+                         "is expanded: enter(room) for each room on the way until the target is in view, then "
+                         "look_at(item) for an item that has to be found, then go_to (each step logged with its parent). "
+                         "go_to(room) is the enters alone.",
                          "Stand point: a station's default spot, or in front of the item at the station's standoff.",
                          "Route: shortest path on the walking graph, shortcut wherever the straight line keeps 30 cm "
                          "from furniture; a carried item is turned the way round that keeps it clear of walls.",
                          "Walk at the persona's speed and turn to face the station."],
                   check="if carrying, the item is still between the hands (< 30 cm)", effect="station := place"),
+    "enter": dict(group="navigate", sig=[("target", "Ref", True, None)], ref=("room",),
+                  steps=["Resolve the room; it must open off the person's room (a step of the walking graph crosses "
+                         "into it).",
+                         "Entry point: the first walking-graph point inside that room on the way to it (or the "
+                         "given one, when expanded from a go_to).",
+                         "Walk there through the doorway (or across the open-plan boundary) at the persona's speed; "
+                         "a carried item is turned the way round that keeps it clear of walls."],
+                  check="if carrying, the item is still between the hands (< 30 cm); the person ends inside the room",
+                  effect="room := room (standing at its entry point)"),
     "look_at": dict(group="navigate", sig=[("target", "Ref", True, None)], ref=("station", "item", "part"),
                     steps=["Resolve the reference to a point (item centre, part centre or station).",
-                           "Turn the head (gaze target) towards it; the body does not move."],
-                    check="none", effect="none"),
+                           "Turn the head (gaze target) towards it; the body does not move.",
+                           "Cast a ray in the physics scene from eye height to it; anything static (walls, door "
+                           "frames, furniture) hit first means it is not in sight."],
+                    check="recorded: the target is in sight (look_check event)", effect="none"),
     "pick_up": dict(group="manipulate", sig=[("target", "Ref", True, None)], ref=("item",),
                     steps=["Resolve the item; it must be within reach (at this station, or in the open case with nothing on it).",
                            "Grasp by family: folded piles and boxes with a two-hand side squeeze across the short side, "
@@ -313,7 +334,8 @@ def candidates(state):
         where = state.loc.get(it.name, "") if state else ""
         loc_words = []
         if where.startswith("station:"):
-            loc_words = STATION_WORDS.get(where.split(":", 1)[1], [])
+            stn = where.split(":", 1)[1]
+            loc_words = STATION_WORDS.get(stn, []) + R.WORDS.get(S.STATIONS[stn].room, [])
         elif where.startswith("case:"):
             loc_words = ["suitcase", "case", "packed"]
         elif where == "held":
@@ -331,6 +353,8 @@ def candidates(state):
     out.append(dict(id=S.CLOTH["name"], kind="cloth", label=S.CLOTH["label"], nouns=["towel", "cloth"],
                     adjs=["beach", "loose", "big", "flat", "orange"], loc=["kitchen", "counter"],
                     phrases=[S.CLOTH["label"], "loose towel"]))
+    for rm, words in R.WORDS.items():
+        out.append(dict(id=rm, kind="room", label=R.LABEL[rm], nouns=[], adjs=[], loc=[], phrases=words))
     for a, words in ANCHOR_WORDS.items():
         out.append(dict(id=a, kind="anchor_case", label=LO.ANCHORS[a]["label"], nouns=[], adjs=[], loc=[], phrases=words))
     return out
@@ -367,7 +391,7 @@ def resolve_ref(phrase, kinds, state=None, held="", last=""):
     for c in cands:
         vocab = set(c["nouns"]) | set(c["adjs"])
         phr = set(t for x in c["phrases"] for t in _tok(x))
-        if c["kind"] in ("station", "anchor_case"):
+        if c["kind"] in ("station", "anchor_case", "room"):
             if all(t in phr for t in toks):
                 scored.append((len(toks), c))
             continue
@@ -663,6 +687,8 @@ def _lab(n):
         return LO.ANCHORS[n]["label"]
     if n == S.CLOTH["name"]:
         return "the " + S.CLOTH["label"]
+    if n in R.LABEL:
+        return R.LABEL[n]
     return {"suitcase": "the suitcase", "bedroom_door": "the bedroom door"}.get(n, n)
 
 
@@ -675,6 +701,8 @@ def describe(a):
     v, t = a.verb, a.target
     if v == "go_to":
         return f"go to {_the(t) if t in [it.name for it in S.ITEMS] else _lab(t)}"
+    if v == "enter":
+        return f"walk into {R.LABEL.get(t, t)}"
     if v == "look_at":
         return f"look at {_the(t)}"
     if v == "pick_up":

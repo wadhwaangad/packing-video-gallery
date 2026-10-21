@@ -14,6 +14,7 @@ import packsim as P
 import episodes as EP
 import actionspace as AS
 import instruct as I
+import rooms as R
 
 HERE = Path(__file__).resolve().parent
 
@@ -41,13 +42,16 @@ EXAMPLES = [
     ("fold the t-shirts", {"cloth": True}),
     ("press the lid", {}),
     ("dance around", {}),
+    ("pack the bottle", {}),
+    ("go to the kitchen. pick up the bottle on the counter", {}),
+    ("go to the water bottle", {"strict": True}),
 ]
 
 
-def run_example(text, cloth=False):
+def run_example(text, cloth=False, strict=False):
     sim = P.PackSim("weekend_trip", cloth=cloth)
     reqs = I.parse_rules(text)
-    ins = I.Instructions(reqs)
+    ins = I.Instructions(reqs, auto_reach=not strict)
     out = []
     for _ in range(60):
         n = ins.next(sim.state)
@@ -66,7 +70,19 @@ def run_example(text, cloth=False):
                                  yaw_deg=round(float(np.degrees(pl["yaw"])), 0),
                                  rests_on=[S.item(o).label for o in pl.get("on", ())] or ["case floor"])
         out.append(dict(kind="action" if ok else "refused", action=d, feedback=msg))
-    return dict(text=text, requests=reqs, cloth=cloth, result=out)
+    return dict(text=text, requests=reqs, cloth=cloth, strict=strict, result=out)
+
+
+def _views():
+    """From each walking-graph point, the items in other rooms that are in view."""
+    out = []
+    for n, xy in S.NAV_NODES.items():
+        r = R.room_at(xy)
+        vis = [it.label for it in S.ITEMS if R.room_at(it.start[:2]) != r and
+               R.line_of_sight((xy[0], xy[1], R.EYE_H), np.array(it.start))[0]]
+        if vis:
+            out.append(dict(point=n, room=R.LABEL[r], sees=vis))
+    return out
 
 
 def main():
@@ -87,6 +103,11 @@ def main():
                    mass_kg=S.CLOTH["mass"]),
         stations=[dict(name=s.name, label=s.label, room=s.room, crouch=s.crouch) for s in S.STATIONS.values()],
         floor_spots={k: dict(label=v["label"]) for k, v in P.FLOOR_SPOTS.items()},
+        rooms=dict(eye_height_m=R.EYE_H,
+                   rooms=[dict(name=k, label=R.LABEL[k], words=R.WORDS[k],
+                               opens_to=[R.LABEL[o] for o in R.LABEL if o != k and R.adjacent(k, o)],
+                               items=[S.item(i.name).label for i in S.ITEMS if i.room == k]) for k in R.LABEL],
+                   in_view=_views()),
         placement=dict(grid_mm=round(LO.GRID * 1000), support_fraction=LO.SUPPORT_FRAC, support_tol_mm=round(LO.SUPPORT_TOL * 1000),
                        headroom_mm=round(LO.HEADROOM * 1000), lid_margin_mm=round(LO.LID_MARGIN * 1000),
                        palm_strip_mm=round(LO.PALM_STRIP * 1000), bottle_strip_mm=round(LO.BOTTLE_STRIP * 1000)),

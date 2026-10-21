@@ -30,6 +30,7 @@ Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pil
 |---|---|---|
 | `actionspace.py` | action space | Verbs with typed signatures, per-asset parts and operations (with value ranges), reference resolution, value parsing, rejection codes, action text, `spec()` |
 | `instruct.py` | instructions | Rule parser and Gemini parser (same request format), macro expansion (pack / unpack / lock / unlock), lazy grounding, auto-inserted `go_to` when out of reach |
+| `rooms.py` | navigation | Rooms, the walking graph, line of sight from eye height past walls, door frames and furniture |
 | `layout.py` | placement | Continuous placement in the case on a 5 mm height map: walls, support, height, the lid's swing, room for the hands; named spots; nudging to the nearest pose that fits |
 | `packsim.py` | symbolic | State (items, case hardware, cloth), preconditions with feedback, effects, goal predicates, tasks, floor spots |
 | `episodes.py` | user + events | Replanning user policy, progress-conditioned events, personas, case sampling with a symbolic dry run |
@@ -47,13 +48,15 @@ An action is a verb with typed arguments; the page lists each verb's resolution 
 
 | Group | Verbs |
 |---|---|
-| navigate | `go_to(target: Ref)`, `look_at(target: Ref)` |
+| navigate | `go_to(target: Ref)`, `enter(room: Ref)`, `look_at(target: Ref)` |
 | manipulate | `pick_up(target: Ref)`, `place(target = it, rel: in\|on\|beside = in, dest: Ref = suitcase, at: Spot?, side: Side?, yaw: Angle?, orient: Orient?)`, `put_back(target = it)` |
 | articulate | `open(target: Ref, to: Frac = 1)`, `close(target: Ref, to: Frac = 0)`, `fasten(target)`, `unfasten(target)` |
 | control | `press(target, hold: Dur = 0.3, times: Count = 1)`, `turn(target, to: Digit \| by: Extent)`, `set(target, value: Setting)`, `insert(target, into = lock)` |
 | case | `stand_up`, `roll(to: Ref)` (`lay_down` is rejected: not simulated yet) |
 | cloth | `fold(target, style = half)` (`unfold` and `thirds` are rejected with the reason) |
 | other | `wait(seconds)`, `say(text)` |
+
+Navigation: one `go_to` reaches only what is in the person's room or in view (an unobstructed line from eye height). Anything else is expanded (`packsim.navigation`) into `enter(room)` for each room on the way until the target is in view, `look_at(item)` for an item that has to be found (a physics ray cast records whether it was in sight), then `go_to`. Each step is its own logged action with a `parent` naming the request it came from. `--no-reach` turns off all insertion and expansion, so an out-of-view `go_to` is refused (strict mode for evaluating agents).
 
 Suitcase parts (from the scan and spinner-case manuals): `lid` (open / close, fully only), `main_zip` (open / close to any fraction), `zip_pulls` (insert into the lock), `lock` (set a code), `dial_1..3` (turn to a digit or by clicks), `lock_button` (press: frees the pulls only when the dials show the code), `trolley_handle` (set to stop 0, 1, 2; only stop 1 with the case lying on the bed), `trolley_button`, `strap` (fasten / unfasten), `side_handle` (grip only), `wheels`.
 
@@ -65,6 +68,7 @@ Rejection codes: `unknown_verb`, `missing_argument`, `bad_value`, `unknown_ref`,
 - every scheduled event fired; in sampled cases, no refused actions (instructions may be refused: they are reported)
 - the action log agrees with physics for every item, the zip fraction, the dials, the pulls, the handle stop and the buckle
 - the lid shut or open as logged; the zipper engaged only with the lid down; the case upright on four wheels or lying on its back, as logged; everything settled
+- every `go_to` target in the person's room or in view at its start; every looked-for item in sight (ray cast); every `enter` ends in its room
 - every pick lifted by contact, no drops; the case undisturbed while it was being packed
 - contact penetration under 5 mm (10 mm on soft piles and cloth), finger joints within 2.5° of their limits
 - fixed segment lengths, no unreachable arm or leg frames, the pelvis clear of walls and furniture

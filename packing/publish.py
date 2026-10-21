@@ -30,6 +30,11 @@ def chapters(actions, schedule, speed):
         if act["verb"] == "go_to" and i + 1 < len(actions) and actions[i + 1]["action"]["verb"] == "pick_up" \
                 and not actions[i + 1]["event"]:
             label = S.item(actions[i + 1]["action"]["target"]).label
+            # a trip taken room by room starts at its first step (same parent request)
+            k = i
+            while act.get("parent") and k > 0 and actions[k - 1]["action"].get("parent") == act["parent"]:
+                k -= 1
+            t = actions[k]["t_start"]
             out.append(dict(title=label[0].upper() + label[1:], time=round(t / speed, 2), sim_time=t))
         elif act["verb"] in CASE_TITLES:
             prev = actions[i - 1] if i else None

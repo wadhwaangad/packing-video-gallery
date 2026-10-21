@@ -11,6 +11,11 @@ Two parsers produce the same request format:
     resolver decides what they refer to, so ambiguity is detected the same way).
 Set GEMINI_API_KEY (and optionally GEMINI_MODEL) to use it.
 
+Navigation: a go_to reaches only what is in the person's room or in view; otherwise it is
+expanded (packsim.navigation) into enter(room) per room on the way, look_at(item) and the
+final go_to, each logged with its parent request. With auto_reach off nothing is inserted
+or expanded, so an out-of-view go_to is refused (strict mode for evaluating agents).
+
 Grounding happens lazily, against the state at the moment the request is reached, so
 'the pile on the dresser' or 'it' resolve against what is there then.
 """
@@ -18,11 +23,11 @@ import json, os, re, urllib.request
 import scene as S
 import layout as LO
 from actionspace import Action, Rejection, VERBS, ground, spec, SUITCASE_PARTS
-from packsim import ITEM_NAMES
+from packsim import ITEM_NAMES, navigation
 
 # ---------------------------------------------------------------- rule parser
 FRAC_WORDS = r"(halfway|half way|half|fully|all the way|a quarter|quarter|three quarters|a third|partly|a bit|[0-9.]+\s*%|0?\.[0-9]+)"
-VERB_START = re.compile(r"^(pack|unpack|pick|grab|take|lift|put|place|set|stand|lay|go|walk|head|move|look|open|close|shut|zip|unzip|"
+VERB_START = re.compile(r"^(pack|enter|unpack|pick|grab|take|lift|put|place|set|stand|lay|go|walk|head|move|look|open|close|shut|zip|unzip|"
                         r"lock|unlock|turn|rotate|spin|press|push|extend|raise|pull|retract|lower|collapse|fasten|buckle|"
                         r"unfasten|unbuckle|undo|roll|wheel|fold|unfold|wait|pause|say|tell|ask|insert|dock|clip)\b")
 
@@ -65,6 +70,9 @@ def parse_one(t):
     if m:
         n = {"a": 1, "one": 1, "two": 2, "three": 3, "five": 5, "ten": 10}.get(m.group(1), m.group(1))
         return dict(verb="wait", args=dict(seconds=float(n)))
+    m = re.match(r"^(?:enter|(?:go|walk|head|step)(?: back)? (?:into|in to))\s+(.+)$", s)
+    if m:
+        return dict(verb="enter", args=dict(target=m.group(1)))
     m = re.match(r"^(?:go|walk|head)(?: over| back)? to (.+)$", s)
     if m:
         return dict(verb="go_to", args=dict(target=m.group(1)))
@@ -260,6 +268,7 @@ Allowed verbs and arguments (Ref arguments are words naming something):
 {verbs}
 Composite verbs: pack(target, at?, orient?) = fetch the item and put it in the case; unpack(target);
 lock() = dock the zip pulls in the lock and scramble the dials; unlock(code).
+Rooms: the bedroom, the bathroom, the kitchen, the hall, the living room ("go into the kitchen" = enter).
 Argument conventions:
 - Copy the user's own words for every Ref argument (e.g. "the shirts", "it"). Do NOT choose between objects
   that the words could mean; never invent object names. Resolve pronouns only to the user's earlier words.
@@ -357,6 +366,8 @@ class Instructions:
                     pa[k] = args[k]
             if item == "bottle" and "orient" not in pa:
                 pa["orient"] = "upright"
+            if st.holding == item:
+                return [dict(verb="place", args=pa)]
             return [dict(verb="pick_up", args=dict(target=item)), dict(verb="place", args=pa)]
         if v == "unpack":
             g = ground(dict(verb="pick_up", args=dict(target=args["target"])), st, self.last)
@@ -406,5 +417,12 @@ class Instructions:
                 where = reach(g, st)
                 if where:
                     self.pending.insert(0, g)
-                    return (Action("go_to", where), "nominal", "")
+                    g = Action("go_to", where)
+                if g.verb in ("go_to", "enter"):
+                    # out of view: room by room, then look for it, then walk to it
+                    steps = navigation(st, g)
+                    if not steps:
+                        continue
+                    self.pending[0:0] = steps[1:]
+                    g = steps[0]
             return (g, "nominal", "")

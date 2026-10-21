@@ -14,6 +14,7 @@ import copy
 import numpy as np
 import scene as S
 import layout as LO
+import rooms as R
 from actionspace import Action, VERBS, SUITCASE_PARTS, ground, Rejection, describe
 
 ITEM_NAMES = [it.name for it in S.ITEMS]
@@ -158,12 +159,32 @@ class PackSim:
             t = a.target
             if t in LO.ANCHORS:
                 return True, ""
+            if t in R.LABEL:
+                if place_room(st) == t:
+                    return False, f"you are already in {R.LABEL[t]}"
+                return False, f"{R.LABEL[t]} is reached room by room (enter each room on the way)"
             if t not in S.STATIONS and t not in ITEM_NAMES:
                 return False, f"cannot find '{t}'"
             if t in ITEM_NAMES and st.loc[t] == "held":
                 return False, f"you are already holding the {lab(t)}"
-            if t == "suitcase" and upright:
-                return True, ""
+            ok, _ = in_view(st, t)
+            if not ok:
+                there = R.LABEL[R.room_at(target_point(st, t)[:2])]
+                name = _the_any(t)
+                return False, f"{name} is in {there}, out of view from {place_label(st)} " \
+                              f"(you are in {R.LABEL[place_room(st)]}): go there room by room"
+            return True, ""
+        if v == "enter":
+            if a.target not in R.LABEL:
+                return False, f"'{a.target}' is not a room"
+            here = place_room(st)
+            if a.target == here:
+                return False, f"you are already in {R.LABEL[here]}"
+            if not R.adjacent(here, a.target):
+                return False, f"{R.LABEL[a.target]} does not open off {R.LABEL[here]}"
+            via = a.get("via")
+            if via and (via not in S.NAV_NODES or R.NODE_ROOM[via] != a.target):
+                return False, f"'{via}' is not a point in {R.LABEL[a.target]}"
             return True, ""
         if v == "look_at":
             return True, ""
@@ -184,7 +205,7 @@ class PackSim:
                 return True, ""
             home = st.loc[t].split(":", 1)[1]
             if st.station != home or st.facing != t:
-                return False, f"the {lab(t)} is not within reach (you are at {S.STATIONS[st.station].label})"
+                return False, f"the {lab(t)} is not within reach (you are at {place_label(st)})"
             return True, ""
         if v == "place":
             item = a.target or st.holding
@@ -371,6 +392,8 @@ class PackSim:
                 st.facing = "" if where == "case" else t
             else:
                 st.station, st.facing = t, ""
+        elif v == "enter":
+            st.station, st.facing = f"node:{a.get('via') or entry_node(st, t)}", ""
         elif v == "pick_up":
             if st.in_case(t):
                 st.place.pop(t, None)
@@ -490,6 +513,138 @@ FLOOR_SPOTS = {
     "bedroom_door": dict(label="the bedroom door", case=(3.05, 2.95), beside=(3.35, 2.95), beside_yaw=-np.pi / 2,
                          route=((2.98, 2.05), (3.35, 2.95))),
 }
+
+
+def _the_any(t):
+    if t in ITEM_NAMES:
+        return f"the {S.item(t).label}"
+    if t in S.STATIONS:
+        return S.STATIONS[t].label
+    return "the suitcase"
+
+
+# ---------------------------------------------------------------- navigation
+# A go_to reaches only what is in the person's room or in view; anything else is
+# reached room by room (enter), then looked for, then walked to. See rooms.py.
+def place_xy(st):
+    """Where the person stands now (x, y)."""
+    s = st.station
+    if s.startswith("node:"):
+        return tuple(S.NAV_NODES[s[5:]])
+    if s == "case_floor":
+        return FLOOR_SPOTS[st.case_at]["beside"]
+    return tuple(S.STATIONS[s].stand)
+
+
+def place_room(st):
+    return R.room_at(place_xy(st))
+
+
+def place_label(st):
+    s = st.station
+    if s.startswith("node:"):
+        return R.LABEL[place_room(st)]
+    if s == "case_floor":
+        return f"the standing case at {FLOOR_SPOTS[st.case_at]['label']}"
+    return S.STATIONS[s].label
+
+
+def access_node(st):
+    s = st.station
+    if s.startswith("node:"):
+        return s[5:]
+    if s == "case_floor":
+        return R.nearest_node(FLOOR_SPOTS[st.case_at]["beside"])
+    return S.STATIONS[s].access
+
+
+def _case_point(st):
+    if st.case_pose == "upright_floor":
+        x, y = FLOOR_SPOTS[st.case_at]["case"]
+        return np.array([x, y, 0.40])
+    stn = S.STATIONS["suitcase"]
+    return np.array([*stn.stand, 0.0]) + np.array([*stn.normal, 0.0]) * 0.6 + np.array([0, 0, stn.top + 0.1])
+
+
+def target_point(st, t):
+    """A point on the target, for line of sight (None for rooms and held items)."""
+    if t in R.LABEL:
+        return None
+    if t == "suitcase" or t in LO.ANCHORS or (t in ITEM_NAMES and st.in_case(t)):
+        return _case_point(st)
+    if t in ITEM_NAMES:
+        if st.loc[t] == "held":
+            return None
+        return np.array(S.item(t).start, float)
+    stn = S.STATIONS[t]
+    return np.array([*stn.stand, 0.0]) + np.array([*stn.normal, 0.0]) * 0.6 + np.array([0, 0, max(stn.top, 0.5)])
+
+
+def target_access(st, t):
+    if t in R.LABEL:
+        return R.CENTRE[t]
+    if t == "suitcase" or t in LO.ANCHORS or (t in ITEM_NAMES and st.in_case(t)):
+        if st.case_pose == "upright_floor":
+            return R.nearest_node(FLOOR_SPOTS[st.case_at]["beside"])
+        return S.STATIONS["suitcase"].access
+    if t in ITEM_NAMES:
+        return S.STATIONS[S.item(t).station].access
+    return S.STATIONS[t].access
+
+
+def in_view(st, t, frm=None):
+    """(ok, why): the target is in the person's room, or visible from where they stand."""
+    p = target_point(st, t)
+    if p is None:
+        return True, ""
+    xy = place_xy(st) if frm is None else frm
+    if R.room_at(xy) == R.room_at(p[:2]):
+        return True, "same room"
+    vis, _ = R.line_of_sight((xy[0], xy[1], R.EYE_H), p)
+    return vis, ("in view" if vis else "")
+
+
+def entry_node(st, room):
+    """The first walking-graph point inside `room` on the way from here to its centre."""
+    for n in R.nav_path(access_node(st), R.CENTRE[room]):
+        if R.NODE_ROOM[n] == room:
+            return n
+    return R.CENTRE[room]
+
+
+def navigation(st, a):
+    """A go_to / enter request as the steps a person can take from here: [a] if its target
+    is in this room or in view; otherwise one enter(room) per room on the way until the
+    target is in view (or its room is reached), then look_at(item) for an item that has to
+    be found, then go_to(target). A go_to(room) is the enters alone ([] if already there).
+    Each step carries the request it came from (`parent`)."""
+    t = a.target
+    here = place_room(st)
+    if a.verb == "enter" or t in R.LABEL:
+        if here == t:
+            return []
+        goal_room, item = t, None
+    else:
+        if in_view(st, t)[0]:
+            return [a]
+        goal_room, item = R.room_at(target_point(st, t)[:2]), t
+    steps, cur = [], here
+    for n in R.nav_path(access_node(st), target_access(st, t)):
+        rn = R.NODE_ROOM[n]
+        if rn == cur:
+            continue
+        steps.append(Action("enter", rn, dict(via=n)))
+        cur = rn
+        if rn == goal_room or (item and in_view(st, item, frm=S.NAV_NODES[n])[0]):
+            break
+    if item:
+        if item in ITEM_NAMES and not st.in_case(item):
+            steps.append(Action("look_at", item))
+        steps.append(Action("go_to", item))
+    parent = a.text()
+    for s in steps:
+        s.parent = parent
+    return steps
 
 
 # ---------------------------------------------------------------- compatibility helpers

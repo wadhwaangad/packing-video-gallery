@@ -31,16 +31,39 @@
     "ref_kinds": [
      "station",
      "item",
-     "anchor_case"
+     "anchor_case",
+     "room"
     ],
     "steps": [
      "Resolve the place, or the item (then its current place).",
+     "Reachable in one step only if it is in the person's room, or in view: an unobstructed line from eye height (1.55 m) to it past walls, door frames and furniture. Otherwise the request is expanded: enter(room) for each room on the way until the target is in view, then look_at(item) for an item that has to be found, then go_to (each step logged with its parent). go_to(room) is the enters alone.",
      "Stand point: a station's default spot, or in front of the item at the station's standoff.",
      "Route: shortest path on the walking graph, shortcut wherever the straight line keeps 30 cm from furniture; a carried item is turned the way round that keeps it clear of walls.",
      "Walk at the persona's speed and turn to face the station."
     ],
     "check": "if carrying, the item is still between the hands (< 30 cm)",
     "effect": "station := place"
+   },
+   "enter": {
+    "group": "navigate",
+    "signature": [
+     {
+      "name": "target",
+      "type": "Ref",
+      "required": true,
+      "default": null
+     }
+    ],
+    "ref_kinds": [
+     "room"
+    ],
+    "steps": [
+     "Resolve the room; it must open off the person's room (a step of the walking graph crosses into it).",
+     "Entry point: the first walking-graph point inside that room on the way to it (or the given one, when expanded from a go_to).",
+     "Walk there through the doorway (or across the open-plan boundary) at the persona's speed; a carried item is turned the way round that keeps it clear of walls."
+    ],
+    "check": "if carrying, the item is still between the hands (< 30 cm); the person ends inside the room",
+    "effect": "room := room (standing at its entry point)"
    },
    "look_at": {
     "group": "navigate",
@@ -59,9 +82,10 @@
     ],
     "steps": [
      "Resolve the reference to a point (item centre, part centre or station).",
-     "Turn the head (gaze target) towards it; the body does not move."
+     "Turn the head (gaze target) towards it; the body does not move.",
+     "Cast a ray in the physics scene from eye height to it; anything static (walls, door frames, furniture) hit first means it is not in sight."
     ],
-    "check": "none",
+    "check": "recorded: the target is in sight (look_check event)",
     "effect": "none"
    },
    "pick_up": {
@@ -415,11 +439,10 @@
      "device"
     ],
     "steps": [
-     "The case must be standing on the floor.",
-     "Grip the trolley bar, lift it onto the foot of the bed and lower it onto its back."
+     "Not simulated yet: requests are rejected (unsupported_operation)."
     ],
-    "check": "case lying on its back on the bed",
-    "effect": "case := on the bed"
+    "check": "-",
+    "effect": "-"
    },
    "roll": {
     "group": "case",
@@ -884,6 +907,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -961,6 +985,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1032,6 +1057,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1110,6 +1136,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1236,14 +1263,40 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the camera"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "look_at",
+      "target": "camera",
+      "args": {},
+      "text": "look at the camera",
+      "parent": "go to the camera"
+     },
+     "feedback": ""
+    },
     {
      "kind": "action",
      "action": {
       "verb": "go_to",
       "target": "camera",
       "args": {},
-      "text": "go to the camera"
+      "text": "go to the camera",
+      "parent": "go to the camera"
      },
      "feedback": ""
     },
@@ -1260,10 +1313,24 @@
     {
      "kind": "action",
      "action": {
+      "verb": "enter",
+      "target": "bedroom",
+      "args": {
+       "via": "bed_door"
+      },
+      "text": "walk into the bedroom",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
-      "text": "go to the suitcase"
+      "text": "go to the suitcase",
+      "parent": "go to the suitcase"
      },
      "feedback": ""
     },
@@ -1292,10 +1359,61 @@
     {
      "kind": "action",
      "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "bath_door"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "bathroom",
+      "args": {
+       "via": "bath_in"
+      },
+      "text": "walk into the bathroom",
+      "parent": "go to the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "look_at",
+      "target": "towel",
+      "args": {},
+      "text": "look at the folded towel",
+      "parent": "go to the folded towel"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
       "verb": "go_to",
       "target": "towel",
       "args": {},
-      "text": "go to the folded towel"
+      "text": "go to the folded towel",
+      "parent": "go to the folded towel"
      },
      "feedback": ""
     },
@@ -1312,10 +1430,37 @@
     {
      "kind": "action",
      "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "bath_door"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_east"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
-      "text": "go to the suitcase"
+      "text": "go to the suitcase",
+      "parent": "go to the suitcase"
      },
      "feedback": ""
     },
@@ -1347,14 +1492,53 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "look_at",
+      "target": "bottle",
+      "args": {},
+      "text": "look at the water bottle",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
     {
      "kind": "action",
      "action": {
       "verb": "go_to",
       "target": "bottle",
       "args": {},
-      "text": "go to the water bottle"
+      "text": "go to the water bottle",
+      "parent": "go to the water bottle"
      },
      "feedback": ""
     },
@@ -1371,10 +1555,37 @@
     {
      "kind": "action",
      "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_east"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
-      "text": "go to the suitcase"
+      "text": "go to the suitcase",
+      "parent": "go to the suitcase"
      },
      "feedback": ""
     },
@@ -1413,6 +1624,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -1432,6 +1644,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -1452,6 +1665,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -1478,6 +1692,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1563,6 +1778,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1672,6 +1888,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1736,6 +1953,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -1756,6 +1974,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1819,6 +2038,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "action",
@@ -1921,6 +2141,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "refused",
@@ -1946,14 +2167,42 @@
     }
    ],
    "cloth": true,
+   "strict": false,
    "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the kitchen counter"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the kitchen counter"
+     },
+     "feedback": ""
+    },
     {
      "kind": "action",
      "action": {
       "verb": "go_to",
       "target": "kitchen_counter",
       "args": {},
-      "text": "go to the kitchen counter"
+      "text": "go to the kitchen counter",
+      "parent": "go to the kitchen counter"
      },
      "feedback": ""
     },
@@ -1983,6 +2232,7 @@
     }
    ],
    "cloth": true,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -2003,6 +2253,7 @@
     }
    ],
    "cloth": true,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -2022,6 +2273,7 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
@@ -2041,11 +2293,249 @@
     }
    ],
    "cloth": false,
+   "strict": false,
    "result": [
     {
      "kind": "rejected",
      "code": "unknown_verb",
      "message": "no action matches 'dance around'"
+    }
+   ]
+  },
+  {
+   "text": "pack the bottle",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the bottle"
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "look_at",
+      "target": "bottle",
+      "args": {},
+      "text": "look at the water bottle",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bottle",
+      "args": {},
+      "text": "go to the water bottle",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "bottle",
+      "args": {},
+      "text": "pick up the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_east"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase",
+      "parent": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "place",
+      "target": "bottle",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "orient": "upright"
+      },
+      "text": "put the water bottle in the suitcase, upright",
+      "resolved": {
+       "from_wheel_end_cm": 13.2,
+       "from_hinge_side_cm": 38.1,
+       "yaw_deg": 0.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "go to the kitchen. pick up the bottle on the counter",
+   "requests": [
+    {
+     "verb": "go_to",
+     "args": {
+      "target": "the kitchen"
+     }
+    },
+    {
+     "verb": "pick_up",
+     "args": {
+      "target": "the bottle on the counter"
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "living",
+      "args": {
+       "via": "hall_door"
+      },
+      "text": "walk into the living room",
+      "parent": "go to the kitchen"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "hall",
+      "args": {
+       "via": "kitchen_hall"
+      },
+      "text": "walk into the hall",
+      "parent": "go to the kitchen"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "enter",
+      "target": "kitchen",
+      "args": {
+       "via": "kitchen_in"
+      },
+      "text": "walk into the kitchen",
+      "parent": "go to the kitchen"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "go_to",
+      "target": "bottle",
+      "args": {},
+      "text": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "verb": "pick_up",
+      "target": "bottle",
+      "args": {},
+      "text": "pick up the water bottle"
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "go to the water bottle",
+   "requests": [
+    {
+     "verb": "go_to",
+     "args": {
+      "target": "the water bottle"
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": true,
+   "result": [
+    {
+     "kind": "refused",
+     "action": {
+      "verb": "go_to",
+      "target": "bottle",
+      "args": {},
+      "text": "go to the water bottle"
+     },
+     "feedback": "the water bottle is in the kitchen, out of view from the suitcase (you are in the bedroom): go there room by room"
     }
    ]
   }
@@ -2500,6 +2990,152 @@
   "bedroom_door": {
    "label": "the bedroom door"
   }
+ },
+ "rooms": {
+  "eye_height_m": 1.55,
+  "rooms": [
+   {
+    "name": "bedroom",
+    "label": "the bedroom",
+    "words": [
+     "bedroom",
+     "bed room"
+    ],
+    "opens_to": [
+     "the living room"
+    ],
+    "items": [
+     "folded trousers",
+     "T-shirt pile",
+     "sweater pile",
+     "striped shirts",
+     "sweatshirts"
+    ]
+   },
+   {
+    "name": "bathroom",
+    "label": "the bathroom",
+    "words": [
+     "bathroom",
+     "bath room",
+     "washroom"
+    ],
+    "opens_to": [
+     "the hall"
+    ],
+    "items": [
+     "folded towel",
+     "stack of towels",
+     "toiletry bag"
+    ]
+   },
+   {
+    "name": "kitchen",
+    "label": "the kitchen",
+    "words": [
+     "kitchen"
+    ],
+    "opens_to": [
+     "the hall"
+    ],
+    "items": [
+     "sweatpants and socks",
+     "water bottle"
+    ]
+   },
+   {
+    "name": "hall",
+    "label": "the hall",
+    "words": [
+     "hall",
+     "hallway",
+     "corridor"
+    ],
+    "opens_to": [
+     "the bathroom",
+     "the kitchen",
+     "the living room"
+    ],
+    "items": []
+   },
+   {
+    "name": "living",
+    "label": "the living room",
+    "words": [
+     "living room",
+     "lounge",
+     "sitting room"
+    ],
+    "opens_to": [
+     "the bedroom",
+     "the hall"
+    ],
+    "items": [
+     "leather notebook",
+     "camera"
+    ]
+   }
+  ],
+  "in_view": [
+   {
+    "point": "bed_door",
+    "room": "the bedroom",
+    "sees": [
+     "camera"
+    ]
+   },
+   {
+    "point": "hall_door",
+    "room": "the living room",
+    "sees": [
+     "folded trousers",
+     "T-shirt pile",
+     "sweatpants and socks"
+    ]
+   },
+   {
+    "point": "living_mid",
+    "room": "the living room",
+    "sees": [
+     "folded trousers",
+     "T-shirt pile",
+     "sweatpants and socks"
+    ]
+   },
+   {
+    "point": "hall_east",
+    "room": "the living room",
+    "sees": [
+     "sweater pile",
+     "striped shirts",
+     "folded towel",
+     "stack of towels",
+     "sweatpants and socks",
+     "toiletry bag"
+    ]
+   },
+   {
+    "point": "bath_door",
+    "room": "the hall",
+    "sees": [
+     "stack of towels",
+     "sweatpants and socks",
+     "toiletry bag",
+     "leather notebook",
+     "camera"
+    ]
+   },
+   {
+    "point": "kitchen_hall",
+    "room": "the hall",
+    "sees": [
+     "sweatpants and socks",
+     "water bottle",
+     "leather notebook",
+     "camera"
+    ]
+   }
+  ]
  },
  "placement": {
   "grid_mm": 5,

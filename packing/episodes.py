@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 import json, random
 import scene as S
 import layout as LO
-from packsim import PackSim, Action, TASKS, ITEM_NAMES, initial_state
+from packsim import PackSim, Action, TASKS, ITEM_NAMES, initial_state, navigation
 
 PERSONAS = {
     "brisk": dict(walk=1.05, pause=0.0, label="walks quickly, no pauses"),
@@ -110,6 +110,7 @@ class User:
         self.order = pack_order(task, rng)
         self.events = list(events)
         self.queue = []             # (Action, label, event id) injected by an active event
+        self.nav = []               # remaining steps of a go_to taken room by room
         self.omitted = set()        # items the user has (for now) forgotten
         self.believed = set()       # items the user wrongly thinks belong in the case
         self.packed_count = 0
@@ -232,6 +233,21 @@ class User:
         return sum(st.in_case(n) for n in ITEM_NAMES)
 
     def next(self, st):
+        """Next (action, label, event id). A go_to whose target is out of the person's room and
+        view is taken room by room (packsim.navigation); the steps keep its label and event."""
+        if self.nav:
+            return self.nav.pop(0)
+        nxt = self._next(st)
+        if nxt is None or nxt[0].verb not in ("go_to", "enter"):
+            return nxt
+        a, label, eid = nxt
+        steps = [(x, label, eid) for x in navigation(st, a)]
+        if not steps:
+            return self.next(st)
+        self.nav = steps[1:]
+        return steps[0]
+
+    def _next(self, st):
         """Next (action, label, event id). Recovery for omissions happens before closing."""
         if self.queue:
             return self.queue.pop(0)

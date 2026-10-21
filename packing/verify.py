@@ -16,7 +16,7 @@ import scene as S
 
 HERE = Path(__file__).resolve().parent
 CODE = ["scene.py", "hands.py", "build_model.py", "runner.py", "tasks.py", "skills_case.py", "skills_hw.py", "packsim.py",
-        "actionspace.py", "layout.py", "instruct.py", "episodes.py", "executor.py", "generate.py", "operator_model.py",
+        "actionspace.py", "layout.py", "rooms.py", "instruct.py", "episodes.py", "executor.py", "generate.py", "operator_model.py",
         "export_poses.py", "render_blender.py", "item_assets.py", "prepare_assets.py", "encode.py", "verify.py",
         "fetch_assets.py"]
 
@@ -78,6 +78,29 @@ def main(run):
                                 if e["event"] == "action_retry"]
     places = [e for e in events if e["event"] == "placed_check"]
     checks["every_placement_landed_in_its_region"] = all(e["ok"] for e in places)
+
+    # -- navigation: one go_to only reaches what is in the person's room or in view
+    import rooms as R
+    nav = []
+    for a in actions:
+        if not a["ok"] or a["action"]["verb"] != "go_to" or a["action"]["target"] not in bid or \
+                a["action"]["target"] == "suitcase":
+            continue
+        f = frames[min(a["frame_start"], len(frames) - 1)]
+        eye = (f["root"]["x"], f["root"]["y"], R.EYE_H)
+        p = np.array(f["xpos"][bid[a["action"]["target"]]])
+        same = R.room_at(eye[:2]) == R.room_at(p[:2])
+        vis = same or R.line_of_sight(eye, p)[0]
+        nav.append(dict(action=a["action"]["text"], from_room=R.room_at(eye[:2]), to_room=R.room_at(p[:2]), ok=bool(vis)))
+    detail["go_to_reach"] = nav
+    checks["every_go_to_target_in_room_or_view"] = all(n["ok"] for n in nav)
+    looks = [e for e in events if e["event"] == "look_check"]
+    detail["look_checks"] = looks
+    checks["every_looked_for_item_in_sight"] = all(e["visible"] for e in looks)
+    enters = [a for a in actions if a["ok"] and a["action"]["verb"] == "enter"]
+    checks["every_enter_ends_in_its_room"] = all(
+        R.room_at((frames[min(a["frame_end"], len(frames) - 1)]["root"]["x"],
+                   frames[min(a["frame_end"], len(frames) - 1)]["root"]["y"])) == a["action"]["target"] for a in enters)
     detail["placements"] = places
 
     # -- the case at the end: every part where the log says it is
