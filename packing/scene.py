@@ -256,7 +256,7 @@ NAV_EDGES = [
     ("bed_foot", "bed_east"), ("bed_east", "bed_north"), ("bed_east", "bed_door"),
     ("bed_door", "hall_door"), ("hall_door", "living_mid"), ("hall_door", "hall_east"),
     ("hall_east", "bath_door"), ("bath_door", "bath_in"), ("hall_east", "kitchen_hall"),
-    ("kitchen_hall", "kitchen_in"),
+    ("kitchen_hall", "kitchen_in"), ("bath_door", "kitchen_hall"),   # along the hall, clear of furniture
 ]
 
 # ---------------------------------------------------------------- items

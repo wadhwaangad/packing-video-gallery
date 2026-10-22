@@ -1,0 +1,3590 @@
+[
+ {
+  "index": 0,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_door"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the toiletry bag"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 2.0,
+  "frame_start": 50,
+  "ok": true,
+  "feedback": "",
+  "t_end": 9.635,
+  "frame_end": 240,
+  "state": {
+   "station": "node:hall_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "station:vanity",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 1,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "bath_door"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the toiletry bag"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 9.635,
+  "frame_start": 240,
+  "ok": true,
+  "feedback": "",
+  "t_end": 13.595,
+  "frame_end": 339,
+  "state": {
+   "station": "node:bath_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "station:vanity",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 2,
+  "action": {
+   "verb": "look_at",
+   "target": "toiletry_bag",
+   "args": {},
+   "text": "look at the toiletry bag",
+   "parent": "go to the toiletry bag"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 13.595,
+  "frame_start": 339,
+  "ok": true,
+  "feedback": "",
+  "t_end": 14.995,
+  "frame_end": 374,
+  "state": {
+   "station": "node:bath_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "station:vanity",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 3,
+  "action": {
+   "verb": "go_to",
+   "target": "toiletry_bag",
+   "args": {},
+   "text": "go to the toiletry bag",
+   "parent": "go to the toiletry bag"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 14.995,
+  "frame_start": 374,
+  "ok": true,
+  "feedback": "",
+  "t_end": 19.819,
+  "frame_end": 495,
+  "state": {
+   "station": "vanity",
+   "facing": "toiletry_bag",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "station:vanity",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 4,
+  "action": {
+   "verb": "pick_up",
+   "target": "toiletry_bag",
+   "args": {},
+   "text": "pick up the toiletry bag"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 19.819,
+  "frame_start": 495,
+  "ok": true,
+  "feedback": "",
+  "t_end": 26.269,
+  "frame_end": 656,
+  "state": {
+   "station": "vanity",
+   "facing": "toiletry_bag",
+   "holding": "toiletry_bag",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "held",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 5,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "bath_door"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 26.269,
+  "frame_start": 656,
+  "ok": true,
+  "feedback": "",
+  "t_end": 32.422,
+  "frame_end": 810,
+  "state": {
+   "station": "node:bath_door",
+   "facing": "",
+   "holding": "toiletry_bag",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "held",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 6,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_east"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 32.422,
+  "frame_start": 810,
+  "ok": true,
+  "feedback": "",
+  "t_end": 34.624,
+  "frame_end": 865,
+  "state": {
+   "station": "node:hall_east",
+   "facing": "",
+   "holding": "toiletry_bag",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "held",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 7,
+  "action": {
+   "verb": "go_to",
+   "target": "suitcase",
+   "args": {},
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 34.624,
+  "frame_start": 865,
+  "ok": true,
+  "feedback": "",
+  "t_end": 43.989,
+  "frame_end": 1099,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "toiletry_bag",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "held",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {},
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 8,
+  "action": {
+   "verb": "place",
+   "target": "toiletry_bag",
+   "args": {
+    "rel": "in",
+    "dest": "suitcase",
+    "at": "front_strip"
+   },
+   "text": "put the toiletry bag in the front strip"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 43.989,
+  "frame_start": 1099,
+  "ok": true,
+  "feedback": "",
+  "t_end": 49.889,
+  "frame_end": 1247,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 9,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_door"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the water bottle"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 49.889,
+  "frame_start": 1247,
+  "ok": true,
+  "feedback": "",
+  "t_end": 58.524,
+  "frame_end": 1463,
+  "state": {
+   "station": "node:hall_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 10,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "kitchen_hall"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the water bottle"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 58.524,
+  "frame_start": 1463,
+  "ok": true,
+  "feedback": "",
+  "t_end": 64.421,
+  "frame_end": 1610,
+  "state": {
+   "station": "node:kitchen_hall",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 11,
+  "action": {
+   "verb": "look_at",
+   "target": "bottle",
+   "args": {},
+   "text": "look at the water bottle",
+   "parent": "go to the water bottle"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 64.421,
+  "frame_start": 1610,
+  "ok": true,
+  "feedback": "",
+  "t_end": 65.821,
+  "frame_end": 1645,
+  "state": {
+   "station": "node:kitchen_hall",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 12,
+  "action": {
+   "verb": "go_to",
+   "target": "bottle",
+   "args": {},
+   "text": "go to the water bottle",
+   "parent": "go to the water bottle"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 65.821,
+  "frame_start": 1645,
+  "ok": true,
+  "feedback": "",
+  "t_end": 70.578,
+  "frame_end": 1764,
+  "state": {
+   "station": "kitchen_counter",
+   "facing": "bottle",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "station:kitchen_counter",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 13,
+  "action": {
+   "verb": "pick_up",
+   "target": "bottle",
+   "args": {},
+   "text": "pick up the water bottle"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 70.578,
+  "frame_start": 1764,
+  "ok": true,
+  "feedback": "",
+  "t_end": 78.278,
+  "frame_end": 1956,
+  "state": {
+   "station": "kitchen_counter",
+   "facing": "bottle",
+   "holding": "bottle",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "held",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 14,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "kitchen_hall"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 78.278,
+  "frame_start": 1956,
+  "ok": true,
+  "feedback": "",
+  "t_end": 83.409,
+  "frame_end": 2085,
+  "state": {
+   "station": "node:kitchen_hall",
+   "facing": "",
+   "holding": "bottle",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "held",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 15,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_east"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 83.409,
+  "frame_start": 2085,
+  "ok": true,
+  "feedback": "",
+  "t_end": 88.841,
+  "frame_end": 2221,
+  "state": {
+   "station": "node:hall_east",
+   "facing": "",
+   "holding": "bottle",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "held",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 16,
+  "action": {
+   "verb": "go_to",
+   "target": "suitcase",
+   "args": {},
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 88.841,
+  "frame_start": 2221,
+  "ok": true,
+  "feedback": "",
+  "t_end": 99.72,
+  "frame_end": 2493,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "bottle",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "held",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 17,
+  "action": {
+   "verb": "place",
+   "target": "bottle",
+   "args": {
+    "rel": "in",
+    "dest": "suitcase",
+    "at": "bottle_corner",
+    "orient": "upright"
+   },
+   "text": "put the water bottle in the front wheel-end corner, upright"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 99.72,
+  "frame_start": 2493,
+  "ok": true,
+  "feedback": "",
+  "t_end": 107.27,
+  "frame_end": 2681,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 18,
+  "action": {
+   "verb": "go_to",
+   "target": "tshirts",
+   "args": {},
+   "text": "go to the T-shirt pile"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 107.27,
+  "frame_start": 2681,
+  "ok": true,
+  "feedback": "",
+  "t_end": 113.875,
+  "frame_end": 2846,
+  "state": {
+   "station": "dresser",
+   "facing": "tshirts",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "station:dresser",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 19,
+  "action": {
+   "verb": "pick_up",
+   "target": "tshirts",
+   "args": {},
+   "text": "pick up the T-shirt pile"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 113.875,
+  "frame_start": 2846,
+  "ok": true,
+  "feedback": "",
+  "t_end": 120.325,
+  "frame_end": 3008,
+  "state": {
+   "station": "dresser",
+   "facing": "tshirts",
+   "holding": "tshirts",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "held",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 20,
+  "action": {
+   "verb": "go_to",
+   "target": "suitcase",
+   "args": {},
+   "text": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 120.325,
+  "frame_start": 3008,
+  "ok": true,
+  "feedback": "",
+  "t_end": 126.626,
+  "frame_end": 3165,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "tshirts",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "held",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 21,
+  "action": {
+   "verb": "place",
+   "target": "tshirts",
+   "args": {
+    "rel": "in",
+    "dest": "suitcase",
+    "at": "wheel_end"
+   },
+   "text": "put the T-shirt pile in the wheel-end garment column"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 126.626,
+  "frame_start": 3165,
+  "ok": true,
+  "feedback": "",
+  "t_end": 132.526,
+  "frame_end": 3313,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 22,
+  "action": {
+   "verb": "go_to",
+   "target": "dresser",
+   "args": {},
+   "text": "go to the dresser"
+  },
+  "label": "error",
+  "event": "e1",
+  "t_start": 132.526,
+  "frame_start": 3313,
+  "ok": true,
+  "feedback": "",
+  "t_end": 138.766,
+  "frame_end": 3469,
+  "state": {
+   "station": "dresser",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 23,
+  "action": {
+   "verb": "wait",
+   "target": "",
+   "args": {
+    "seconds": 2.0
+   },
+   "text": "pause for 2 s"
+  },
+  "label": "error",
+  "event": "e1",
+  "t_start": 138.766,
+  "frame_start": 3469,
+  "ok": true,
+  "feedback": "",
+  "t_end": 140.766,
+  "frame_end": 3519,
+  "state": {
+   "station": "dresser",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 24,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_door"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the sweatpants and socks"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 140.766,
+  "frame_start": 3519,
+  "ok": true,
+  "feedback": "",
+  "t_end": 146.301,
+  "frame_end": 3657,
+  "state": {
+   "station": "node:hall_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 25,
+  "action": {
+   "verb": "look_at",
+   "target": "gym_clothes",
+   "args": {},
+   "text": "look at the sweatpants and socks",
+   "parent": "go to the sweatpants and socks"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 146.301,
+  "frame_start": 3657,
+  "ok": true,
+  "feedback": "",
+  "t_end": 147.701,
+  "frame_end": 3692,
+  "state": {
+   "station": "node:hall_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 26,
+  "action": {
+   "verb": "go_to",
+   "target": "gym_clothes",
+   "args": {},
+   "text": "go to the sweatpants and socks",
+   "parent": "go to the sweatpants and socks"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 147.701,
+  "frame_start": 3692,
+  "ok": true,
+  "feedback": "",
+  "t_end": 155.79,
+  "frame_end": 3894,
+  "state": {
+   "station": "kitchen_counter",
+   "facing": "gym_clothes",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "station:kitchen_counter",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 27,
+  "action": {
+   "verb": "pick_up",
+   "target": "gym_clothes",
+   "args": {},
+   "text": "pick up the sweatpants and socks"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 155.79,
+  "frame_start": 3894,
+  "ok": true,
+  "feedback": "",
+  "t_end": 162.24,
+  "frame_end": 4056,
+  "state": {
+   "station": "kitchen_counter",
+   "facing": "gym_clothes",
+   "holding": "gym_clothes",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "held",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 28,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "kitchen_hall"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 162.24,
+  "frame_start": 4056,
+  "ok": true,
+  "feedback": "",
+  "t_end": 165.791,
+  "frame_end": 4144,
+  "state": {
+   "station": "node:kitchen_hall",
+   "facing": "",
+   "holding": "gym_clothes",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "held",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 29,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_east"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 165.791,
+  "frame_start": 4144,
+  "ok": true,
+  "feedback": "",
+  "t_end": 170.53,
+  "frame_end": 4263,
+  "state": {
+   "station": "node:hall_east",
+   "facing": "",
+   "holding": "gym_clothes",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "held",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 30,
+  "action": {
+   "verb": "go_to",
+   "target": "suitcase",
+   "args": {},
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 170.53,
+  "frame_start": 4263,
+  "ok": true,
+  "feedback": "",
+  "t_end": 179.895,
+  "frame_end": 4497,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "gym_clothes",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "held",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 31,
+  "action": {
+   "verb": "place",
+   "target": "gym_clothes",
+   "args": {
+    "rel": "in",
+    "dest": "suitcase",
+    "at": "wheel_end"
+   },
+   "text": "put the sweatpants and socks in the wheel-end garment column"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 179.895,
+  "frame_start": 4497,
+  "ok": true,
+  "feedback": "",
+  "t_end": 185.795,
+  "frame_end": 4644,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 32,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_door"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 185.795,
+  "frame_start": 4644,
+  "ok": true,
+  "feedback": "",
+  "t_end": 194.43,
+  "frame_end": 4860,
+  "state": {
+   "station": "node:hall_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 33,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "bath_door"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 194.43,
+  "frame_start": 4860,
+  "ok": true,
+  "feedback": "",
+  "t_end": 198.39,
+  "frame_end": 4959,
+  "state": {
+   "station": "node:bath_door",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 34,
+  "action": {
+   "verb": "enter",
+   "target": "bathroom",
+   "args": {
+    "via": "bath_in"
+   },
+   "text": "walk into the bathroom",
+   "parent": "go to the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 198.39,
+  "frame_start": 4959,
+  "ok": true,
+  "feedback": "",
+  "t_end": 201.285,
+  "frame_end": 5032,
+  "state": {
+   "station": "node:bath_in",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 35,
+  "action": {
+   "verb": "look_at",
+   "target": "towel",
+   "args": {},
+   "text": "look at the folded towel",
+   "parent": "go to the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 201.285,
+  "frame_start": 5032,
+  "ok": true,
+  "feedback": "",
+  "t_end": 202.685,
+  "frame_end": 5067,
+  "state": {
+   "station": "node:bath_in",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 36,
+  "action": {
+   "verb": "go_to",
+   "target": "towel",
+   "args": {},
+   "text": "go to the folded towel",
+   "parent": "go to the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 202.685,
+  "frame_start": 5067,
+  "ok": true,
+  "feedback": "",
+  "t_end": 205.32,
+  "frame_end": 5133,
+  "state": {
+   "station": "towel_shelf",
+   "facing": "towel",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "station:towel_shelf",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 37,
+  "action": {
+   "verb": "pick_up",
+   "target": "towel",
+   "args": {},
+   "text": "pick up the folded towel"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 205.32,
+  "frame_start": 5133,
+  "ok": true,
+  "feedback": "",
+  "t_end": 211.77,
+  "frame_end": 5294,
+  "state": {
+   "station": "towel_shelf",
+   "facing": "towel",
+   "holding": "towel",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "held",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 38,
+  "action": {
+   "verb": "enter",
+   "target": "hall",
+   "args": {
+    "via": "bath_door"
+   },
+   "text": "walk into the hall",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 211.77,
+  "frame_start": 5294,
+  "ok": true,
+  "feedback": "",
+  "t_end": 216.986,
+  "frame_end": 5424,
+  "state": {
+   "station": "node:bath_door",
+   "facing": "",
+   "holding": "towel",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "held",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 39,
+  "action": {
+   "verb": "enter",
+   "target": "living",
+   "args": {
+    "via": "hall_east"
+   },
+   "text": "walk into the living room",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 216.986,
+  "frame_start": 5424,
+  "ok": true,
+  "feedback": "",
+  "t_end": 219.188,
+  "frame_end": 5479,
+  "state": {
+   "station": "node:hall_east",
+   "facing": "",
+   "holding": "towel",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "held",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 40,
+  "action": {
+   "verb": "go_to",
+   "target": "suitcase",
+   "args": {},
+   "text": "go to the suitcase",
+   "parent": "go to the suitcase"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 219.188,
+  "frame_start": 5479,
+  "ok": true,
+  "feedback": "",
+  "t_end": 228.553,
+  "frame_end": 5713,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "towel",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "held",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 41,
+  "action": {
+   "verb": "place",
+   "target": "towel",
+   "args": {
+    "rel": "in",
+    "dest": "suitcase",
+    "at": "wheel_end"
+   },
+   "text": "put the folded towel in the wheel-end garment column"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 228.553,
+  "frame_start": 5713,
+  "ok": true,
+  "feedback": "",
+  "t_end": 234.453,
+  "frame_end": 5861,
+  "state": {
+   "station": "suitcase",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "case",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    },
+    "towel": {
+     "x": -0.0725859345254439,
+     "y": -0.15707736197732985,
+     "yaw": 1.5621954282653119,
+     "orient": "",
+     "z": 0.2606,
+     "on": [
+      "gym_clothes"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ },
+ {
+  "index": 42,
+  "action": {
+   "verb": "go_to",
+   "target": "bed_foot",
+   "args": {},
+   "text": "go to the foot of the bed"
+  },
+  "label": "nominal",
+  "event": "",
+  "t_start": 234.453,
+  "frame_start": 5861,
+  "ok": true,
+  "feedback": "",
+  "t_end": 240.769,
+  "frame_end": 6019,
+  "state": {
+   "station": "bed_foot",
+   "facing": "",
+   "holding": "",
+   "loc": {
+    "trousers": "station:dresser",
+    "tshirts": "case",
+    "sweater_pile": "station:bed",
+    "striped_shirts": "station:bed_far",
+    "sweatshirts": "station:nightstand",
+    "towel": "case",
+    "towel_stack": "station:vanity",
+    "gym_clothes": "case",
+    "toiletry_bag": "case",
+    "bottle": "case",
+    "notebook": "station:coffee_table",
+    "camera": "station:coffee_table"
+   },
+   "place": {
+    "toiletry_bag": {
+     "x": 0.16411911061130388,
+     "y": 0.11911608332294699,
+     "yaw": 1.5873403700544897,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "bottle": {
+     "x": 0.14789832987489865,
+     "y": -0.18960894923733473,
+     "yaw": 0.0,
+     "orient": "upright",
+     "z": 0.018,
+     "on": []
+    },
+    "tshirts": {
+     "x": -0.07116910450404379,
+     "y": -0.12109305660098445,
+     "yaw": 2.348445513541488,
+     "orient": "",
+     "z": 0.018,
+     "on": []
+    },
+    "gym_clothes": {
+     "x": -0.06861727441394021,
+     "y": -0.15581471107728023,
+     "yaw": 1.564024753426877,
+     "orient": "",
+     "z": 0.1321,
+     "on": [
+      "tshirts"
+     ]
+    },
+    "towel": {
+     "x": -0.0725859345254439,
+     "y": -0.15707736197732985,
+     "yaw": 1.5621954282653119,
+     "orient": "",
+     "z": 0.2606,
+     "on": [
+      "gym_clothes"
+     ]
+    }
+   },
+   "orient": {
+    "bottle": "upright"
+   },
+   "lid": "open",
+   "zip_open": 1.0,
+   "pulls": "free",
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0,
+   "strap": "fastened",
+   "case_pose": "on_bed",
+   "case_at": "bed",
+   "pack": [
+    "gym_clothes",
+    "tshirts",
+    "towel",
+    "toiletry_bag",
+    "bottle"
+   ],
+   "cloth": {},
+   "zipped": false,
+   "locked": false
+  }
+ }
+]

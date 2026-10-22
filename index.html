@@ -45,7 +45,7 @@ ol.steps{margin:0;padding-left:18px;color:var(--muted)}ol.steps li{margin:0 0 3p
 <header><span class="wordmark">PACKING / SIMULATOR</span><nav><a href="#sim">How it works</a><a href="#actions">Actions</a><a href="#grounding">Grounding</a><a href="#suitcase">Suitcase</a><a href="#clips">Clips</a><a href="#events">Events</a><a href="#data">Data</a><a href="hands/index.html">Hand tests</a></nav></header>
 
 <h1>A packing simulator that generates new trajectories on demand.</h1>
-<p class="intro">A person packs a suitcase in a two-room apartment, driven either by a sampled case (a task, a persona and a private schedule of mistakes) or by instructions in plain language. Every request is grounded into a typed action, refused with a reason if it cannot be, and executed in a contact-only MuJoCo simulation with anatomical hands. That covers the case's zip, combination lock, strap buckle, telescopic handle and spinner wheels, and folding a towel. Each run is rendered and logged as training data.</p>
+<p class="intro">A person packs a suitcase in a five-room apartment, driven either by a sampled case (a task, a persona and a private schedule of mistakes) or by instructions in plain language. Every request is grounded into a typed action, refused with a reason if it cannot be, and executed in a contact-only MuJoCo simulation with anatomical hands. That covers the case's zip, combination lock, strap buckle, telescopic handle and spinner wheels, and folding a towel. Each run is rendered and logged as training data.</p>
 <div class="facts" id="facts"></div>
 
 <span class="tag">Reference trajectory · weekend away · one wrong pile picked up, then put back</span>
@@ -72,7 +72,18 @@ ol.steps{margin:0;padding-left:18px;color:var(--muted)}ol.steps li{margin:0 0 3p
 <p>Success is a set of predicates, not a route, so any valid order passes: <code>packed(x)</code> for every listed item, <code>no_extra_items</code>, <code>bottle_upright</code>, <code>heavy_on_floor(x)</code>, <code>nothing_on(camera)</code>, <code>lid_closed</code>, <code>zipped</code>, <code>case_upright</code> and, for tasks that ask for it, <code>locked</code>.</p>
 
 <h2 id="actions">Action space</h2>
-<p>An action is a verb applied to typed arguments, <code>a = f(θ)</code>. No object, part, place, position or amount is an action of its own: <code>place(tshirts, in, suitcase, at=(30 cm, 15 cm))</code>, <code>set(trolley_handle, 2)</code> and <code>turn(dial_1, to=7)</code> are one verb each with arguments. Every verb below is executed in physics by contact. The steps column is the algorithm the engine runs to resolve and execute the action, and the check is how success is measured on the simulation, not assumed.</p>
+<p>The action space is a closed catalogue of <span id="catSize"></span> fully specified actions, such as <code>pick_up(trousers)</code>, <code>place_on(tshirts, trousers)</code>, <code>zip_to(50)</code>, <code>enter(hall)</code> or <code>turn_dial(dial_2, 7)</code>. Every action the simulator runs, from a sampled case or from an instruction, is one of these ids, and each record logs it. The catalogue holds what a person can really do with these things and what the simulation carries out. Anything real that is not yet reliable in simulation is left out, with the reason. The catalogue is built to leave no room for a malformed action:</p>
+<ol class="steps">
+<li><b>No free values.</b> Every argument comes from a finite list fixed by the scene: rooms, stations, items, the five named spots in the case, another packed item and a side of it, dial digits, handle stops, floor spots. A quantity a person really varies is taken in steps a person would use: the zip runs to 0, 25, 50, 75 or 100 % closed, either way. There are no coordinates, angles, durations or free text.</li>
+<li><b>No optional arguments or defaults.</b> An id is the whole action. <code>enter(room)</code> always ends at the same point of that room for a given starting place.</li>
+<li><b>One id, one skill, one effect.</b> No verb covers two parts (<code>open_lid</code>, <code>zip_to</code>), and no effect has two ids: a lock code is set dial by dial, and there is no separate set-code action.</li>
+<li><b>Real and reliable.</b> These real actions are left out for now: <span id="excluded"></span>.</li>
+<li><b>The legal actions are listed.</b> At any moment the simulator lists the ids whose preconditions hold now: hands free, lid open, same room or in view for <code>go_to</code>, a neighbouring room for <code>enter</code>. An agent that chooses from that list cannot make a grounding or precondition error. Only the physical outcome can still fail, and that is measured.</li>
+</ol>
+<div class="tablewrap"><table id="catTable"><thead><tr><th>Group</th><th>Action</th><th>Count</th><th>Arguments drawn from</th><th>Does</th></tr></thead><tbody></tbody></table></div>
+<p class="note" id="legalNote"></p>
+<h3>How each action is executed</h3>
+<p>Each catalogue action runs one verb in physics, by contact. The steps column is the algorithm the engine runs, and the check is how success is measured on the simulation, not assumed. The signatures are the general form the grounder reads from language; only their catalogue instances are run.</p>
 <div class="tablewrap"><table id="verbTable"><thead><tr><th>Group</th><th>Verb and signature</th><th>Refers to</th><th>How it is resolved and executed</th><th>Physical check</th><th>Effect</th></tr></thead><tbody></tbody></table></div>
 <h3>Argument types</h3>
 <div class="tablewrap"><table id="typeTable"><thead><tr><th>Type</th><th>Meaning and accepted values</th></tr></thead><tbody></tbody></table></div>
@@ -88,7 +99,7 @@ ol.steps{margin:0;padding-left:18px;color:var(--muted)}ol.steps li{margin:0 0 3p
 <li>Otherwise every content word must belong to a candidate's vocabulary: its nouns, modifiers and where it is now. The last word must be one of its nouns.</li>
 <li>One match resolves the reference. None gives <code>unknown_ref</code>. Several give <code>ambiguous_ref</code> with the candidates listed, unless exactly one of them has the most modifiers matched.</li>
 </ol>
-<p>Values are parsed into their types and checked against the part's own range: the lid's allowed openings, the handle's stops, a dial's digits. Then the symbolic preconditions run. If the target is out of reach, a <code>go_to</code> is inserted first; nothing else is added silently.</p>
+<p>Values are parsed into their types and checked against the part's own range: the lid's allowed openings, the handle's stops, a dial's digits. The grounded action must then be a catalogue action, before anything moves. Only deterministic rewrites are made: a lock code becomes one <code>turn_dial</code> per dial, clicks become the digit they land on, "go to the kitchen" becomes <code>enter(kitchen)</code>, and a pack request with no spot takes the planner's named spot. "beside the trousers" with no side takes the first side (in a fixed order) where it fits. Ambiguous words are still resolved, or returned with their candidates, as above. Anything else is rejected as <code>not_in_action_space</code> with the reason: a zip position between the steps, a spot in centimetres, an item turned by an angle, or an action in the excluded list. Then the symbolic preconditions run. If the target is out of reach, a <code>go_to</code> is inserted first; nothing else is added silently.</p>
 <h3>Moving between rooms</h3>
 <p>The person knows where everything is, but one <code>go_to</code> only takes them to something in the room they are in, or in view from where they stand. In view means an unobstructed line from eye height (1.55 m) to the target, past the walls, door frames and furniture. Anything else is reached room by room:</p>
 <ol class="steps">
@@ -162,7 +173,7 @@ python packing/verify.py runs/0012                      # physical + log/physics
 python packing/render_all.py runs/0012 --samples 48     # head and room cameras, encoded</pre>
 <p>Each trajectory folder holds <code>case.json</code> (task, persona, private schedule), <code>actions.json</code> (one record per action: text, label of nominal, error, recovery, question or plan change, event id, start and end time and frame, feedback, symbolic state after), <code>goals.json</code>, <code>frames.json</code> (every body pose at 25 Hz), <code>events.json</code> (lift, placement, lid and zip checks), <code>validation.json</code> and the videos.</p>
 <h3>Sampled trajectories</h3>
-<p>Six cases sampled with <code>generate.py --seed N</code> and run in physics with the published code. A trajectory that fails any check is rejected, not kept as data. Three of the six pass every check. Two complete with every goal met but are rejected because the avatar's arm cannot follow the hand while it opens the lid. One fails standing the case up. Failed actions are first rewound and retried with small variations (see limitations). Each row links to its records.</p>
+<p>Eight cases sampled with <code>generate.py --seed N</code> (the last with <code>--task work_trip</code>) and run in physics with the published code, cross-room walks taken room by room. A trajectory that fails any check is rejected, not kept as data. Four of the eight pass every check. Two fail reopening the lid after closing it too early: the hand hooks the edge but the lid does not lift (the same failure on the code before room-by-room navigation). One fails closing the lid (6° short), and one fails when a shirt does not land where it was placed. Failed actions are first rewound and retried with small variations (see limitations). Each row links to its records.</p>
 <div class="tablewrap"><table id="sampleTable"><thead><tr><th>Case</th><th>Task · persona</th><th>Events (self-recovery)</th><th>Actions (error / recovery)</th><th>Simulated</th><th>Goals</th><th>Checks</th></tr></thead><tbody></tbody></table></div>
 <h3>Reference trajectory, action by action</h3>
 <div class="tablewrap"><table class="timeline" id="timeline"><thead><tr><th>Time</th><th>Label</th><th>Action</th><th>Frames</th></tr></thead><tbody></tbody></table></div>
@@ -206,7 +217,7 @@ j('trip/spec.json').then(s=>{
   tb=$('macroTable').tBodies[0];Object.entries(A.macros).forEach(([k,v])=>row(tb,[`<code>${k}</code>`,esc(v)]));
   const codes={unknown_verb:'no verb matches the request',missing_argument:'a required argument is absent (or turn has neither a digit nor clicks)',bad_value:'a value does not parse as its type',
     unknown_ref:'nothing in the scene matches the words',ambiguous_ref:'several things match; the candidates are returned',wrong_kind:'the words name something, but not the kind the slot needs (a lid is not a control)',
-    unsupported_operation:'the verb does not apply to that part of that asset',unsupported_value:'the right type, but this part cannot take that value',out_of_range:'outside the part\'s range'};
+    unsupported_operation:'the verb does not apply to that part of that asset',unsupported_value:'the right type, but this part cannot take that value',out_of_range:'outside the part\'s range',not_in_action_space:'it grounds, but is not a catalogue action (a zip between the 25 % steps, a spot in centimetres, an angle, or a real action not yet reliable in simulation)'};
   tb=$('codeTable').tBodies[0];A.rejection_codes.forEach(c=>row(tb,[`<code>${c}</code>`,esc(codes[c]||'')]));
   const ex=$('examples');s.examples.forEach(e=>{const d=document.createElement('div');d.className='example';
     d.innerHTML=`<div class="say">“${esc(e.text)}”${e.cloth?' <span class="pill">scene with the towel</span>':''}${e.strict?' <span class="pill">strict: nothing inserted</span>':''}</div>`+e.result.map(r=>{
@@ -214,8 +225,13 @@ j('trip/spec.json').then(s=>{
       if(r.kind==='refused')return `<div class="res rej"><span class="pill error">refused</span> <code>${esc(r.action.verb)}</code> ${esc(r.action.text)}: ${esc(r.feedback)}</div>`;
       const rs=r.action.resolved?` <span class="note">→ ${r.action.resolved.from_wheel_end_cm} cm, ${r.action.resolved.from_hinge_side_cm} cm, on ${esc(r.action.resolved.rests_on.join(', '))}</span>`:'';
       const args=Object.entries(r.action.args||{}).map(([k,v])=>k+'='+(Array.isArray(v)?'('+v.map(x=>typeof x==='number'?x.toFixed(3):x).join(', ')+')':v)).join(', ');
-      return `<div class="res"><code>${r.action.verb}(${esc([r.action.target,args].filter(x=>x).join(', '))})</code> ${esc(r.action.text)}${rs}</div>`;}).join('');
+      return `<div class="res"><code>${esc(r.action.id||r.action.verb)}</code> ${esc(r.action.text)}${rs}</div>`;}).join('');
     ex.appendChild(d);});
+  if(s.catalogue){const C=s.catalogue;$('catSize').textContent=C.size;$('excluded').textContent=Object.entries(C.excluded).map(([k,v])=>k+' ('+v+')').join('; ');tb=$('catTable').tBodies[0];
+    C.templates.forEach(t=>{const pos=[];t.ids.forEach(i=>{const m=i.match(/\((.*)\)/);if(m)m[1].split(', ').forEach((v,k)=>{(pos[k]=pos[k]||[]).includes(v)||pos[k].push(v);});});
+      const shown=pos.map(v=>v.length>6?`${v.length}: ${v.slice(0,4).join(', ')} …`:v.join(', ')).map(x=>'{'+x+'}').join(' × ');
+      row(tb,[t.group,`<code>${esc(t.ids[0].split('(')[0])}${t.ids[0].includes('(')?'(…)':''}</code>`,t.count,esc(shown||'–'),esc(t.example)]);});
+    $('legalNote').innerHTML=`Legal at the start of the weekend trip (standing at the open case in the bedroom), ${C.legal_at_start.length} of ${C.size}: `+C.legal_at_start.map(i=>'<code>'+esc(i)+'</code>').join(' ')+'.';}
   if(s.rooms){tb=$('roomTable').tBodies[0];s.rooms.rooms.forEach(r=>row(tb,[esc(r.label),esc(r.opens_to.join(', ')),esc(r.items.join(', ')||'–'),esc(r.words.join(', '))]));
     $('viewNote').textContent='In view across rooms, from points of the walking graph: '+s.rooms.in_view.map(v=>`${v.point.replace(/_/g,' ')} (${v.room}) sees ${v.sees.join(', ')}`).join('; ')+'.';}
   const parts=A.assets.suitcase.parts;
@@ -229,7 +245,7 @@ j('trip/spec.json').then(s=>{
   row(tb,[esc(s.cloth.label)+' <span class="pill">cloth</span>','flex sheet',esc(st[s.cloth.station].label),s.cloth.size_cm.join(' × '),s.cloth.mass_kg+' kg','towel, beach, loose',`simulated cloth, ${s.cloth.vertices.join(' × ')} vertices`]);
   tb=$('familyTable').tBodies[0];Object.entries(s.families).forEach(([k,f])=>row(tb,[`<code>${k}</code>`,esc(f.pick),esc(f.place),f.hands,f.stackable?'yes':'no',s.items.filter(i=>i.family===k).map(i=>esc(i.label)).join(', ')]));
   const P=s.placement;
-  $('placeNote').textContent=`A place request resolves to a pose in the case: a named spot, a measured centre, on top of a packed item, or beside one. The pose is checked on a ${P.grid_mm} mm height map of what is already packed. A relation or a named spot is approximate: the nearest pose within 8 cm that passes is used. A measured spot is taken as given, or rejected.`;
+  $('placeNote').textContent=`A place action names one of the five spots below, or another packed item to go on top of or beside (on a named side). The item's turn is fixed by its kind: the squeezed side along the case length, the bottle upright. The pose is checked on a ${P.grid_mm} mm height map of what is already packed. A spot or relation is approximate: the nearest pose within 8 cm that passes is used, or the action is not legal. Measured centres are read by the layout code but are not actions.`;
   [`inside the liner walls`,
    `resting on the highest surface under it, with at least ${Math.round(P.support_fraction*100)}% of its footprint and its centre within ${P.support_tol_mm} mm of that height; nothing fragile or unstackable underneath`,
    `its top at least ${P.headroom_mm} mm below the closed lid's liner`,

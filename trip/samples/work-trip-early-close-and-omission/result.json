@@ -1,0 +1,37 @@
+{
+ "status": "failed: open_lid: lid only reached -0.0 deg",
+ "sim_seconds": 55.11899999996224,
+ "wall_seconds": 110.13369464874268,
+ "frames": 1377,
+ "actions": 6,
+ "goals_satisfied": false,
+ "diagnostics": {
+  "max_penetration": 0.0016732483089545015,
+  "worst_penetration": {
+   "t": 9.4,
+   "stage": "Reach for folded trousers",
+   "geoms": [
+    "5distph_coll_2_l",
+    "dresser_coll"
+   ]
+  },
+  "max_joint_excursion": 0.0034877531925190768,
+  "worst_joint": {
+   "t": 39.14,
+   "stage": "Let the lid fall closed",
+   "joint": "lid_hinge"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.001713348549012038,
+  "worst_penetration_soft": {
+   "t": 22.12,
+   "stage": "Lower folded trousers into place",
+   "geoms": [
+    "5distph_coll_2_l",
+    "trousers_geom"
+   ]
+  }
+ }
+}

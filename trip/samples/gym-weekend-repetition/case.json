@@ -1,0 +1,34 @@
+{
+ "task": "gym_weekend",
+ "seed": 47,
+ "attempt": 0,
+ "persona": "steady",
+ "events": [
+  {
+   "id": "e1",
+   "type": "repetition",
+   "target": "tshirts",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 48,
+  "final_goals": {
+   "packed(gym_clothes)": true,
+   "packed(tshirts)": true,
+   "packed(towel)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}

@@ -13,9 +13,10 @@ import numpy as np
 import mujoco
 from scipy.spatial.transform import Rotation as Rot
 import scene as S
+from actionspace import Action
 
 HERE = Path(__file__).resolve().parent
-CODE = ["scene.py", "hands.py", "build_model.py", "runner.py", "tasks.py", "skills_case.py", "skills_hw.py", "packsim.py",
+CODE = ["scene.py", "hands.py", "build_model.py", "runner.py", "tasks.py", "skills_case.py", "skills_hw.py", "packsim.py", "discrete.py",
         "actionspace.py", "layout.py", "rooms.py", "instruct.py", "episodes.py", "executor.py", "generate.py", "operator_model.py",
         "export_poses.py", "render_blender.py", "item_assets.py", "prepare_assets.py", "encode.py", "verify.py",
         "fetch_assets.py"]
@@ -102,6 +103,8 @@ def main(run):
         R.room_at((frames[min(a["frame_end"], len(frames) - 1)]["root"]["x"],
                    frames[min(a["frame_end"], len(frames) - 1)]["root"]["y"])) == a["action"]["target"] for a in enters)
     detail["placements"] = places
+    import discrete as D
+    checks["every_action_in_catalogue"] = all(D.to_id(Action.from_dict(a["action"])) for a in actions)
 
     # -- the case at the end: every part where the log says it is
     lid_deg = float(np.degrees(last["lid"]))

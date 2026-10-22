@@ -1,0 +1,44 @@
+{
+ "task": "beach_holiday",
+ "seed": 43,
+ "attempt": 0,
+ "persona": "deliberate",
+ "events": [
+  {
+   "id": "e1",
+   "type": "omission",
+   "target": "camera",
+   "other": "",
+   "after": -1,
+   "recover": false,
+   "text": ""
+  },
+  {
+   "id": "e2",
+   "type": "stall",
+   "target": "",
+   "other": "",
+   "after": 2,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 42,
+  "final_goals": {
+   "packed(tshirts)": true,
+   "packed(striped_shirts)": true,
+   "packed(towel_stack)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(camera)": false,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}

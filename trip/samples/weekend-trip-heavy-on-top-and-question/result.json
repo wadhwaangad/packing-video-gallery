@@ -1,0 +1,37 @@
+{
+ "status": "complete",
+ "sim_seconds": 414.128999997119,
+ "wall_seconds": 2958.1826589107513,
+ "frames": 10353,
+ "actions": 64,
+ "goals_satisfied": true,
+ "diagnostics": {
+  "max_penetration": 0.002462561325828262,
+  "worst_penetration": {
+   "t": 166.22,
+   "stage": "Grip folded towel",
+   "geoms": [
+    "5distph_coll_2_l",
+    "towel_shelf"
+   ]
+  },
+  "max_joint_excursion": 0.009290981350524863,
+  "worst_joint": {
+   "t": 365.72,
+   "stage": "Push the zip slider along",
+   "joint": "mcp2_abduction_l"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.0026305835230602606,
+  "worst_penetration_soft": {
+   "t": 390.82,
+   "stage": "Stand it up by the handle",
+   "geoms": [
+    "trousers_geom",
+    "tshirts_geom"
+   ]
+  }
+ }
+}

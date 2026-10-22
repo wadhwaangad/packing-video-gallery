@@ -59,7 +59,7 @@
     ],
     "steps": [
      "Resolve the room; it must open off the person's room (a step of the walking graph crosses into it).",
-     "Entry point: the first walking-graph point inside that room on the way to it (or the given one, when expanded from a go_to).",
+     "Entry point: the first walking-graph point inside that room on the way from here to its centre: fixed by the room and where the person stands, never an argument.",
      "Walk there through the doorway (or across the open-plan boundary) at the persona's speed; a carried item is turned the way round that keeps it clear of walls."
     ],
     "check": "if carrying, the item is still between the hands (< 30 cm); the person ends inside the room",
@@ -892,7 +892,1109 @@
    "wrong_kind",
    "unsupported_operation",
    "unsupported_value",
-   "out_of_range"
+   "out_of_range",
+   "not_in_action_space"
+  ]
+ },
+ "catalogue": {
+  "size": 869,
+  "groups": {
+   "navigate": 39,
+   "manipulate": 744,
+   "case": 48,
+   "cloth": 1,
+   "other": 37
+  },
+  "templates": [
+   {
+    "family": "enter",
+    "group": "navigate",
+    "count": 5,
+    "ids": [
+     "enter(bedroom)",
+     "enter(bathroom)",
+     "enter(kitchen)",
+     "enter(hall)",
+     "enter(living)"
+    ],
+    "example": "walk into the bedroom from a room it opens off"
+   },
+   {
+    "family": "go_to",
+    "group": "navigate",
+    "count": 22,
+    "ids": [
+     "go_to(dresser)",
+     "go_to(bed)",
+     "go_to(bed_far)",
+     "go_to(nightstand)",
+     "go_to(vanity)",
+     "go_to(towel_shelf)",
+     "go_to(kitchen_counter)",
+     "go_to(coffee_table)",
+     "go_to(suitcase)",
+     "go_to(bed_foot)",
+     "go_to(trousers)",
+     "go_to(tshirts)",
+     "go_to(sweater_pile)",
+     "go_to(striped_shirts)",
+     "go_to(sweatshirts)",
+     "go_to(towel)",
+     "go_to(towel_stack)",
+     "go_to(gym_clothes)",
+     "go_to(toiletry_bag)",
+     "go_to(bottle)",
+     "go_to(notebook)",
+     "go_to(camera)"
+    ],
+    "example": "walk to the dresser (in this room or in view)"
+   },
+   {
+    "family": "look_at",
+    "group": "navigate",
+    "count": 12,
+    "ids": [
+     "look_at(trousers)",
+     "look_at(tshirts)",
+     "look_at(sweater_pile)",
+     "look_at(striped_shirts)",
+     "look_at(sweatshirts)",
+     "look_at(towel)",
+     "look_at(towel_stack)",
+     "look_at(gym_clothes)",
+     "look_at(toiletry_bag)",
+     "look_at(bottle)",
+     "look_at(notebook)",
+     "look_at(camera)"
+    ],
+    "example": "turn the head to the folded trousers"
+   },
+   {
+    "family": "pick_up",
+    "group": "manipulate",
+    "count": 12,
+    "ids": [
+     "pick_up(trousers)",
+     "pick_up(tshirts)",
+     "pick_up(sweater_pile)",
+     "pick_up(striped_shirts)",
+     "pick_up(sweatshirts)",
+     "pick_up(towel)",
+     "pick_up(towel_stack)",
+     "pick_up(gym_clothes)",
+     "pick_up(toiletry_bag)",
+     "pick_up(bottle)",
+     "pick_up(notebook)",
+     "pick_up(camera)"
+    ],
+    "example": "pick up the folded trousers"
+   },
+   {
+    "family": "place",
+    "group": "manipulate",
+    "count": 60,
+    "ids": [
+     "place(trousers, wheel_end)",
+     "place(trousers, handle_end)",
+     "place(trousers, front_strip)",
+     "place(trousers, bottle_corner)",
+     "place(trousers, centre)",
+     "place(tshirts, wheel_end)",
+     "place(tshirts, handle_end)",
+     "place(tshirts, front_strip)",
+     "place(tshirts, bottle_corner)",
+     "place(tshirts, centre)",
+     "place(sweater_pile, wheel_end)",
+     "place(sweater_pile, handle_end)",
+     "place(sweater_pile, front_strip)",
+     "place(sweater_pile, bottle_corner)",
+     "place(sweater_pile, centre)",
+     "place(striped_shirts, wheel_end)",
+     "place(striped_shirts, handle_end)",
+     "place(striped_shirts, front_strip)",
+     "place(striped_shirts, bottle_corner)",
+     "place(striped_shirts, centre)",
+     "place(sweatshirts, wheel_end)",
+     "place(sweatshirts, handle_end)",
+     "place(sweatshirts, front_strip)",
+     "place(sweatshirts, bottle_corner)",
+     "place(sweatshirts, centre)",
+     "place(towel, wheel_end)",
+     "place(towel, handle_end)",
+     "place(towel, front_strip)",
+     "place(towel, bottle_corner)",
+     "place(towel, centre)",
+     "place(towel_stack, wheel_end)",
+     "place(towel_stack, handle_end)",
+     "place(towel_stack, front_strip)",
+     "place(towel_stack, bottle_corner)",
+     "place(towel_stack, centre)",
+     "place(gym_clothes, wheel_end)",
+     "place(gym_clothes, handle_end)",
+     "place(gym_clothes, front_strip)",
+     "place(gym_clothes, bottle_corner)",
+     "place(gym_clothes, centre)",
+     "place(toiletry_bag, wheel_end)",
+     "place(toiletry_bag, handle_end)",
+     "place(toiletry_bag, front_strip)",
+     "place(toiletry_bag, bottle_corner)",
+     "place(toiletry_bag, centre)",
+     "place(bottle, wheel_end)",
+     "place(bottle, handle_end)",
+     "place(bottle, front_strip)",
+     "place(bottle, bottle_corner)",
+     "place(bottle, centre)",
+     "place(notebook, wheel_end)",
+     "place(notebook, handle_end)",
+     "place(notebook, front_strip)",
+     "place(notebook, bottle_corner)",
+     "place(notebook, centre)",
+     "place(camera, wheel_end)",
+     "place(camera, handle_end)",
+     "place(camera, front_strip)",
+     "place(camera, bottle_corner)",
+     "place(camera, centre)"
+    ],
+    "example": "put the folded trousers in the wheel-end garment column"
+   },
+   {
+    "family": "place_on",
+    "group": "manipulate",
+    "count": 132,
+    "ids": [
+     "place_on(trousers, tshirts)",
+     "place_on(trousers, sweater_pile)",
+     "place_on(trousers, striped_shirts)",
+     "place_on(trousers, sweatshirts)",
+     "place_on(trousers, towel)",
+     "place_on(trousers, towel_stack)",
+     "place_on(trousers, gym_clothes)",
+     "place_on(trousers, toiletry_bag)",
+     "place_on(trousers, bottle)",
+     "place_on(trousers, notebook)",
+     "place_on(trousers, camera)",
+     "place_on(tshirts, trousers)",
+     "place_on(tshirts, sweater_pile)",
+     "place_on(tshirts, striped_shirts)",
+     "place_on(tshirts, sweatshirts)",
+     "place_on(tshirts, towel)",
+     "place_on(tshirts, towel_stack)",
+     "place_on(tshirts, gym_clothes)",
+     "place_on(tshirts, toiletry_bag)",
+     "place_on(tshirts, bottle)",
+     "place_on(tshirts, notebook)",
+     "place_on(tshirts, camera)",
+     "place_on(sweater_pile, trousers)",
+     "place_on(sweater_pile, tshirts)",
+     "place_on(sweater_pile, striped_shirts)",
+     "place_on(sweater_pile, sweatshirts)",
+     "place_on(sweater_pile, towel)",
+     "place_on(sweater_pile, towel_stack)",
+     "place_on(sweater_pile, gym_clothes)",
+     "place_on(sweater_pile, toiletry_bag)",
+     "place_on(sweater_pile, bottle)",
+     "place_on(sweater_pile, notebook)",
+     "place_on(sweater_pile, camera)",
+     "place_on(striped_shirts, trousers)",
+     "place_on(striped_shirts, tshirts)",
+     "place_on(striped_shirts, sweater_pile)",
+     "place_on(striped_shirts, sweatshirts)",
+     "place_on(striped_shirts, towel)",
+     "place_on(striped_shirts, towel_stack)",
+     "place_on(striped_shirts, gym_clothes)",
+     "place_on(striped_shirts, toiletry_bag)",
+     "place_on(striped_shirts, bottle)",
+     "place_on(striped_shirts, notebook)",
+     "place_on(striped_shirts, camera)",
+     "place_on(sweatshirts, trousers)",
+     "place_on(sweatshirts, tshirts)",
+     "place_on(sweatshirts, sweater_pile)",
+     "place_on(sweatshirts, striped_shirts)",
+     "place_on(sweatshirts, towel)",
+     "place_on(sweatshirts, towel_stack)",
+     "place_on(sweatshirts, gym_clothes)",
+     "place_on(sweatshirts, toiletry_bag)",
+     "place_on(sweatshirts, bottle)",
+     "place_on(sweatshirts, notebook)",
+     "place_on(sweatshirts, camera)",
+     "place_on(towel, trousers)",
+     "place_on(towel, tshirts)",
+     "place_on(towel, sweater_pile)",
+     "place_on(towel, striped_shirts)",
+     "place_on(towel, sweatshirts)",
+     "place_on(towel, towel_stack)",
+     "place_on(towel, gym_clothes)",
+     "place_on(towel, toiletry_bag)",
+     "place_on(towel, bottle)",
+     "place_on(towel, notebook)",
+     "place_on(towel, camera)",
+     "place_on(towel_stack, trousers)",
+     "place_on(towel_stack, tshirts)",
+     "place_on(towel_stack, sweater_pile)",
+     "place_on(towel_stack, striped_shirts)",
+     "place_on(towel_stack, sweatshirts)",
+     "place_on(towel_stack, towel)",
+     "place_on(towel_stack, gym_clothes)",
+     "place_on(towel_stack, toiletry_bag)",
+     "place_on(towel_stack, bottle)",
+     "place_on(towel_stack, notebook)",
+     "place_on(towel_stack, camera)",
+     "place_on(gym_clothes, trousers)",
+     "place_on(gym_clothes, tshirts)",
+     "place_on(gym_clothes, sweater_pile)",
+     "place_on(gym_clothes, striped_shirts)",
+     "place_on(gym_clothes, sweatshirts)",
+     "place_on(gym_clothes, towel)",
+     "place_on(gym_clothes, towel_stack)",
+     "place_on(gym_clothes, toiletry_bag)",
+     "place_on(gym_clothes, bottle)",
+     "place_on(gym_clothes, notebook)",
+     "place_on(gym_clothes, camera)",
+     "place_on(toiletry_bag, trousers)",
+     "place_on(toiletry_bag, tshirts)",
+     "place_on(toiletry_bag, sweater_pile)",
+     "place_on(toiletry_bag, striped_shirts)",
+     "place_on(toiletry_bag, sweatshirts)",
+     "place_on(toiletry_bag, towel)",
+     "place_on(toiletry_bag, towel_stack)",
+     "place_on(toiletry_bag, gym_clothes)",
+     "place_on(toiletry_bag, bottle)",
+     "place_on(toiletry_bag, notebook)",
+     "place_on(toiletry_bag, camera)",
+     "place_on(bottle, trousers)",
+     "place_on(bottle, tshirts)",
+     "place_on(bottle, sweater_pile)",
+     "place_on(bottle, striped_shirts)",
+     "place_on(bottle, sweatshirts)",
+     "place_on(bottle, towel)",
+     "place_on(bottle, towel_stack)",
+     "place_on(bottle, gym_clothes)",
+     "place_on(bottle, toiletry_bag)",
+     "place_on(bottle, notebook)",
+     "place_on(bottle, camera)",
+     "place_on(notebook, trousers)",
+     "place_on(notebook, tshirts)",
+     "place_on(notebook, sweater_pile)",
+     "place_on(notebook, striped_shirts)",
+     "place_on(notebook, sweatshirts)",
+     "place_on(notebook, towel)",
+     "place_on(notebook, towel_stack)",
+     "place_on(notebook, gym_clothes)",
+     "place_on(notebook, toiletry_bag)",
+     "place_on(notebook, bottle)",
+     "place_on(notebook, camera)",
+     "place_on(camera, trousers)",
+     "place_on(camera, tshirts)",
+     "place_on(camera, sweater_pile)",
+     "place_on(camera, striped_shirts)",
+     "place_on(camera, sweatshirts)",
+     "place_on(camera, towel)",
+     "place_on(camera, towel_stack)",
+     "place_on(camera, gym_clothes)",
+     "place_on(camera, toiletry_bag)",
+     "place_on(camera, bottle)",
+     "place_on(camera, notebook)"
+    ],
+    "example": "put the folded trousers on top of the T-shirt pile in the case"
+   },
+   {
+    "family": "place_beside",
+    "group": "manipulate",
+    "count": 528,
+    "ids": [
+     "place_beside(trousers, tshirts, wheel_end)",
+     "place_beside(trousers, tshirts, handle_end)",
+     "place_beside(trousers, tshirts, front_side)",
+     "place_beside(trousers, tshirts, hinge_side)",
+     "place_beside(trousers, sweater_pile, wheel_end)",
+     "place_beside(trousers, sweater_pile, handle_end)",
+     "place_beside(trousers, sweater_pile, front_side)",
+     "place_beside(trousers, sweater_pile, hinge_side)",
+     "place_beside(trousers, striped_shirts, wheel_end)",
+     "place_beside(trousers, striped_shirts, handle_end)",
+     "place_beside(trousers, striped_shirts, front_side)",
+     "place_beside(trousers, striped_shirts, hinge_side)",
+     "place_beside(trousers, sweatshirts, wheel_end)",
+     "place_beside(trousers, sweatshirts, handle_end)",
+     "place_beside(trousers, sweatshirts, front_side)",
+     "place_beside(trousers, sweatshirts, hinge_side)",
+     "place_beside(trousers, towel, wheel_end)",
+     "place_beside(trousers, towel, handle_end)",
+     "place_beside(trousers, towel, front_side)",
+     "place_beside(trousers, towel, hinge_side)",
+     "place_beside(trousers, towel_stack, wheel_end)",
+     "place_beside(trousers, towel_stack, handle_end)",
+     "place_beside(trousers, towel_stack, front_side)",
+     "place_beside(trousers, towel_stack, hinge_side)",
+     "place_beside(trousers, gym_clothes, wheel_end)",
+     "place_beside(trousers, gym_clothes, handle_end)",
+     "place_beside(trousers, gym_clothes, front_side)",
+     "place_beside(trousers, gym_clothes, hinge_side)",
+     "place_beside(trousers, toiletry_bag, wheel_end)",
+     "place_beside(trousers, toiletry_bag, handle_end)",
+     "place_beside(trousers, toiletry_bag, front_side)",
+     "place_beside(trousers, toiletry_bag, hinge_side)",
+     "place_beside(trousers, bottle, wheel_end)",
+     "place_beside(trousers, bottle, handle_end)",
+     "place_beside(trousers, bottle, front_side)",
+     "place_beside(trousers, bottle, hinge_side)",
+     "place_beside(trousers, notebook, wheel_end)",
+     "place_beside(trousers, notebook, handle_end)",
+     "place_beside(trousers, notebook, front_side)",
+     "place_beside(trousers, notebook, hinge_side)",
+     "place_beside(trousers, camera, wheel_end)",
+     "place_beside(trousers, camera, handle_end)",
+     "place_beside(trousers, camera, front_side)",
+     "place_beside(trousers, camera, hinge_side)",
+     "place_beside(tshirts, trousers, wheel_end)",
+     "place_beside(tshirts, trousers, handle_end)",
+     "place_beside(tshirts, trousers, front_side)",
+     "place_beside(tshirts, trousers, hinge_side)",
+     "place_beside(tshirts, sweater_pile, wheel_end)",
+     "place_beside(tshirts, sweater_pile, handle_end)",
+     "place_beside(tshirts, sweater_pile, front_side)",
+     "place_beside(tshirts, sweater_pile, hinge_side)",
+     "place_beside(tshirts, striped_shirts, wheel_end)",
+     "place_beside(tshirts, striped_shirts, handle_end)",
+     "place_beside(tshirts, striped_shirts, front_side)",
+     "place_beside(tshirts, striped_shirts, hinge_side)",
+     "place_beside(tshirts, sweatshirts, wheel_end)",
+     "place_beside(tshirts, sweatshirts, handle_end)",
+     "place_beside(tshirts, sweatshirts, front_side)",
+     "place_beside(tshirts, sweatshirts, hinge_side)",
+     "place_beside(tshirts, towel, wheel_end)",
+     "place_beside(tshirts, towel, handle_end)",
+     "place_beside(tshirts, towel, front_side)",
+     "place_beside(tshirts, towel, hinge_side)",
+     "place_beside(tshirts, towel_stack, wheel_end)",
+     "place_beside(tshirts, towel_stack, handle_end)",
+     "place_beside(tshirts, towel_stack, front_side)",
+     "place_beside(tshirts, towel_stack, hinge_side)",
+     "place_beside(tshirts, gym_clothes, wheel_end)",
+     "place_beside(tshirts, gym_clothes, handle_end)",
+     "place_beside(tshirts, gym_clothes, front_side)",
+     "place_beside(tshirts, gym_clothes, hinge_side)",
+     "place_beside(tshirts, toiletry_bag, wheel_end)",
+     "place_beside(tshirts, toiletry_bag, handle_end)",
+     "place_beside(tshirts, toiletry_bag, front_side)",
+     "place_beside(tshirts, toiletry_bag, hinge_side)",
+     "place_beside(tshirts, bottle, wheel_end)",
+     "place_beside(tshirts, bottle, handle_end)",
+     "place_beside(tshirts, bottle, front_side)",
+     "place_beside(tshirts, bottle, hinge_side)",
+     "place_beside(tshirts, notebook, wheel_end)",
+     "place_beside(tshirts, notebook, handle_end)",
+     "place_beside(tshirts, notebook, front_side)",
+     "place_beside(tshirts, notebook, hinge_side)",
+     "place_beside(tshirts, camera, wheel_end)",
+     "place_beside(tshirts, camera, handle_end)",
+     "place_beside(tshirts, camera, front_side)",
+     "place_beside(tshirts, camera, hinge_side)",
+     "place_beside(sweater_pile, trousers, wheel_end)",
+     "place_beside(sweater_pile, trousers, handle_end)",
+     "place_beside(sweater_pile, trousers, front_side)",
+     "place_beside(sweater_pile, trousers, hinge_side)",
+     "place_beside(sweater_pile, tshirts, wheel_end)",
+     "place_beside(sweater_pile, tshirts, handle_end)",
+     "place_beside(sweater_pile, tshirts, front_side)",
+     "place_beside(sweater_pile, tshirts, hinge_side)",
+     "place_beside(sweater_pile, striped_shirts, wheel_end)",
+     "place_beside(sweater_pile, striped_shirts, handle_end)",
+     "place_beside(sweater_pile, striped_shirts, front_side)",
+     "place_beside(sweater_pile, striped_shirts, hinge_side)",
+     "place_beside(sweater_pile, sweatshirts, wheel_end)",
+     "place_beside(sweater_pile, sweatshirts, handle_end)",
+     "place_beside(sweater_pile, sweatshirts, front_side)",
+     "place_beside(sweater_pile, sweatshirts, hinge_side)",
+     "place_beside(sweater_pile, towel, wheel_end)",
+     "place_beside(sweater_pile, towel, handle_end)",
+     "place_beside(sweater_pile, towel, front_side)",
+     "place_beside(sweater_pile, towel, hinge_side)",
+     "place_beside(sweater_pile, towel_stack, wheel_end)",
+     "place_beside(sweater_pile, towel_stack, handle_end)",
+     "place_beside(sweater_pile, towel_stack, front_side)",
+     "place_beside(sweater_pile, towel_stack, hinge_side)",
+     "place_beside(sweater_pile, gym_clothes, wheel_end)",
+     "place_beside(sweater_pile, gym_clothes, handle_end)",
+     "place_beside(sweater_pile, gym_clothes, front_side)",
+     "place_beside(sweater_pile, gym_clothes, hinge_side)",
+     "place_beside(sweater_pile, toiletry_bag, wheel_end)",
+     "place_beside(sweater_pile, toiletry_bag, handle_end)",
+     "place_beside(sweater_pile, toiletry_bag, front_side)",
+     "place_beside(sweater_pile, toiletry_bag, hinge_side)",
+     "place_beside(sweater_pile, bottle, wheel_end)",
+     "place_beside(sweater_pile, bottle, handle_end)",
+     "place_beside(sweater_pile, bottle, front_side)",
+     "place_beside(sweater_pile, bottle, hinge_side)",
+     "place_beside(sweater_pile, notebook, wheel_end)",
+     "place_beside(sweater_pile, notebook, handle_end)",
+     "place_beside(sweater_pile, notebook, front_side)",
+     "place_beside(sweater_pile, notebook, hinge_side)",
+     "place_beside(sweater_pile, camera, wheel_end)",
+     "place_beside(sweater_pile, camera, handle_end)",
+     "place_beside(sweater_pile, camera, front_side)",
+     "place_beside(sweater_pile, camera, hinge_side)",
+     "place_beside(striped_shirts, trousers, wheel_end)",
+     "place_beside(striped_shirts, trousers, handle_end)",
+     "place_beside(striped_shirts, trousers, front_side)",
+     "place_beside(striped_shirts, trousers, hinge_side)",
+     "place_beside(striped_shirts, tshirts, wheel_end)",
+     "place_beside(striped_shirts, tshirts, handle_end)",
+     "place_beside(striped_shirts, tshirts, front_side)",
+     "place_beside(striped_shirts, tshirts, hinge_side)",
+     "place_beside(striped_shirts, sweater_pile, wheel_end)",
+     "place_beside(striped_shirts, sweater_pile, handle_end)",
+     "place_beside(striped_shirts, sweater_pile, front_side)",
+     "place_beside(striped_shirts, sweater_pile, hinge_side)",
+     "place_beside(striped_shirts, sweatshirts, wheel_end)",
+     "place_beside(striped_shirts, sweatshirts, handle_end)",
+     "place_beside(striped_shirts, sweatshirts, front_side)",
+     "place_beside(striped_shirts, sweatshirts, hinge_side)",
+     "place_beside(striped_shirts, towel, wheel_end)",
+     "place_beside(striped_shirts, towel, handle_end)",
+     "place_beside(striped_shirts, towel, front_side)",
+     "place_beside(striped_shirts, towel, hinge_side)",
+     "place_beside(striped_shirts, towel_stack, wheel_end)",
+     "place_beside(striped_shirts, towel_stack, handle_end)",
+     "place_beside(striped_shirts, towel_stack, front_side)",
+     "place_beside(striped_shirts, towel_stack, hinge_side)",
+     "place_beside(striped_shirts, gym_clothes, wheel_end)",
+     "place_beside(striped_shirts, gym_clothes, handle_end)",
+     "place_beside(striped_shirts, gym_clothes, front_side)",
+     "place_beside(striped_shirts, gym_clothes, hinge_side)",
+     "place_beside(striped_shirts, toiletry_bag, wheel_end)",
+     "place_beside(striped_shirts, toiletry_bag, handle_end)",
+     "place_beside(striped_shirts, toiletry_bag, front_side)",
+     "place_beside(striped_shirts, toiletry_bag, hinge_side)",
+     "place_beside(striped_shirts, bottle, wheel_end)",
+     "place_beside(striped_shirts, bottle, handle_end)",
+     "place_beside(striped_shirts, bottle, front_side)",
+     "place_beside(striped_shirts, bottle, hinge_side)",
+     "place_beside(striped_shirts, notebook, wheel_end)",
+     "place_beside(striped_shirts, notebook, handle_end)",
+     "place_beside(striped_shirts, notebook, front_side)",
+     "place_beside(striped_shirts, notebook, hinge_side)",
+     "place_beside(striped_shirts, camera, wheel_end)",
+     "place_beside(striped_shirts, camera, handle_end)",
+     "place_beside(striped_shirts, camera, front_side)",
+     "place_beside(striped_shirts, camera, hinge_side)",
+     "place_beside(sweatshirts, trousers, wheel_end)",
+     "place_beside(sweatshirts, trousers, handle_end)",
+     "place_beside(sweatshirts, trousers, front_side)",
+     "place_beside(sweatshirts, trousers, hinge_side)",
+     "place_beside(sweatshirts, tshirts, wheel_end)",
+     "place_beside(sweatshirts, tshirts, handle_end)",
+     "place_beside(sweatshirts, tshirts, front_side)",
+     "place_beside(sweatshirts, tshirts, hinge_side)",
+     "place_beside(sweatshirts, sweater_pile, wheel_end)",
+     "place_beside(sweatshirts, sweater_pile, handle_end)",
+     "place_beside(sweatshirts, sweater_pile, front_side)",
+     "place_beside(sweatshirts, sweater_pile, hinge_side)",
+     "place_beside(sweatshirts, striped_shirts, wheel_end)",
+     "place_beside(sweatshirts, striped_shirts, handle_end)",
+     "place_beside(sweatshirts, striped_shirts, front_side)",
+     "place_beside(sweatshirts, striped_shirts, hinge_side)",
+     "place_beside(sweatshirts, towel, wheel_end)",
+     "place_beside(sweatshirts, towel, handle_end)",
+     "place_beside(sweatshirts, towel, front_side)",
+     "place_beside(sweatshirts, towel, hinge_side)",
+     "place_beside(sweatshirts, towel_stack, wheel_end)",
+     "place_beside(sweatshirts, towel_stack, handle_end)",
+     "place_beside(sweatshirts, towel_stack, front_side)",
+     "place_beside(sweatshirts, towel_stack, hinge_side)",
+     "place_beside(sweatshirts, gym_clothes, wheel_end)",
+     "place_beside(sweatshirts, gym_clothes, handle_end)",
+     "place_beside(sweatshirts, gym_clothes, front_side)",
+     "place_beside(sweatshirts, gym_clothes, hinge_side)",
+     "place_beside(sweatshirts, toiletry_bag, wheel_end)",
+     "place_beside(sweatshirts, toiletry_bag, handle_end)",
+     "place_beside(sweatshirts, toiletry_bag, front_side)",
+     "place_beside(sweatshirts, toiletry_bag, hinge_side)",
+     "place_beside(sweatshirts, bottle, wheel_end)",
+     "place_beside(sweatshirts, bottle, handle_end)",
+     "place_beside(sweatshirts, bottle, front_side)",
+     "place_beside(sweatshirts, bottle, hinge_side)",
+     "place_beside(sweatshirts, notebook, wheel_end)",
+     "place_beside(sweatshirts, notebook, handle_end)",
+     "place_beside(sweatshirts, notebook, front_side)",
+     "place_beside(sweatshirts, notebook, hinge_side)",
+     "place_beside(sweatshirts, camera, wheel_end)",
+     "place_beside(sweatshirts, camera, handle_end)",
+     "place_beside(sweatshirts, camera, front_side)",
+     "place_beside(sweatshirts, camera, hinge_side)",
+     "place_beside(towel, trousers, wheel_end)",
+     "place_beside(towel, trousers, handle_end)",
+     "place_beside(towel, trousers, front_side)",
+     "place_beside(towel, trousers, hinge_side)",
+     "place_beside(towel, tshirts, wheel_end)",
+     "place_beside(towel, tshirts, handle_end)",
+     "place_beside(towel, tshirts, front_side)",
+     "place_beside(towel, tshirts, hinge_side)",
+     "place_beside(towel, sweater_pile, wheel_end)",
+     "place_beside(towel, sweater_pile, handle_end)",
+     "place_beside(towel, sweater_pile, front_side)",
+     "place_beside(towel, sweater_pile, hinge_side)",
+     "place_beside(towel, striped_shirts, wheel_end)",
+     "place_beside(towel, striped_shirts, handle_end)",
+     "place_beside(towel, striped_shirts, front_side)",
+     "place_beside(towel, striped_shirts, hinge_side)",
+     "place_beside(towel, sweatshirts, wheel_end)",
+     "place_beside(towel, sweatshirts, handle_end)",
+     "place_beside(towel, sweatshirts, front_side)",
+     "place_beside(towel, sweatshirts, hinge_side)",
+     "place_beside(towel, towel_stack, wheel_end)",
+     "place_beside(towel, towel_stack, handle_end)",
+     "place_beside(towel, towel_stack, front_side)",
+     "place_beside(towel, towel_stack, hinge_side)",
+     "place_beside(towel, gym_clothes, wheel_end)",
+     "place_beside(towel, gym_clothes, handle_end)",
+     "place_beside(towel, gym_clothes, front_side)",
+     "place_beside(towel, gym_clothes, hinge_side)",
+     "place_beside(towel, toiletry_bag, wheel_end)",
+     "place_beside(towel, toiletry_bag, handle_end)",
+     "place_beside(towel, toiletry_bag, front_side)",
+     "place_beside(towel, toiletry_bag, hinge_side)",
+     "place_beside(towel, bottle, wheel_end)",
+     "place_beside(towel, bottle, handle_end)",
+     "place_beside(towel, bottle, front_side)",
+     "place_beside(towel, bottle, hinge_side)",
+     "place_beside(towel, notebook, wheel_end)",
+     "place_beside(towel, notebook, handle_end)",
+     "place_beside(towel, notebook, front_side)",
+     "place_beside(towel, notebook, hinge_side)",
+     "place_beside(towel, camera, wheel_end)",
+     "place_beside(towel, camera, handle_end)",
+     "place_beside(towel, camera, front_side)",
+     "place_beside(towel, camera, hinge_side)",
+     "place_beside(towel_stack, trousers, wheel_end)",
+     "place_beside(towel_stack, trousers, handle_end)",
+     "place_beside(towel_stack, trousers, front_side)",
+     "place_beside(towel_stack, trousers, hinge_side)",
+     "place_beside(towel_stack, tshirts, wheel_end)",
+     "place_beside(towel_stack, tshirts, handle_end)",
+     "place_beside(towel_stack, tshirts, front_side)",
+     "place_beside(towel_stack, tshirts, hinge_side)",
+     "place_beside(towel_stack, sweater_pile, wheel_end)",
+     "place_beside(towel_stack, sweater_pile, handle_end)",
+     "place_beside(towel_stack, sweater_pile, front_side)",
+     "place_beside(towel_stack, sweater_pile, hinge_side)",
+     "place_beside(towel_stack, striped_shirts, wheel_end)",
+     "place_beside(towel_stack, striped_shirts, handle_end)",
+     "place_beside(towel_stack, striped_shirts, front_side)",
+     "place_beside(towel_stack, striped_shirts, hinge_side)",
+     "place_beside(towel_stack, sweatshirts, wheel_end)",
+     "place_beside(towel_stack, sweatshirts, handle_end)",
+     "place_beside(towel_stack, sweatshirts, front_side)",
+     "place_beside(towel_stack, sweatshirts, hinge_side)",
+     "place_beside(towel_stack, towel, wheel_end)",
+     "place_beside(towel_stack, towel, handle_end)",
+     "place_beside(towel_stack, towel, front_side)",
+     "place_beside(towel_stack, towel, hinge_side)",
+     "place_beside(towel_stack, gym_clothes, wheel_end)",
+     "place_beside(towel_stack, gym_clothes, handle_end)",
+     "place_beside(towel_stack, gym_clothes, front_side)",
+     "place_beside(towel_stack, gym_clothes, hinge_side)",
+     "place_beside(towel_stack, toiletry_bag, wheel_end)",
+     "place_beside(towel_stack, toiletry_bag, handle_end)",
+     "place_beside(towel_stack, toiletry_bag, front_side)",
+     "place_beside(towel_stack, toiletry_bag, hinge_side)",
+     "place_beside(towel_stack, bottle, wheel_end)",
+     "place_beside(towel_stack, bottle, handle_end)",
+     "place_beside(towel_stack, bottle, front_side)",
+     "place_beside(towel_stack, bottle, hinge_side)",
+     "place_beside(towel_stack, notebook, wheel_end)",
+     "place_beside(towel_stack, notebook, handle_end)",
+     "place_beside(towel_stack, notebook, front_side)",
+     "place_beside(towel_stack, notebook, hinge_side)",
+     "place_beside(towel_stack, camera, wheel_end)",
+     "place_beside(towel_stack, camera, handle_end)",
+     "place_beside(towel_stack, camera, front_side)",
+     "place_beside(towel_stack, camera, hinge_side)",
+     "place_beside(gym_clothes, trousers, wheel_end)",
+     "place_beside(gym_clothes, trousers, handle_end)",
+     "place_beside(gym_clothes, trousers, front_side)",
+     "place_beside(gym_clothes, trousers, hinge_side)",
+     "place_beside(gym_clothes, tshirts, wheel_end)",
+     "place_beside(gym_clothes, tshirts, handle_end)",
+     "place_beside(gym_clothes, tshirts, front_side)",
+     "place_beside(gym_clothes, tshirts, hinge_side)",
+     "place_beside(gym_clothes, sweater_pile, wheel_end)",
+     "place_beside(gym_clothes, sweater_pile, handle_end)",
+     "place_beside(gym_clothes, sweater_pile, front_side)",
+     "place_beside(gym_clothes, sweater_pile, hinge_side)",
+     "place_beside(gym_clothes, striped_shirts, wheel_end)",
+     "place_beside(gym_clothes, striped_shirts, handle_end)",
+     "place_beside(gym_clothes, striped_shirts, front_side)",
+     "place_beside(gym_clothes, striped_shirts, hinge_side)",
+     "place_beside(gym_clothes, sweatshirts, wheel_end)",
+     "place_beside(gym_clothes, sweatshirts, handle_end)",
+     "place_beside(gym_clothes, sweatshirts, front_side)",
+     "place_beside(gym_clothes, sweatshirts, hinge_side)",
+     "place_beside(gym_clothes, towel, wheel_end)",
+     "place_beside(gym_clothes, towel, handle_end)",
+     "place_beside(gym_clothes, towel, front_side)",
+     "place_beside(gym_clothes, towel, hinge_side)",
+     "place_beside(gym_clothes, towel_stack, wheel_end)",
+     "place_beside(gym_clothes, towel_stack, handle_end)",
+     "place_beside(gym_clothes, towel_stack, front_side)",
+     "place_beside(gym_clothes, towel_stack, hinge_side)",
+     "place_beside(gym_clothes, toiletry_bag, wheel_end)",
+     "place_beside(gym_clothes, toiletry_bag, handle_end)",
+     "place_beside(gym_clothes, toiletry_bag, front_side)",
+     "place_beside(gym_clothes, toiletry_bag, hinge_side)",
+     "place_beside(gym_clothes, bottle, wheel_end)",
+     "place_beside(gym_clothes, bottle, handle_end)",
+     "place_beside(gym_clothes, bottle, front_side)",
+     "place_beside(gym_clothes, bottle, hinge_side)",
+     "place_beside(gym_clothes, notebook, wheel_end)",
+     "place_beside(gym_clothes, notebook, handle_end)",
+     "place_beside(gym_clothes, notebook, front_side)",
+     "place_beside(gym_clothes, notebook, hinge_side)",
+     "place_beside(gym_clothes, camera, wheel_end)",
+     "place_beside(gym_clothes, camera, handle_end)",
+     "place_beside(gym_clothes, camera, front_side)",
+     "place_beside(gym_clothes, camera, hinge_side)",
+     "place_beside(toiletry_bag, trousers, wheel_end)",
+     "place_beside(toiletry_bag, trousers, handle_end)",
+     "place_beside(toiletry_bag, trousers, front_side)",
+     "place_beside(toiletry_bag, trousers, hinge_side)",
+     "place_beside(toiletry_bag, tshirts, wheel_end)",
+     "place_beside(toiletry_bag, tshirts, handle_end)",
+     "place_beside(toiletry_bag, tshirts, front_side)",
+     "place_beside(toiletry_bag, tshirts, hinge_side)",
+     "place_beside(toiletry_bag, sweater_pile, wheel_end)",
+     "place_beside(toiletry_bag, sweater_pile, handle_end)",
+     "place_beside(toiletry_bag, sweater_pile, front_side)",
+     "place_beside(toiletry_bag, sweater_pile, hinge_side)",
+     "place_beside(toiletry_bag, striped_shirts, wheel_end)",
+     "place_beside(toiletry_bag, striped_shirts, handle_end)",
+     "place_beside(toiletry_bag, striped_shirts, front_side)",
+     "place_beside(toiletry_bag, striped_shirts, hinge_side)",
+     "place_beside(toiletry_bag, sweatshirts, wheel_end)",
+     "place_beside(toiletry_bag, sweatshirts, handle_end)",
+     "place_beside(toiletry_bag, sweatshirts, front_side)",
+     "place_beside(toiletry_bag, sweatshirts, hinge_side)",
+     "place_beside(toiletry_bag, towel, wheel_end)",
+     "place_beside(toiletry_bag, towel, handle_end)",
+     "place_beside(toiletry_bag, towel, front_side)",
+     "place_beside(toiletry_bag, towel, hinge_side)",
+     "place_beside(toiletry_bag, towel_stack, wheel_end)",
+     "place_beside(toiletry_bag, towel_stack, handle_end)",
+     "place_beside(toiletry_bag, towel_stack, front_side)",
+     "place_beside(toiletry_bag, towel_stack, hinge_side)",
+     "place_beside(toiletry_bag, gym_clothes, wheel_end)",
+     "place_beside(toiletry_bag, gym_clothes, handle_end)",
+     "place_beside(toiletry_bag, gym_clothes, front_side)",
+     "place_beside(toiletry_bag, gym_clothes, hinge_side)",
+     "place_beside(toiletry_bag, bottle, wheel_end)",
+     "place_beside(toiletry_bag, bottle, handle_end)",
+     "place_beside(toiletry_bag, bottle, front_side)",
+     "place_beside(toiletry_bag, bottle, hinge_side)",
+     "place_beside(toiletry_bag, notebook, wheel_end)",
+     "place_beside(toiletry_bag, notebook, handle_end)",
+     "place_beside(toiletry_bag, notebook, front_side)",
+     "place_beside(toiletry_bag, notebook, hinge_side)",
+     "place_beside(toiletry_bag, camera, wheel_end)",
+     "place_beside(toiletry_bag, camera, handle_end)",
+     "place_beside(toiletry_bag, camera, front_side)",
+     "place_beside(toiletry_bag, camera, hinge_side)",
+     "place_beside(bottle, trousers, wheel_end)",
+     "place_beside(bottle, trousers, handle_end)",
+     "place_beside(bottle, trousers, front_side)",
+     "place_beside(bottle, trousers, hinge_side)",
+     "place_beside(bottle, tshirts, wheel_end)",
+     "place_beside(bottle, tshirts, handle_end)",
+     "place_beside(bottle, tshirts, front_side)",
+     "place_beside(bottle, tshirts, hinge_side)",
+     "place_beside(bottle, sweater_pile, wheel_end)",
+     "place_beside(bottle, sweater_pile, handle_end)",
+     "place_beside(bottle, sweater_pile, front_side)",
+     "place_beside(bottle, sweater_pile, hinge_side)",
+     "place_beside(bottle, striped_shirts, wheel_end)",
+     "place_beside(bottle, striped_shirts, handle_end)",
+     "place_beside(bottle, striped_shirts, front_side)",
+     "place_beside(bottle, striped_shirts, hinge_side)",
+     "place_beside(bottle, sweatshirts, wheel_end)",
+     "place_beside(bottle, sweatshirts, handle_end)",
+     "place_beside(bottle, sweatshirts, front_side)",
+     "place_beside(bottle, sweatshirts, hinge_side)",
+     "place_beside(bottle, towel, wheel_end)",
+     "place_beside(bottle, towel, handle_end)",
+     "place_beside(bottle, towel, front_side)",
+     "place_beside(bottle, towel, hinge_side)",
+     "place_beside(bottle, towel_stack, wheel_end)",
+     "place_beside(bottle, towel_stack, handle_end)",
+     "place_beside(bottle, towel_stack, front_side)",
+     "place_beside(bottle, towel_stack, hinge_side)",
+     "place_beside(bottle, gym_clothes, wheel_end)",
+     "place_beside(bottle, gym_clothes, handle_end)",
+     "place_beside(bottle, gym_clothes, front_side)",
+     "place_beside(bottle, gym_clothes, hinge_side)",
+     "place_beside(bottle, toiletry_bag, wheel_end)",
+     "place_beside(bottle, toiletry_bag, handle_end)",
+     "place_beside(bottle, toiletry_bag, front_side)",
+     "place_beside(bottle, toiletry_bag, hinge_side)",
+     "place_beside(bottle, notebook, wheel_end)",
+     "place_beside(bottle, notebook, handle_end)",
+     "place_beside(bottle, notebook, front_side)",
+     "place_beside(bottle, notebook, hinge_side)",
+     "place_beside(bottle, camera, wheel_end)",
+     "place_beside(bottle, camera, handle_end)",
+     "place_beside(bottle, camera, front_side)",
+     "place_beside(bottle, camera, hinge_side)",
+     "place_beside(notebook, trousers, wheel_end)",
+     "place_beside(notebook, trousers, handle_end)",
+     "place_beside(notebook, trousers, front_side)",
+     "place_beside(notebook, trousers, hinge_side)",
+     "place_beside(notebook, tshirts, wheel_end)",
+     "place_beside(notebook, tshirts, handle_end)",
+     "place_beside(notebook, tshirts, front_side)",
+     "place_beside(notebook, tshirts, hinge_side)",
+     "place_beside(notebook, sweater_pile, wheel_end)",
+     "place_beside(notebook, sweater_pile, handle_end)",
+     "place_beside(notebook, sweater_pile, front_side)",
+     "place_beside(notebook, sweater_pile, hinge_side)",
+     "place_beside(notebook, striped_shirts, wheel_end)",
+     "place_beside(notebook, striped_shirts, handle_end)",
+     "place_beside(notebook, striped_shirts, front_side)",
+     "place_beside(notebook, striped_shirts, hinge_side)",
+     "place_beside(notebook, sweatshirts, wheel_end)",
+     "place_beside(notebook, sweatshirts, handle_end)",
+     "place_beside(notebook, sweatshirts, front_side)",
+     "place_beside(notebook, sweatshirts, hinge_side)",
+     "place_beside(notebook, towel, wheel_end)",
+     "place_beside(notebook, towel, handle_end)",
+     "place_beside(notebook, towel, front_side)",
+     "place_beside(notebook, towel, hinge_side)",
+     "place_beside(notebook, towel_stack, wheel_end)",
+     "place_beside(notebook, towel_stack, handle_end)",
+     "place_beside(notebook, towel_stack, front_side)",
+     "place_beside(notebook, towel_stack, hinge_side)",
+     "place_beside(notebook, gym_clothes, wheel_end)",
+     "place_beside(notebook, gym_clothes, handle_end)",
+     "place_beside(notebook, gym_clothes, front_side)",
+     "place_beside(notebook, gym_clothes, hinge_side)",
+     "place_beside(notebook, toiletry_bag, wheel_end)",
+     "place_beside(notebook, toiletry_bag, handle_end)",
+     "place_beside(notebook, toiletry_bag, front_side)",
+     "place_beside(notebook, toiletry_bag, hinge_side)",
+     "place_beside(notebook, bottle, wheel_end)",
+     "place_beside(notebook, bottle, handle_end)",
+     "place_beside(notebook, bottle, front_side)",
+     "place_beside(notebook, bottle, hinge_side)",
+     "place_beside(notebook, camera, wheel_end)",
+     "place_beside(notebook, camera, handle_end)",
+     "place_beside(notebook, camera, front_side)",
+     "place_beside(notebook, camera, hinge_side)",
+     "place_beside(camera, trousers, wheel_end)",
+     "place_beside(camera, trousers, handle_end)",
+     "place_beside(camera, trousers, front_side)",
+     "place_beside(camera, trousers, hinge_side)",
+     "place_beside(camera, tshirts, wheel_end)",
+     "place_beside(camera, tshirts, handle_end)",
+     "place_beside(camera, tshirts, front_side)",
+     "place_beside(camera, tshirts, hinge_side)",
+     "place_beside(camera, sweater_pile, wheel_end)",
+     "place_beside(camera, sweater_pile, handle_end)",
+     "place_beside(camera, sweater_pile, front_side)",
+     "place_beside(camera, sweater_pile, hinge_side)",
+     "place_beside(camera, striped_shirts, wheel_end)",
+     "place_beside(camera, striped_shirts, handle_end)",
+     "place_beside(camera, striped_shirts, front_side)",
+     "place_beside(camera, striped_shirts, hinge_side)",
+     "place_beside(camera, sweatshirts, wheel_end)",
+     "place_beside(camera, sweatshirts, handle_end)",
+     "place_beside(camera, sweatshirts, front_side)",
+     "place_beside(camera, sweatshirts, hinge_side)",
+     "place_beside(camera, towel, wheel_end)",
+     "place_beside(camera, towel, handle_end)",
+     "place_beside(camera, towel, front_side)",
+     "place_beside(camera, towel, hinge_side)",
+     "place_beside(camera, towel_stack, wheel_end)",
+     "place_beside(camera, towel_stack, handle_end)",
+     "place_beside(camera, towel_stack, front_side)",
+     "place_beside(camera, towel_stack, hinge_side)",
+     "place_beside(camera, gym_clothes, wheel_end)",
+     "place_beside(camera, gym_clothes, handle_end)",
+     "place_beside(camera, gym_clothes, front_side)",
+     "place_beside(camera, gym_clothes, hinge_side)",
+     "place_beside(camera, toiletry_bag, wheel_end)",
+     "place_beside(camera, toiletry_bag, handle_end)",
+     "place_beside(camera, toiletry_bag, front_side)",
+     "place_beside(camera, toiletry_bag, hinge_side)",
+     "place_beside(camera, bottle, wheel_end)",
+     "place_beside(camera, bottle, handle_end)",
+     "place_beside(camera, bottle, front_side)",
+     "place_beside(camera, bottle, hinge_side)",
+     "place_beside(camera, notebook, wheel_end)",
+     "place_beside(camera, notebook, handle_end)",
+     "place_beside(camera, notebook, front_side)",
+     "place_beside(camera, notebook, hinge_side)"
+    ],
+    "example": "put the folded trousers beside the T-shirt pile, on its wheel end side"
+   },
+   {
+    "family": "put_back",
+    "group": "manipulate",
+    "count": 12,
+    "ids": [
+     "put_back(trousers)",
+     "put_back(tshirts)",
+     "put_back(sweater_pile)",
+     "put_back(striped_shirts)",
+     "put_back(sweatshirts)",
+     "put_back(towel)",
+     "put_back(towel_stack)",
+     "put_back(gym_clothes)",
+     "put_back(toiletry_bag)",
+     "put_back(bottle)",
+     "put_back(notebook)",
+     "put_back(camera)"
+    ],
+    "example": "put the folded trousers back where it was"
+   },
+   {
+    "family": "open_lid",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "open_lid"
+    ],
+    "example": "swing the lid fully open"
+   },
+   {
+    "family": "close_lid",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "close_lid"
+    ],
+    "example": "swing the lid shut"
+   },
+   {
+    "family": "zip_to",
+    "group": "case",
+    "count": 5,
+    "ids": [
+     "zip_to(0)",
+     "zip_to(25)",
+     "zip_to(50)",
+     "zip_to(75)",
+     "zip_to(100)"
+    ],
+    "example": "unzip the case all the way"
+   },
+   {
+    "family": "dock_zip_pulls",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "dock_zip_pulls"
+    ],
+    "example": "push both zip pulls into the lock"
+   },
+   {
+    "family": "press_lock_button",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "press_lock_button"
+    ],
+    "example": "press the lock's release button once"
+   },
+   {
+    "family": "turn_dial",
+    "group": "case",
+    "count": 30,
+    "ids": [
+     "turn_dial(dial_1, 0)",
+     "turn_dial(dial_1, 1)",
+     "turn_dial(dial_1, 2)",
+     "turn_dial(dial_1, 3)",
+     "turn_dial(dial_1, 4)",
+     "turn_dial(dial_1, 5)",
+     "turn_dial(dial_1, 6)",
+     "turn_dial(dial_1, 7)",
+     "turn_dial(dial_1, 8)",
+     "turn_dial(dial_1, 9)",
+     "turn_dial(dial_2, 0)",
+     "turn_dial(dial_2, 1)",
+     "turn_dial(dial_2, 2)",
+     "turn_dial(dial_2, 3)",
+     "turn_dial(dial_2, 4)",
+     "turn_dial(dial_2, 5)",
+     "turn_dial(dial_2, 6)",
+     "turn_dial(dial_2, 7)",
+     "turn_dial(dial_2, 8)",
+     "turn_dial(dial_2, 9)",
+     "turn_dial(dial_3, 0)",
+     "turn_dial(dial_3, 1)",
+     "turn_dial(dial_3, 2)",
+     "turn_dial(dial_3, 3)",
+     "turn_dial(dial_3, 4)",
+     "turn_dial(dial_3, 5)",
+     "turn_dial(dial_3, 6)",
+     "turn_dial(dial_3, 7)",
+     "turn_dial(dial_3, 8)",
+     "turn_dial(dial_3, 9)"
+    ],
+    "example": "turn dial 1 to 0"
+   },
+   {
+    "family": "press_handle_button",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "press_handle_button"
+    ],
+    "example": "press the button in the trolley handle's grip (frees the handle while held)"
+   },
+   {
+    "family": "fasten_strap",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "fasten_strap"
+    ],
+    "example": "click the strap buckle shut"
+   },
+   {
+    "family": "unfasten_strap",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "unfasten_strap"
+    ],
+    "example": "release the strap buckle"
+   },
+   {
+    "family": "set_handle",
+    "group": "case",
+    "count": 3,
+    "ids": [
+     "set_handle(0)",
+     "set_handle(1)",
+     "set_handle(2)"
+    ],
+    "example": "retract the trolley handle"
+   },
+   {
+    "family": "stand_up_case",
+    "group": "case",
+    "count": 1,
+    "ids": [
+     "stand_up_case"
+    ],
+    "example": "stand the case up on its wheels"
+   },
+   {
+    "family": "roll_case",
+    "group": "case",
+    "count": 2,
+    "ids": [
+     "roll_case(bed_foot)",
+     "roll_case(bedroom_door)"
+    ],
+    "example": "roll the standing case to bed foot"
+   },
+   {
+    "family": "fold",
+    "group": "cloth",
+    "count": 1,
+    "ids": [
+     "fold(beach_towel)"
+    ],
+    "example": "fold the loose towel in half"
+   },
+   {
+    "family": "wait",
+    "group": "other",
+    "count": 1,
+    "ids": [
+     "wait"
+    ],
+    "example": "pause for 2 s"
+   },
+   {
+    "family": "ask",
+    "group": "other",
+    "count": 12,
+    "ids": [
+     "ask(trousers)",
+     "ask(tshirts)",
+     "ask(sweater_pile)",
+     "ask(striped_shirts)",
+     "ask(sweatshirts)",
+     "ask(towel)",
+     "ask(towel_stack)",
+     "ask(gym_clothes)",
+     "ask(toiletry_bag)",
+     "ask(bottle)",
+     "ask(notebook)",
+     "ask(camera)"
+    ],
+    "example": "ask \"Should the folded trousers go in too?\""
+   },
+   {
+    "family": "announce",
+    "group": "other",
+    "count": 24,
+    "ids": [
+     "announce(add, trousers)",
+     "announce(add, tshirts)",
+     "announce(add, sweater_pile)",
+     "announce(add, striped_shirts)",
+     "announce(add, sweatshirts)",
+     "announce(add, towel)",
+     "announce(add, towel_stack)",
+     "announce(add, gym_clothes)",
+     "announce(add, toiletry_bag)",
+     "announce(add, bottle)",
+     "announce(add, notebook)",
+     "announce(add, camera)",
+     "announce(remove, trousers)",
+     "announce(remove, tshirts)",
+     "announce(remove, sweater_pile)",
+     "announce(remove, striped_shirts)",
+     "announce(remove, sweatshirts)",
+     "announce(remove, towel)",
+     "announce(remove, towel_stack)",
+     "announce(remove, gym_clothes)",
+     "announce(remove, toiletry_bag)",
+     "announce(remove, bottle)",
+     "announce(remove, notebook)",
+     "announce(remove, camera)"
+    ],
+    "example": "say \"I'll take the folded trousers as well.\""
+   }
+  ],
+  "wait_seconds": 2.0,
+  "excluded": {
+   "lay the bottle down": "the lying placement is not reliable with the scanned case yet",
+   "lay the case down": "not simulated yet",
+   "unfold the towel": "neither the scoop nor a pinch gets under the folded edge with this hand model",
+   "fold in thirds": "only folding in half is simulated",
+   "carry the case by its side handle": "the handle has a grip but no skill yet",
+   "change the lock's combination": "needs a pen in the reset hole; there is no pen in the scene"
+  },
+  "legal_at_start": [
+   "enter(living)",
+   "go_to(dresser)",
+   "go_to(bed)",
+   "go_to(bed_far)",
+   "go_to(nightstand)",
+   "go_to(bed_foot)",
+   "go_to(trousers)",
+   "go_to(tshirts)",
+   "go_to(sweater_pile)",
+   "go_to(striped_shirts)",
+   "go_to(sweatshirts)",
+   "look_at(trousers)",
+   "look_at(tshirts)",
+   "look_at(sweater_pile)",
+   "look_at(striped_shirts)",
+   "look_at(sweatshirts)",
+   "wait"
   ]
  },
  "examples": [
@@ -912,6 +2014,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(tshirts)",
       "verb": "go_to",
       "target": "tshirts",
       "args": {},
@@ -922,6 +2025,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(tshirts)",
       "verb": "pick_up",
       "target": "tshirts",
       "args": {},
@@ -932,6 +2036,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -942,14 +2047,15 @@
     {
      "kind": "action",
      "action": {
+      "id": "place(tshirts, wheel_end)",
       "verb": "place",
       "target": "tshirts",
       "args": {
        "rel": "in",
        "dest": "suitcase",
-       "orient": ""
+       "at": "wheel_end"
       },
-      "text": "put the T-shirt pile in the suitcase",
+      "text": "put the T-shirt pile in the wheel-end garment column",
       "resolved": {
        "from_wheel_end_cm": 18.2,
        "from_hinge_side_cm": 17.3,
@@ -990,6 +2096,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(tshirts)",
       "verb": "go_to",
       "target": "tshirts",
       "args": {},
@@ -1000,6 +2107,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(tshirts)",
       "verb": "pick_up",
       "target": "tshirts",
       "args": {},
@@ -1010,6 +2118,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1020,13 +2129,13 @@
     {
      "kind": "action",
      "action": {
+      "id": "place(tshirts, handle_end)",
       "verb": "place",
       "target": "tshirts",
       "args": {
        "rel": "in",
        "dest": "suitcase",
-       "at": "handle_end",
-       "orient": ""
+       "at": "handle_end"
       },
       "text": "put the T-shirt pile in the handle-end garment column",
       "resolved": {
@@ -1060,60 +2169,9 @@
    "strict": false,
    "result": [
     {
-     "kind": "action",
-     "action": {
-      "verb": "go_to",
-      "target": "striped_shirts",
-      "args": {},
-      "text": "go to the striped shirts"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "pick_up",
-      "target": "striped_shirts",
-      "args": {},
-      "text": "pick up the striped shirts"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "go_to",
-      "target": "suitcase",
-      "args": {},
-      "text": "go to the suitcase"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "place",
-      "target": "striped_shirts",
-      "args": {
-       "rel": "in",
-       "dest": "suitcase",
-       "at": [
-        -0.09140000000000001,
-        -0.03660000000000002
-       ],
-       "orient": ""
-      },
-      "text": "put the striped shirts in the case 30 cm from the wheel end, 15 cm from the hinge side",
-      "resolved": {
-       "from_wheel_end_cm": 30.0,
-       "from_hinge_side_cm": 15.0,
-       "yaw_deg": 90.0,
-       "rests_on": [
-        "case floor"
-       ]
-      }
-     },
-     "feedback": ""
+     "kind": "rejected",
+     "code": "not_in_action_space",
+     "message": "a spot is named, not measured: wheel_end, handle_end, front_strip, bottle_corner, centre"
     }
    ]
   },
@@ -1141,6 +2199,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(trousers)",
       "verb": "go_to",
       "target": "trousers",
       "args": {},
@@ -1151,6 +2210,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(trousers)",
       "verb": "pick_up",
       "target": "trousers",
       "args": {},
@@ -1161,6 +2221,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1171,14 +2232,15 @@
     {
      "kind": "action",
      "action": {
+      "id": "place(trousers, wheel_end)",
       "verb": "place",
       "target": "trousers",
       "args": {
        "rel": "in",
        "dest": "suitcase",
-       "orient": ""
+       "at": "wheel_end"
       },
-      "text": "put the folded trousers in the suitcase",
+      "text": "put the folded trousers in the wheel-end garment column",
       "resolved": {
        "from_wheel_end_cm": 18.2,
        "from_hinge_side_cm": 17.3,
@@ -1193,6 +2255,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(sweatshirts)",
       "verb": "go_to",
       "target": "sweatshirts",
       "args": {},
@@ -1203,6 +2266,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(sweatshirts)",
       "verb": "pick_up",
       "target": "sweatshirts",
       "args": {},
@@ -1213,6 +2277,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1223,12 +2288,12 @@
     {
      "kind": "action",
      "action": {
+      "id": "place_on(sweatshirts, trousers)",
       "verb": "place",
       "target": "sweatshirts",
       "args": {
        "rel": "on",
-       "dest": "trousers",
-       "orient": ""
+       "dest": "trousers"
       },
       "text": "put the sweatshirts on the folded trousers",
       "resolved": {
@@ -1268,11 +2333,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the camera"
      },
@@ -1281,6 +2345,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "look_at(camera)",
       "verb": "look_at",
       "target": "camera",
       "args": {},
@@ -1292,6 +2357,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(camera)",
       "verb": "go_to",
       "target": "camera",
       "args": {},
@@ -1303,6 +2369,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(camera)",
       "verb": "pick_up",
       "target": "camera",
       "args": {},
@@ -1313,11 +2380,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(bedroom)",
       "verb": "enter",
       "target": "bedroom",
-      "args": {
-       "via": "bed_door"
-      },
+      "args": {},
       "text": "walk into the bedroom",
       "parent": "go to the suitcase"
      },
@@ -1326,6 +2392,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1337,14 +2404,15 @@
     {
      "kind": "action",
      "action": {
+      "id": "place(camera, front_strip)",
       "verb": "place",
       "target": "camera",
       "args": {
        "rel": "in",
        "dest": "suitcase",
-       "orient": ""
+       "at": "front_strip"
       },
-      "text": "put the camera in the suitcase",
+      "text": "put the camera in the front strip",
       "resolved": {
        "from_wheel_end_cm": 45.7,
        "from_hinge_side_cm": 41.1,
@@ -1359,11 +2427,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the folded towel"
      },
@@ -1372,11 +2439,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "bath_door"
-      },
+      "args": {},
       "text": "walk into the hall",
       "parent": "go to the folded towel"
      },
@@ -1385,11 +2451,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(bathroom)",
       "verb": "enter",
       "target": "bathroom",
-      "args": {
-       "via": "bath_in"
-      },
+      "args": {},
       "text": "walk into the bathroom",
       "parent": "go to the folded towel"
      },
@@ -1398,6 +2463,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "look_at(towel)",
       "verb": "look_at",
       "target": "towel",
       "args": {},
@@ -1409,6 +2475,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(towel)",
       "verb": "go_to",
       "target": "towel",
       "args": {},
@@ -1420,6 +2487,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(towel)",
       "verb": "pick_up",
       "target": "towel",
       "args": {},
@@ -1430,11 +2498,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "bath_door"
-      },
+      "args": {},
       "text": "walk into the hall",
       "parent": "go to the suitcase"
      },
@@ -1443,11 +2510,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_east"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the suitcase"
      },
@@ -1456,6 +2522,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1467,12 +2534,12 @@
     {
      "kind": "refused",
      "action": {
+      "id": "place_on(towel, camera)",
       "verb": "place",
       "target": "towel",
       "args": {
        "rel": "on",
-       "dest": "camera",
-       "orient": ""
+       "dest": "camera"
       },
       "text": "put the folded towel on the camera"
      },
@@ -1495,121 +2562,9 @@
    "strict": false,
    "result": [
     {
-     "kind": "action",
-     "action": {
-      "verb": "enter",
-      "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
-      "text": "walk into the living room",
-      "parent": "go to the water bottle"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "enter",
-      "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
-      "text": "walk into the hall",
-      "parent": "go to the water bottle"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "look_at",
-      "target": "bottle",
-      "args": {},
-      "text": "look at the water bottle",
-      "parent": "go to the water bottle"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "go_to",
-      "target": "bottle",
-      "args": {},
-      "text": "go to the water bottle",
-      "parent": "go to the water bottle"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "pick_up",
-      "target": "bottle",
-      "args": {},
-      "text": "pick up the water bottle"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "enter",
-      "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
-      "text": "walk into the hall",
-      "parent": "go to the suitcase"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "enter",
-      "target": "living",
-      "args": {
-       "via": "hall_east"
-      },
-      "text": "walk into the living room",
-      "parent": "go to the suitcase"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "go_to",
-      "target": "suitcase",
-      "args": {},
-      "text": "go to the suitcase",
-      "parent": "go to the suitcase"
-     },
-     "feedback": ""
-    },
-    {
-     "kind": "action",
-     "action": {
-      "verb": "place",
-      "target": "bottle",
-      "args": {
-       "rel": "in",
-       "dest": "suitcase",
-       "orient": "lying"
-      },
-      "text": "put the water bottle in the suitcase, lying",
-      "resolved": {
-       "from_wheel_end_cm": 13.2,
-       "from_hinge_side_cm": 38.1,
-       "yaw_deg": 90.0,
-       "rests_on": [
-        "case floor"
-       ]
-      }
-     },
-     "feedback": ""
+     "kind": "rejected",
+     "code": "not_in_action_space",
+     "message": "laying the bottle down: the lying placement is not reliable with the scanned case yet"
     }
    ]
   },
@@ -1697,6 +2652,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -1707,6 +2663,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "close_lid",
       "verb": "close",
       "target": "lid",
       "args": {
@@ -1719,6 +2676,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1729,12 +2687,199 @@
     {
      "kind": "action",
      "action": {
+      "id": "zip_to(50)",
       "verb": "close",
       "target": "main_zip",
       "args": {
        "to": 0.5
       },
       "text": "zip the case to 50% closed"
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "close the lid. zip it to 30%",
+   "requests": [
+    {
+     "verb": "close",
+     "args": {
+      "target": "the lid"
+     }
+    },
+    {
+     "verb": "close",
+     "args": {
+      "target": "main zip",
+      "to": 0.7
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(bed_foot)",
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "close_lid",
+      "verb": "close",
+      "target": "lid",
+      "args": {
+       "to": 0.0
+      },
+      "text": "close the lid"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "rejected",
+     "code": "not_in_action_space",
+     "message": "the zip goes to 0, 25, 50, 75, 100 % closed; 30 % is between them"
+    }
+   ]
+  },
+  {
+   "text": "pack the trousers. pack the sweatshirts next to the trousers",
+   "requests": [
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the trousers"
+     }
+    },
+    {
+     "verb": "pack",
+     "args": {
+      "target": "the sweatshirts",
+      "rel": "beside",
+      "dest": "the trousers"
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(trousers)",
+      "verb": "go_to",
+      "target": "trousers",
+      "args": {},
+      "text": "go to the folded trousers"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "pick_up(trousers)",
+      "verb": "pick_up",
+      "target": "trousers",
+      "args": {},
+      "text": "pick up the folded trousers"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(suitcase)",
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "place(trousers, wheel_end)",
+      "verb": "place",
+      "target": "trousers",
+      "args": {
+       "rel": "in",
+       "dest": "suitcase",
+       "at": "wheel_end"
+      },
+      "text": "put the folded trousers in the wheel-end garment column",
+      "resolved": {
+       "from_wheel_end_cm": 18.2,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(sweatshirts)",
+      "verb": "go_to",
+      "target": "sweatshirts",
+      "args": {},
+      "text": "go to the sweatshirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "pick_up(sweatshirts)",
+      "verb": "pick_up",
+      "target": "sweatshirts",
+      "args": {},
+      "text": "pick up the sweatshirts"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(suitcase)",
+      "verb": "go_to",
+      "target": "suitcase",
+      "args": {},
+      "text": "go to the suitcase"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "place_beside(sweatshirts, trousers, handle_end)",
+      "verb": "place",
+      "target": "sweatshirts",
+      "args": {
+       "rel": "beside",
+       "dest": "trousers",
+       "side": "handle_end"
+      },
+      "text": "put the sweatshirts beside the folded trousers (handle end)",
+      "resolved": {
+       "from_wheel_end_cm": 41.5,
+       "from_hinge_side_cm": 17.3,
+       "yaw_deg": 90.0,
+       "rests_on": [
+        "case floor"
+       ]
+      }
      },
      "feedback": ""
     }
@@ -1783,6 +2928,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -1793,6 +2939,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "close_lid",
       "verb": "close",
       "target": "lid",
       "args": {
@@ -1805,6 +2952,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1815,6 +2963,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "zip_to(100)",
       "verb": "close",
       "target": "main_zip",
       "args": {
@@ -1827,6 +2976,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "dock_zip_pulls",
       "verb": "insert",
       "target": "zip_pulls",
       "args": {
@@ -1839,18 +2989,46 @@
     {
      "kind": "action",
      "action": {
-      "verb": "set",
-      "target": "lock",
+      "id": "turn_dial(dial_1, 3)",
+      "verb": "turn",
+      "target": "dial_1",
       "args": {
-       "value": "372"
+       "to": 3
       },
-      "text": "set the combination lock to 372"
+      "text": "turn the left lock dial to 3"
      },
      "feedback": ""
     },
     {
      "kind": "action",
      "action": {
+      "id": "turn_dial(dial_2, 7)",
+      "verb": "turn",
+      "target": "dial_2",
+      "args": {
+       "to": 7
+      },
+      "text": "turn the middle lock dial to 7"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "turn_dial(dial_3, 2)",
+      "verb": "turn",
+      "target": "dial_3",
+      "args": {
+       "to": 2
+      },
+      "text": "turn the right lock dial to 2"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "press_lock_button",
       "verb": "press",
       "target": "lock_button",
       "args": {
@@ -1893,6 +3071,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -1903,6 +3082,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "close_lid",
       "verb": "close",
       "target": "lid",
       "args": {
@@ -1915,6 +3095,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -1925,6 +3106,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "turn_dial(dial_1, 7)",
       "verb": "turn",
       "target": "dial_1",
       "args": {
@@ -1979,6 +3161,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -1989,6 +3172,7 @@
     {
      "kind": "refused",
      "action": {
+      "id": "set_handle(2)",
       "verb": "set",
       "target": "trolley_handle",
       "args": {
@@ -2043,6 +3227,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -2053,6 +3238,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "close_lid",
       "verb": "close",
       "target": "lid",
       "args": {
@@ -2065,6 +3251,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -2075,6 +3262,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "zip_to(100)",
       "verb": "close",
       "target": "main_zip",
       "args": {
@@ -2087,6 +3275,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bed_foot)",
       "verb": "go_to",
       "target": "bed_foot",
       "args": {},
@@ -2097,6 +3286,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "stand_up_case",
       "verb": "stand_up",
       "target": "suitcase",
       "args": {},
@@ -2107,6 +3297,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "set_handle(2)",
       "verb": "set",
       "target": "trolley_handle",
       "args": {
@@ -2119,6 +3310,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "roll_case(bedroom_door)",
       "verb": "roll",
       "target": "suitcase",
       "args": {
@@ -2146,6 +3338,7 @@
     {
      "kind": "refused",
      "action": {
+      "id": "unfasten_strap",
       "verb": "unfasten",
       "target": "strap",
       "args": {},
@@ -2172,11 +3365,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the kitchen counter"
      },
@@ -2185,11 +3377,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
+      "args": {},
       "text": "walk into the hall",
       "parent": "go to the kitchen counter"
      },
@@ -2198,6 +3389,19 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(kitchen)",
+      "verb": "enter",
+      "target": "kitchen",
+      "args": {},
+      "text": "walk into the kitchen",
+      "parent": "go to the kitchen counter"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(kitchen_counter)",
       "verb": "go_to",
       "target": "kitchen_counter",
       "args": {},
@@ -2209,6 +3413,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "fold(beach_towel)",
       "verb": "fold",
       "target": "beach_towel",
       "args": {
@@ -2318,11 +3523,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the water bottle"
      },
@@ -2331,11 +3535,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
+      "args": {},
       "text": "walk into the hall",
       "parent": "go to the water bottle"
      },
@@ -2344,6 +3547,19 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(kitchen)",
+      "verb": "enter",
+      "target": "kitchen",
+      "args": {},
+      "text": "walk into the kitchen",
+      "parent": "go to the water bottle"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "look_at(bottle)",
       "verb": "look_at",
       "target": "bottle",
       "args": {},
@@ -2355,6 +3571,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bottle)",
       "verb": "go_to",
       "target": "bottle",
       "args": {},
@@ -2366,6 +3583,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(bottle)",
       "verb": "pick_up",
       "target": "bottle",
       "args": {},
@@ -2376,11 +3594,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
+      "args": {},
       "text": "walk into the hall",
       "parent": "go to the suitcase"
      },
@@ -2389,11 +3606,10 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_east"
-      },
+      "args": {},
       "text": "walk into the living room",
       "parent": "go to the suitcase"
      },
@@ -2402,6 +3618,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "go_to(suitcase)",
       "verb": "go_to",
       "target": "suitcase",
       "args": {},
@@ -2413,14 +3630,16 @@
     {
      "kind": "action",
      "action": {
+      "id": "place(bottle, bottle_corner)",
       "verb": "place",
       "target": "bottle",
       "args": {
        "rel": "in",
        "dest": "suitcase",
-       "orient": "upright"
+       "orient": "upright",
+       "at": "bottle_corner"
       },
-      "text": "put the water bottle in the suitcase, upright",
+      "text": "put the water bottle in the front wheel-end corner, upright",
       "resolved": {
        "from_wheel_end_cm": 13.2,
        "from_hinge_side_cm": 38.1,
@@ -2429,6 +3648,47 @@
         "case floor"
        ]
       }
+     },
+     "feedback": ""
+    }
+   ]
+  },
+  {
+   "text": "press the handle button twice",
+   "requests": [
+    {
+     "verb": "press",
+     "args": {
+      "target": "the handle button",
+      "times": 2
+     }
+    }
+   ],
+   "cloth": false,
+   "strict": false,
+   "result": [
+    {
+     "kind": "action",
+     "action": {
+      "id": "go_to(bed_foot)",
+      "verb": "go_to",
+      "target": "bed_foot",
+      "args": {},
+      "text": "go to the foot of the bed"
+     },
+     "feedback": ""
+    },
+    {
+     "kind": "action",
+     "action": {
+      "id": "press_handle_button",
+      "verb": "press",
+      "target": "trolley_button",
+      "args": {
+       "hold": 0.3,
+       "times": 1
+      },
+      "text": "press the trolley-handle button"
      },
      "feedback": ""
     }
@@ -2456,45 +3716,43 @@
     {
      "kind": "action",
      "action": {
+      "id": "enter(living)",
       "verb": "enter",
       "target": "living",
-      "args": {
-       "via": "hall_door"
-      },
+      "args": {},
       "text": "walk into the living room",
-      "parent": "go to the kitchen"
+      "parent": "walk into the kitchen"
      },
      "feedback": ""
     },
     {
      "kind": "action",
      "action": {
+      "id": "enter(hall)",
       "verb": "enter",
       "target": "hall",
-      "args": {
-       "via": "kitchen_hall"
-      },
+      "args": {},
       "text": "walk into the hall",
-      "parent": "go to the kitchen"
+      "parent": "walk into the kitchen"
      },
      "feedback": ""
     },
     {
      "kind": "action",
      "action": {
+      "id": "enter(kitchen)",
       "verb": "enter",
       "target": "kitchen",
-      "args": {
-       "via": "kitchen_in"
-      },
+      "args": {},
       "text": "walk into the kitchen",
-      "parent": "go to the kitchen"
+      "parent": "walk into the kitchen"
      },
      "feedback": ""
     },
     {
      "kind": "action",
      "action": {
+      "id": "go_to(bottle)",
       "verb": "go_to",
       "target": "bottle",
       "args": {},
@@ -2505,6 +3763,7 @@
     {
      "kind": "action",
      "action": {
+      "id": "pick_up(bottle)",
       "verb": "pick_up",
       "target": "bottle",
       "args": {},
@@ -2530,6 +3789,7 @@
     {
      "kind": "refused",
      "action": {
+      "id": "go_to(bottle)",
       "verb": "go_to",
       "target": "bottle",
       "args": {},

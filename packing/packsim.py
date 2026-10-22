@@ -167,6 +167,9 @@ class PackSim:
                 return False, f"cannot find '{t}'"
             if t in ITEM_NAMES and st.loc[t] == "held":
                 return False, f"you are already holding the {lab(t)}"
+            here_t = ("case_floor" if upright else "suitcase") if t == "suitcase" else t
+            if (t in ITEM_NAMES and st.facing == t) or (t not in ITEM_NAMES and st.station == here_t and not st.facing):
+                return False, f"you are already at {_the_any(t)}"
             ok, _ = in_view(st, t)
             if not ok:
                 there = R.LABEL[R.room_at(target_point(st, t)[:2])]
@@ -182,11 +185,13 @@ class PackSim:
                 return False, f"you are already in {R.LABEL[here]}"
             if not R.adjacent(here, a.target):
                 return False, f"{R.LABEL[a.target]} does not open off {R.LABEL[here]}"
-            via = a.get("via")
-            if via and (via not in S.NAV_NODES or R.NODE_ROOM[via] != a.target):
-                return False, f"'{via}' is not a point in {R.LABEL[a.target]}"
             return True, ""
         if v == "look_at":
+            if a.target in ITEM_NAMES and st.loc[a.target] == "held":
+                return False, f"you are holding the {lab(a.target)}"
+            ok, _ = in_view(st, a.target)
+            if not ok:
+                return False, f"{_the_any(a.target)} is out of view from {place_label(st)}"
             return True, ""
         if v == "pick_up":
             t = a.target
@@ -313,10 +318,9 @@ class PackSim:
             if st.pulls == "docked":
                 return False, "the zip pulls are locked in the lock" if st.locked else \
                     "the zip pulls are in the lock: press the lock's release button"
-            if v == "open" and to <= st.zip_open + 1e-6:
-                return False, f"the zip is already {st.zip_open:.0%} open"
-            if v == "close" and to >= st.zip_open - 1e-6:
-                return False, "the zip is already closed that far"
+            # a zip runs to a position either way, as a real one does
+            if abs(to - st.zip_open) < 1e-6:
+                return False, f"the zip is already {1 - st.zip_open:.0%} closed"
             if st.strap != "fastened" and False:
                 return False, ""
             return True, ""
@@ -393,7 +397,7 @@ class PackSim:
             else:
                 st.station, st.facing = t, ""
         elif v == "enter":
-            st.station, st.facing = f"node:{a.get('via') or entry_node(st, t)}", ""
+            st.station, st.facing = f"node:{entry_node(st, t)}", ""
         elif v == "pick_up":
             if st.in_case(t):
                 st.place.pop(t, None)
@@ -605,11 +609,8 @@ def in_view(st, t, frm=None):
 
 
 def entry_node(st, room):
-    """The first walking-graph point inside `room` on the way from here to its centre."""
-    for n in R.nav_path(access_node(st), R.CENTRE[room]):
-        if R.NODE_ROOM[n] == room:
-            return n
-    return R.CENTRE[room]
+    """Where enter(room) ends: the point of that room nearest along the walking graph."""
+    return R.entry_node(access_node(st), room)
 
 
 def navigation(st, a):
@@ -628,14 +629,13 @@ def navigation(st, a):
         if in_view(st, t)[0]:
             return [a]
         goal_room, item = R.room_at(target_point(st, t)[:2]), t
-    steps, cur = [], here
-    for n in R.nav_path(access_node(st), target_access(st, t)):
-        rn = R.NODE_ROOM[n]
-        if rn == cur:
-            continue
-        steps.append(Action("enter", rn, dict(via=n)))
-        cur = rn
-        if rn == goal_room or (item and in_view(st, item, frm=S.NAV_NODES[n])[0]):
+    # rooms on the way: shortest path over the rooms' doorways (adjacency), so a step never
+    # skips a room; enter(room) walks to entry_node(room) from wherever the person is
+    steps, node = [], access_node(st)
+    for rn in R.room_path(here, goal_room)[1:]:
+        node = R.entry_node(node, rn)
+        steps.append(Action("enter", rn))
+        if rn == goal_room or (item and in_view(st, item, frm=S.NAV_NODES[node])[0]):
             break
     if item:
         if item in ITEM_NAMES and not st.in_case(item):

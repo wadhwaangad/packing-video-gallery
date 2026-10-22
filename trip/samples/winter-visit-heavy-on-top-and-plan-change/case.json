@@ -1,0 +1,46 @@
+{
+ "task": "winter_visit",
+ "seed": 40,
+ "attempt": 0,
+ "persona": "brisk",
+ "events": [
+  {
+   "id": "e1",
+   "type": "heavy_on_top",
+   "target": "toiletry_bag",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": ""
+  },
+  {
+   "id": "e2",
+   "type": "plan_change",
+   "target": "",
+   "other": "add:towel_stack",
+   "after": 4,
+   "recover": true,
+   "text": "I'll take the stack of towels as well."
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 55,
+  "final_goals": {
+   "packed(sweater_pile)": true,
+   "packed(sweatshirts)": true,
+   "packed(trousers)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(notebook)": true,
+   "packed(towel_stack)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(trousers)": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}

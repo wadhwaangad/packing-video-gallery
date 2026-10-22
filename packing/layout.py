@@ -315,6 +315,28 @@ def rest_z(placements, item, anchor):
     return evaluate(placements, item, x, y, default_yaw(item)).z
 
 
+def choose_named(placements, item, orient=""):
+    """The planner's spot among the named ones only (the discrete action space): the same
+    preferences as choose_spot, each spot taken as approximate (nudged within 8 cm, as
+    a place action does). None if no named spot fits."""
+    it = S.item(item)
+    cols = sorted(COLUMNS, key=lambda a: rest_z(placements, item, a))
+    if it.family == "bottle":
+        prefs = ["bottle_corner", "front_strip"] + cols + ["centre"]
+    elif item == "toiletry_bag" or it.family == "fragile_box":
+        prefs = ["front_strip"] + cols + ["centre"]
+    elif it.heavy:
+        prefs = [a for a in cols if rest_z(placements, item, a) <= FLOOR + 1e-6] + cols + ["front_strip", "centre"]
+    else:
+        prefs = cols + ["front_strip", "centre"]
+    orient = orient or ("upright" if item == "bottle" else "")
+    for a in dict.fromkeys(prefs):
+        x, y = ANCHORS[a]["xy"]
+        if nudge(placements, item, x, y, default_yaw(item, orient), orient)[0] is not None:
+            return a
+    return None
+
+
 def choose_spot(placements, item):
     """The planner's spot: a named spot if it fits there (columns lowest first, the bag
     and fragile items in the front strip, heavy items on an empty column, the bottle in

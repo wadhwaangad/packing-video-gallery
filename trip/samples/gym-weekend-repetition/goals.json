@@ -1,0 +1,37 @@
+{
+ "goals": {
+  "packed(gym_clothes)": true,
+  "packed(tshirts)": true,
+  "packed(towel)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "lid_closed": false,
+  "zipped": false,
+  "case_upright": false
+ },
+ "satisfied": false,
+ "pack": [
+  "gym_clothes",
+  "tshirts",
+  "towel",
+  "toiletry_bag",
+  "bottle"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "repetition",
+   "channel": "error",
+   "target": "tshirts",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "walks back for an item that is already packed"
+  }
+ ]
+}

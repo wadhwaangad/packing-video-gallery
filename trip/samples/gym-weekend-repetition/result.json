@@ -1,0 +1,37 @@
+{
+ "status": "failed: lid not shut: 6.2 deg",
+ "sim_seconds": 252.97800000084388,
+ "wall_seconds": 2937.352332830429,
+ "frames": 6324,
+ "actions": 43,
+ "goals_satisfied": false,
+ "diagnostics": {
+  "max_penetration": 0.002467158357716502,
+  "worst_penetration": {
+   "t": 208.12,
+   "stage": "Grip folded towel",
+   "geoms": [
+    "5distph_coll_2_r",
+    "towel_shelf"
+   ]
+  },
+  "max_joint_excursion": 0.004905690946730157,
+  "worst_joint": {
+   "t": 22.42,
+   "stage": "Reach for toiletry bag",
+   "joint": "mcp5_abduction_l"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.0029239112074754044,
+  "worst_penetration_soft": {
+   "t": 249.5,
+   "stage": "Let the lid fall closed",
+   "geoms": [
+    "towel_geom",
+    "gym_clothes_geom"
+   ]
+  }
+ }
+}

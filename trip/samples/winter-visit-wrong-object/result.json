@@ -1,0 +1,37 @@
+{
+ "status": "complete",
+ "sim_seconds": 351.1269999986088,
+ "wall_seconds": 1454.9928290843964,
+ "frames": 8778,
+ "actions": 46,
+ "goals_satisfied": true,
+ "diagnostics": {
+  "max_penetration": 0.0026503545772039398,
+  "worst_penetration": {
+   "t": 182.92,
+   "stage": "Grip striped shirts",
+   "geoms": [
+    "5distph_coll_2_r",
+    "mattress"
+   ]
+  },
+  "max_joint_excursion": 0.013295450669574327,
+  "worst_joint": {
+   "t": 302.18,
+   "stage": "Push the zip slider along",
+   "joint": "mcp2_abduction_l"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.0021285045418779286,
+  "worst_penetration_soft": {
+   "t": 78.7,
+   "stage": "Release folded trousers",
+   "geoms": [
+    "5distph_coll_2_r",
+    "trousers_geom"
+   ]
+  }
+ }
+}

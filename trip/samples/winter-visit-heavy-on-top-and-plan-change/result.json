@@ -1,0 +1,37 @@
+{
+ "status": "complete",
+ "sim_seconds": 347.98799999868305,
+ "wall_seconds": 2698.272157430649,
+ "frames": 8699,
+ "actions": 55,
+ "goals_satisfied": true,
+ "diagnostics": {
+  "max_penetration": 0.002459558862129927,
+  "worst_penetration": {
+   "t": 202.34,
+   "stage": "Grip leather notebook",
+   "geoms": [
+    "5distph_coll_2_l",
+    "coffee_table_coll"
+   ]
+  },
+  "max_joint_excursion": 0.01081288703127714,
+  "worst_joint": {
+   "t": 294.68,
+   "stage": "Pull the zip slider back",
+   "joint": "mcp2_abduction_r"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.004444665359491378,
+  "worst_penetration_soft": {
+   "t": 324.5,
+   "stage": "Stand it up by the handle",
+   "geoms": [
+    "sweater_pile_geom",
+    "towel_stack_geom"
+   ]
+  }
+ }
+}

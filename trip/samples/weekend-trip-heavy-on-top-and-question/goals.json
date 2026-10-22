@@ -1,0 +1,57 @@
+{
+ "goals": {
+  "packed(trousers)": true,
+  "packed(tshirts)": true,
+  "packed(sweatshirts)": true,
+  "packed(towel)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "packed(notebook)": true,
+  "packed(camera)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(trousers)": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "nothing_on(camera)": true,
+  "lid_closed": true,
+  "zipped": true,
+  "case_upright": true
+ },
+ "satisfied": true,
+ "pack": [
+  "trousers",
+  "tshirts",
+  "sweatshirts",
+  "towel",
+  "toiletry_bag",
+  "bottle",
+  "notebook",
+  "camera"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "heavy_on_top",
+   "channel": "error",
+   "target": "toiletry_bag",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "puts the heavy toiletry bag on top of a clothes pile"
+  },
+  {
+   "id": "e2",
+   "type": "question",
+   "channel": "question",
+   "target": "",
+   "other": "",
+   "after": 4,
+   "recover": true,
+   "text": "Should the stack of towels go in too?",
+   "fired": true,
+   "description": "asks a question about the task"
+  }
+ ]
+}

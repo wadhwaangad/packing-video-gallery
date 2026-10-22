@@ -1,0 +1,51 @@
+{
+ "goals": {
+  "packed(tshirts)": false,
+  "packed(striped_shirts)": false,
+  "packed(towel_stack)": false,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "packed(camera)": false,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "lid_closed": false,
+  "zipped": false,
+  "case_upright": false
+ },
+ "satisfied": false,
+ "pack": [
+  "tshirts",
+  "striped_shirts",
+  "towel_stack",
+  "toiletry_bag",
+  "bottle",
+  "camera"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "omission",
+   "channel": "error",
+   "target": "camera",
+   "other": "",
+   "after": -1,
+   "recover": false,
+   "text": "",
+   "fired": false,
+   "description": "skips an item on the list"
+  },
+  {
+   "id": "e2",
+   "type": "stall",
+   "channel": "error",
+   "target": "",
+   "other": "",
+   "after": 2,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "stops making progress for several seconds"
+  }
+ ]
+}

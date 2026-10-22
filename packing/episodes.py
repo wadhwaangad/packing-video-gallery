@@ -15,6 +15,7 @@ import json, random
 import scene as S
 import layout as LO
 from packsim import PackSim, Action, TASKS, ITEM_NAMES, initial_state, navigation
+import discrete as D
 
 PERSONAS = {
     "brisk": dict(walk=1.05, pause=0.0, label="walks quickly, no pauses"),
@@ -89,7 +90,9 @@ def _rest_z(st, item, anchor):
 
 
 def choose_spot(st, item):
-    return LO.choose_spot(st.place, item)
+    """A named spot (the action space has no measured ones); front_strip if none fits,
+    which the dry run then refuses, so such a case is not sampled."""
+    return LO.choose_named(st.place, item) or "front_strip"
 
 
 def topmost_over(st, n):
@@ -148,7 +151,8 @@ class User:
                     if st.station != "suitcase":
                         return go("suitcase")
                     if st.locked:
-                        return Action("set", "lock", dict(value=st.code))
+                        k = next(i for i in range(3) if st.dials[i] != int(st.code[i]))
+                        return Action("turn", D.DIALS[k], dict(to=int(st.code[k])))
                     return Action("press", "lock_button", dict(hold=0.3, times=1))
                 if st.zip_open < 0.95:
                     return go("suitcase") if st.station != "suitcase" else Action("open", "main_zip", dict(to=1.0))
@@ -164,7 +168,7 @@ class User:
         if TASKS[self.task].lock and st.pulls == "free":
             return go("suitcase") if st.station != "suitcase" else Action("insert", "zip_pulls", dict(into="lock"))
         if TASKS[self.task].lock and not st.locked:
-            return Action("turn", "dial_1", dict(by=3))
+            return Action("turn", "dial_1", dict(to=(st.dials[0] + 3) % 10))
         if st.case_pose == "on_bed":
             return go("bed_foot") if st.station != "bed_foot" else Action("stand_up", "suitcase")
         return None
@@ -184,9 +188,9 @@ class User:
             self.omitted.add(ev.target)
             return []
         if ev.type == "repetition":
-            return [E(Action("go_to", S.item(ev.target).station)), E(Action("wait", "", dict(seconds=2.0)))]
+            return [E(Action("go_to", S.item(ev.target).station)), E(D.action("wait"))]
         if ev.type == "nav_deviation":
-            return [E(Action("go_to", ev.other)), E(Action("wait", "", dict(seconds=1.5)))]
+            return [E(Action("go_to", ev.other)), E(D.action("wait"))]
         if ev.type == "heavy_on_top":
             col = max(COLUMNS, key=lambda a: _rest_z(st, ev.target, a))
             acts = [E(Action("place", ev.target, dict(rel="in", dest="suitcase", at=col)))]
@@ -195,16 +199,16 @@ class User:
                          E(Action("place", ev.target, dict(rel="in", dest="suitcase", at="front_strip")), "recovery")]
             return acts
         if ev.type == "bottle_lying":
-            return [E(Action("place", "bottle", dict(rel="in", dest="suitcase", at=(0.140, -0.200), orient="lying")))]
+            return [E(Action("place", "bottle", dict(rel="in", dest="suitcase", at="bottle_corner", orient="lying")))]
         if ev.type == "premature_close":
             acts = [E(Action("go_to", "bed_foot")), E(Action("close", "lid", dict(to=0.0)))]
             if not ev.recover:
                 self.omitted |= {n for n in self.intended(st) if not st.in_case(n)}
             return acts
         if ev.type == "stall":
-            return [E(Action("wait", "", dict(seconds=6.0)))]
+            return [E(D.action("wait")) for _ in range(3)]
         if ev.type == "question":
-            return [E(Action("say", "", dict(text=ev.text)), "question"), E(Action("wait", "", dict(seconds=1.5)), "question")]
+            return [E(Action("say", "", dict(text=ev.text)), "question"), E(D.action("wait"), "question")]
         if ev.type == "plan_change":
             return [E(Action("say", "", dict(text=ev.text)), "plan_change")]
         return []
@@ -301,7 +305,7 @@ def dry_run(case, max_steps=200):
         a, label, eid = nxt
         ok, msg = sim.step(a)
         trace.append(dict(action=a.to_dict(), label=label, event=eid, ok=ok, feedback=msg))
-        if not ok:
+        if not ok or not D.to_id(a):
             return False, trace, sim, user
     fired = all(e.fired for e in events)
     return fired and user.next(sim.state) is None, trace, sim, user
@@ -355,17 +359,19 @@ def sample_case(task=None, seed=0, n_events=None, persona=None, allow=None):
             elif ty in ("premature_close", "stall", "question", "plan_change"):
                 e["after"] = rng.randint(1, max(1, len(pack) - 2))
                 if ty == "question":
-                    extra = [o.label for o in S.ITEMS if o.name not in pack]
-                    e["text"] = f"Should the {rng.choice(extra)} go in too?" if extra else "Is the bottle closed?"
+                    extra = [o.name for o in S.ITEMS if o.name not in pack]
+                    if not extra:
+                        continue
+                    e["other"] = rng.choice(extra); e["text"] = D.ask_text(e["other"])
                 if ty == "plan_change":
                     removable = [n for n in pack if n not in used_targets and not S.item(n).heavy]
                     addable = [o.name for o in S.ITEMS if o.name not in pack and o.family == "folded_pile"]
                     if rng.random() < 0.5 and removable:
                         it = rng.choice(removable); e["other"] = f"remove:{it}"
-                        e["text"] = f"Actually, I'll leave the {S.item(it).label} at home."
+                        e["text"] = D.announce_text("remove", it)
                     elif addable:
                         it = rng.choice(addable); e["other"] = f"add:{it}"
-                        e["text"] = f"I'll take the {S.item(it).label} as well."
+                        e["text"] = D.announce_text("add", it)
                     else:
                         continue
                     used_targets.add(it)

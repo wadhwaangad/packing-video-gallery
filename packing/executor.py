@@ -164,7 +164,7 @@ class Executor:
     def enter(self, a):
         """Walk through to the entry point of the next room (on the way to a target)."""
         st = self.sim.state
-        node = a.get("via") or __import__("packsim").entry_node(st, a.target)
+        node = __import__("packsim").entry_node(st, a.target)
         holding = st.holding
         if not holding:
             self.rest()

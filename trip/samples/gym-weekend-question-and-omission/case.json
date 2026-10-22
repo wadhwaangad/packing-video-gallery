@@ -1,0 +1,43 @@
+{
+ "task": "gym_weekend",
+ "seed": 49,
+ "attempt": 1,
+ "persona": "brisk",
+ "events": [
+  {
+   "id": "e1",
+   "type": "question",
+   "target": "",
+   "other": "",
+   "after": 2,
+   "recover": true,
+   "text": "Should the stack of towels go in too?"
+  },
+  {
+   "id": "e2",
+   "type": "omission",
+   "target": "toiletry_bag",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 48,
+  "final_goals": {
+   "packed(gym_clothes)": true,
+   "packed(tshirts)": true,
+   "packed(towel)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}

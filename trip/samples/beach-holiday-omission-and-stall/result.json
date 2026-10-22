@@ -1,0 +1,37 @@
+{
+ "status": "failed: striped_shirts did not land at (-0.067, -0.161): [-0.043 -0.085  0.118]",
+ "sim_seconds": 160.49400000040228,
+ "wall_seconds": 656.5928978919983,
+ "frames": 4012,
+ "actions": 22,
+ "goals_satisfied": false,
+ "diagnostics": {
+  "max_penetration": 0.0026511482300301393,
+  "worst_penetration": {
+   "t": 139.26,
+   "stage": "Grip striped shirts",
+   "geoms": [
+    "5distph_coll_2_r",
+    "mattress"
+   ]
+  },
+  "max_joint_excursion": 0.008780373197709135,
+  "worst_joint": {
+   "t": 157.2,
+   "stage": "Lower striped shirts into place",
+   "joint": "mcp3_abduction_r"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.004549042232718203,
+  "worst_penetration_soft": {
+   "t": 158.24,
+   "stage": "Release striped shirts",
+   "geoms": [
+    "distal_thumb_coll_l",
+    "striped_shirts_geom"
+   ]
+  }
+ }
+}

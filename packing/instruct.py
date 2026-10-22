@@ -19,10 +19,11 @@ or expanded, so an out-of-view go_to is refused (strict mode for evaluating agen
 Grounding happens lazily, against the state at the moment the request is reached, so
 'the pile on the dresser' or 'it' resolve against what is there then.
 """
-import json, os, re, urllib.request
+import copy, json, os, re, urllib.request
 import scene as S
 import layout as LO
 from actionspace import Action, Rejection, VERBS, ground, spec, SUITCASE_PARTS
+import discrete as D
 from packsim import ITEM_NAMES, navigation
 
 # ---------------------------------------------------------------- rule parser
@@ -366,6 +367,14 @@ class Instructions:
                     pa[k] = args[k]
             if item == "bottle" and "orient" not in pa:
                 pa["orient"] = "upright"
+            # the placement must be a catalogue action before anything is fetched
+            held = copy.deepcopy(st); held.holding = item
+            gp = ground(dict(verb="place", args=pa), held, item)
+            if isinstance(gp, Rejection):
+                return gp
+            cp = D.canonical(gp, held)
+            if isinstance(cp, Rejection):
+                return cp
             if st.holding == item:
                 return [dict(verb="place", args=pa)]
             return [dict(verb="pick_up", args=dict(target=item)), dict(verb="place", args=pa)]
@@ -404,6 +413,8 @@ class Instructions:
                 self.pending = ex
             req = self.pending.pop(0)
             if isinstance(req, Action):
+                # a step already grounded and expanded; it is a catalogue action by now
+                assert D.to_id(req), req
                 return (req, "nominal", "")
             g = ground(req, st, self.last)
             if isinstance(g, Rejection):
@@ -413,6 +424,14 @@ class Instructions:
                 g.target = st.holding
             if g.target in ITEM_NAMES:
                 self.last = g.target
+            # only catalogue actions run (discrete.py): deterministic paraphrases are
+            # rewritten, anything else is rejected with the reason before anything moves
+            c = D.canonical(g, st)
+            if isinstance(c, Rejection):
+                self.pending = []
+                return ("rejected", c, req)
+            g = c[0]
+            self.pending[0:0] = c[1:]
             if self.auto_reach:
                 where = reach(g, st)
                 if where:

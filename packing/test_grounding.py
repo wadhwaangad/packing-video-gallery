@@ -7,6 +7,8 @@ Usage: python test_grounding.py
 from packsim import PackSim
 from actionspace import Rejection
 import instruct as I
+import discrete as D
+import episodes as E
 
 
 def run(text, task="weekend_trip", setup=(), auto_reach=True):
@@ -23,6 +25,7 @@ def run(text, task="weekend_trip", setup=(), auto_reach=True):
             out.append(f"REJECT {n[1].code}: {n[1].message}")
             continue
         a = n[0]
+        assert D.to_id(a), f"not a catalogue action: {a}"
         ok, msg = sim.step(a)
         out.append(a.text() if ok else f"REFUSED {a.text()}: {msg}")
     return out
@@ -75,7 +78,29 @@ STRICT = [  # auto_reach off: nothing is inserted or expanded (evaluating an age
     "enter the kitchen",
 ]
 
+def check_catalogue(seeds=range(6)):
+    """Every id round-trips; every generated action is a catalogue id that legal() listed."""
+    for e in D.CATALOGUE:
+        assert D.to_id(D.action(e["id"])) == e["id"], e["id"]
+    n = 0
+    for task in sorted(E.TASKS):
+        for seed in seeds:
+            case = E.sample_case(task=task, seed=seed)
+            sim = PackSim(case["task"])
+            events = [E.Event(**{k: v for k, v in x.items() if k in E.Event.__dataclass_fields__}) for x in case["events"]]
+            user = E.User(case["task"], __import__("random").Random(case["seed"]), events)
+            while (nxt := user.next(sim.state)) is not None:
+                a = nxt[0]
+                aid = D.to_id(a)
+                assert aid, a
+                assert aid.startswith(("ask(", "announce(")) or aid in D.legal(sim), (task, seed, aid)
+                assert sim.step(a)[0]
+                n += 1
+    print(f"catalogue: {len(D.CATALOGUE)} actions, all round-trip; {n} generated actions all listed by legal()")
+
+
 if __name__ == "__main__":
+    check_catalogue()
     for c in CASES:
         print(">>", c)
         for line in run(c):

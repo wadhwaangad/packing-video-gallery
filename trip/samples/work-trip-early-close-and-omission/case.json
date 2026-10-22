@@ -1,0 +1,45 @@
+{
+ "task": "work_trip",
+ "seed": 52,
+ "attempt": 0,
+ "persona": "steady",
+ "events": [
+  {
+   "id": "e1",
+   "type": "premature_close",
+   "target": "",
+   "other": "",
+   "after": 1,
+   "recover": true,
+   "text": ""
+  },
+  {
+   "id": "e2",
+   "type": "omission",
+   "target": "notebook",
+   "other": "",
+   "after": -1,
+   "recover": false,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 37,
+  "final_goals": {
+   "packed(trousers)": true,
+   "packed(striped_shirts)": true,
+   "packed(toiletry_bag)": true,
+   "packed(notebook)": false,
+   "packed(bottle)": true,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(trousers)": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true,
+   "locked": true
+  }
+ }
+}

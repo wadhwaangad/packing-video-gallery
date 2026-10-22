@@ -30,6 +30,7 @@ Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pil
 |---|---|---|
 | `actionspace.py` | action space | Verbs with typed signatures, per-asset parts and operations (with value ranges), reference resolution, value parsing, rejection codes, action text, `spec()` |
 | `instruct.py` | instructions | Rule parser and Gemini parser (same request format), macro expansion (pack / unpack / lock / unlock), lazy grounding, auto-inserted `go_to` when out of reach |
+| `discrete.py` | action catalogue | The closed list of fully specified actions (ids), `legal(sim)`, `canonical()` from grounded language |
 | `rooms.py` | navigation | Rooms, the walking graph, line of sight from eye height past walls, door frames and furniture |
 | `layout.py` | placement | Continuous placement in the case on a 5 mm height map: walls, support, height, the lid's swing, room for the hands; named spots; nudging to the nearest pose that fits |
 | `packsim.py` | symbolic | State (items, case hardware, cloth), preconditions with feedback, effects, goal predicates, tasks, floor spots |
@@ -44,7 +45,26 @@ Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pil
 
 ## Action space
 
-An action is a verb with typed arguments; the page lists each verb's resolution steps, physical check and effect (`trip/spec.json`).
+The action space is a closed catalogue (`discrete.py`, 869 actions) of fully specified ids:
+- navigation: `enter(room)`, `go_to(station | item)`, `look_at(item)`
+- handling items: `pick_up(item)`, `place(item, spot)` with spot one of `wheel_end, handle_end, front_strip, bottle_corner, centre`, `place_on(item, other)`, `place_beside(item, other, side)`, `put_back(item)`
+- the case: `open_lid`, `close_lid`, `zip_to(0|25|50|75|100)` (% closed, either way), `dock_zip_pulls`, `press_lock_button`, `turn_dial(dial_k, digit)`, `press_handle_button`, `fasten_strap`, `unfasten_strap`, `set_handle(0|1|2)`, `stand_up_case`, `roll_case(bed_foot | bedroom_door)`
+- other: `fold(beach_towel)`, `wait` (2 s), `ask(item)`, `announce(add|remove, item)`
+
+- The catalogue holds what a person can really do and the simulation carries out. Real actions that are not yet reliable in simulation are listed in `EXCLUDED` with the reason (the bottle laid down, the case laid down, unfolding, thirds, the side handle, changing the combination).
+- Every argument comes from a finite list fixed by the scene. A quantity a person varies is taken in the steps a person would use (the zip in quarters). There are no coordinates, angles, durations, free text, optional arguments or defaults.
+- One id is one skill with one effect. No effect has two ids: a code is set with `turn_dial`, one dial at a time.
+- `legal(sim)` lists the ids whose preconditions hold now. An agent choosing from it cannot make a grounding or precondition error.
+- Language is still grounded by the resolver: ambiguous words are resolved or returned with their candidates. The grounded action then passes through `canonical(action, state)`, which makes only deterministic rewrites:
+  - a code becomes dial turns, and clicks become a digit;
+  - `go_to(room)` becomes `enter(room)`;
+  - beside with no side takes the first side that fits;
+  - a pack request without a spot takes `layout.choose_named`.
+
+  Anything else is rejected as `not_in_action_space`.
+- Each record logs the action's `id`, and `verify.py` checks every one (`every_action_in_catalogue`).
+
+The verbs below are the general form the grounder reads from language and the executor runs; only their catalogue instances are executed. The page lists each verb's resolution steps, physical check and effect (`trip/spec.json`).
 
 | Group | Verbs |
 |---|---|
@@ -60,7 +80,7 @@ Navigation: one `go_to` reaches only what is in the person's room or in view (an
 
 Suitcase parts (from the scan and spinner-case manuals): `lid` (open / close, fully only), `main_zip` (open / close to any fraction), `zip_pulls` (insert into the lock), `lock` (set a code), `dial_1..3` (turn to a digit or by clicks), `lock_button` (press: frees the pulls only when the dials show the code), `trolley_handle` (set to stop 0, 1, 2; only stop 1 with the case lying on the bed), `trolley_button`, `strap` (fasten / unfasten), `side_handle` (grip only), `wheels`.
 
-Rejection codes: `unknown_verb`, `missing_argument`, `bad_value`, `unknown_ref`, `ambiguous_ref` (with candidates), `wrong_kind`, `unsupported_operation`, `unsupported_value`, `out_of_range`. State-dependent refusals ("the zip pulls are locked in the lock") come from `PackSim.check`.
+Rejection codes: `unknown_verb`, `missing_argument`, `bad_value`, `unknown_ref`, `ambiguous_ref` (with candidates), `wrong_kind`, `unsupported_operation`, `unsupported_value`, `out_of_range`, `not_in_action_space`. State-dependent refusals ("the zip pulls are locked in the lock") come from `PackSim.check`.
 
 ## Checks (`validation.json`)
 

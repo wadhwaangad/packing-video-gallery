@@ -1,0 +1,54 @@
+{
+ "goals": {
+  "packed(sweater_pile)": true,
+  "packed(sweatshirts)": true,
+  "packed(trousers)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "packed(notebook)": true,
+  "packed(towel_stack)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(trousers)": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "lid_closed": true,
+  "zipped": true,
+  "case_upright": true
+ },
+ "satisfied": true,
+ "pack": [
+  "sweater_pile",
+  "sweatshirts",
+  "trousers",
+  "toiletry_bag",
+  "bottle",
+  "notebook",
+  "towel_stack"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "heavy_on_top",
+   "channel": "error",
+   "target": "toiletry_bag",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "puts the heavy toiletry bag on top of a clothes pile"
+  },
+  {
+   "id": "e2",
+   "type": "plan_change",
+   "channel": "plan_change",
+   "target": "",
+   "other": "add:towel_stack",
+   "after": 4,
+   "recover": true,
+   "text": "I'll take the stack of towels as well.",
+   "fired": true,
+   "description": "announces a legitimate change to the packing list"
+  }
+ ]
+}

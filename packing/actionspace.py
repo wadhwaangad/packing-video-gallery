@@ -17,6 +17,8 @@ returns either a resolved Action or a Rejection with a code:
   unsupported_operation the verb does not apply to that part of that asset
   unsupported_value     the value is the right type but this part cannot take it
   out_of_range          the value is outside the part's range
+  not_in_action_space   it grounds, but is not one of the catalogue's actions (discrete.py):
+                        a half-open zip, a spot in centimetres, on / beside another item
 
 Preconditions that depend on the current state (hands full, lid closed, zip pulls
 locked ...) are checked afterwards by PackSim.check and return feedback.
@@ -44,7 +46,8 @@ class Action:
         return describe(self)
 
     def to_dict(self):
-        d = dict(verb=self.verb, target=self.target, args=dict(self.args), text=self.text())
+        from discrete import to_id
+        d = dict(id=to_id(self), verb=self.verb, target=self.target, args=dict(self.args), text=self.text())
         if self.parent:
             d["parent"] = self.parent
         return d
@@ -185,8 +188,8 @@ VERBS = {
     "enter": dict(group="navigate", sig=[("target", "Ref", True, None)], ref=("room",),
                   steps=["Resolve the room; it must open off the person's room (a step of the walking graph crosses "
                          "into it).",
-                         "Entry point: the first walking-graph point inside that room on the way to it (or the "
-                         "given one, when expanded from a go_to).",
+                         "Entry point: the first walking-graph point inside that room on the way from here to its "
+                         "centre: fixed by the room and where the person stands, never an argument.",
                          "Walk there through the doorway (or across the open-plan boundary) at the persona's speed; "
                          "a carried item is turned the way round that keeps it clear of walls."],
                   check="if carrying, the item is still between the hands (< 30 cm); the person ends inside the room",
@@ -659,8 +662,7 @@ def check_operation(a):
                                                   f"{S.item(t).label} can only be laid flat")
         if a.get("rel") in ("on", "beside") and a.get("dest") in (None, "suitcase"):
             return Rejection("missing_argument", f"place {a.get('rel')} what?")
-        if a.get("rel") == "beside" and not a.get("side"):
-            return Rejection("missing_argument", "beside which side (wheel_end / handle_end / front_side / hinge_side)?")
+        # beside with no side: discrete.canonical takes the first side (fixed order) where it fits
         y = a.get("yaw")
         if y is not None:
             if not np.isfinite(y):
@@ -792,4 +794,4 @@ def spec():
                 case_interior_cm=dict(along=round(100 * (LO.Y1 - LO.Y0), 1), across=round(100 * (LO.X1 - LO.X0), 1),
                                       height_closed=round(100 * (LO.TOP - LO.FLOOR), 1)),
                 rejection_codes=["unknown_verb", "missing_argument", "bad_value", "unknown_ref", "ambiguous_ref", "wrong_kind",
-                                 "unsupported_operation", "unsupported_value", "out_of_range"])
+                                 "unsupported_operation", "unsupported_value", "out_of_range", "not_in_action_space"])

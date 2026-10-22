@@ -1,0 +1,49 @@
+{
+ "goals": {
+  "packed(gym_clothes)": true,
+  "packed(tshirts)": true,
+  "packed(towel)": true,
+  "packed(toiletry_bag)": true,
+  "packed(bottle)": true,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(toiletry_bag)": true,
+  "lid_closed": true,
+  "zipped": true,
+  "case_upright": true
+ },
+ "satisfied": true,
+ "pack": [
+  "gym_clothes",
+  "tshirts",
+  "towel",
+  "toiletry_bag",
+  "bottle"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "question",
+   "channel": "question",
+   "target": "",
+   "other": "",
+   "after": 2,
+   "recover": true,
+   "text": "Should the stack of towels go in too?",
+   "fired": true,
+   "description": "asks a question about the task"
+  },
+  {
+   "id": "e2",
+   "type": "omission",
+   "channel": "error",
+   "target": "toiletry_bag",
+   "other": "",
+   "after": -1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "skips an item on the list"
+  }
+ ]
+}

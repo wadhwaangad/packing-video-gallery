@@ -1,0 +1,366 @@
+{
+ "passed": false,
+ "checks": {
+  "single_continuous_run": false,
+  "strictly_increasing_time": true,
+  "gravity_enabled": true,
+  "no_equality_constraints_in_model": true,
+  "finite_poses": true,
+  "log_matches_physics_for_every_item": true,
+  "every_scheduled_event_fired": false,
+  "no_refused_actions": true,
+  "every_placement_landed_in_its_region": true,
+  "every_go_to_target_in_room_or_view": true,
+  "every_looked_for_item_in_sight": true,
+  "every_enter_ends_in_its_room": true,
+  "lid_closed_under_2deg": true,
+  "zipper_engaged_only_with_lid_down": true,
+  "zip_matches_log": false,
+  "lock_dials_match_log": true,
+  "zip_pulls_match_log": true,
+  "trolley_stop_matches_log": true,
+  "strap_matches_log": true,
+  "suitcase_lying_on_its_back_under_10deg": true,
+  "settled_last_2s_under_2mm": true,
+  "suitcase_undisturbed_while_packing_under_15mm": true,
+  "suitcase_shift_while_closing_under_60mm": true,
+  "every_pick_lifted_by_contact": true,
+  "no_item_dropped": true,
+  "contact_penetration_under_5mm": true,
+  "soft_pile_penetration_under_10mm": true,
+  "joint_limits_within_2_5deg": 1.0,
+  "upper_arm_length_fixed": false,
+  "no_unreachable_arm_frames": false,
+  "no_unreachable_leg_frames": false,
+  "pelvis_clear_of_walls_and_furniture": 1.0
+ },
+ "detail": {
+  "items": {
+   "trousers": {
+    "local_m": [
+     -0.0815,
+     -0.1558,
+     0.0688
+    ],
+    "inside_physically": true,
+    "packed_in_log": true
+   },
+   "tshirts": {
+    "local_m": [
+     -0.0645,
+     1.9564,
+     0.1018
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "sweater_pile": {
+    "local_m": [
+     0.046,
+     -0.8501,
+     0.07
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "striped_shirts": {
+    "local_m": [
+     -0.8943,
+     -0.5832,
+     0.065
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "sweatshirts": {
+    "local_m": [
+     -1.6832,
+     -1.0527,
+     0.2632
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "towel": {
+    "local_m": [
+     0.2784,
+     3.8144,
+     0.4853
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "towel_stack": {
+    "local_m": [
+     1.1133,
+     3.4115,
+     0.4292
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "gym_clothes": {
+    "local_m": [
+     -0.0733,
+     5.0591,
+     0.464
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "toiletry_bag": {
+    "local_m": [
+     1.0949,
+     2.9419,
+     0.4149
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "bottle": {
+    "local_m": [
+     0.7261,
+     5.0278,
+     0.5149
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "notebook": {
+    "local_m": [
+     -3.4859,
+     0.4488,
+     -0.0976
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "camera": {
+    "local_m": [
+     -3.4889,
+     0.8893,
+     -0.0711
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   }
+  },
+  "goals": {
+   "packed(trousers)": true,
+   "packed(striped_shirts)": false,
+   "packed(toiletry_bag)": false,
+   "packed(notebook)": false,
+   "packed(bottle)": false,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(trousers)": true,
+   "lid_closed": true,
+   "zipped": false,
+   "case_upright": false,
+   "locked": false
+  },
+  "goals_satisfied": false,
+  "refused_or_rejected": [],
+  "action_retries": [
+   {
+    "t": 41.4,
+    "action": "open the lid",
+    "reason": "open_lid: lid only reached -0.0 deg"
+   },
+   {
+    "t": 41.4,
+    "action": "open the lid",
+    "reason": "open_lid: lid only reached -0.0 deg"
+   },
+   {
+    "t": 41.4,
+    "action": "open the lid",
+    "reason": "open_lid: lid only reached -0.0 deg"
+   }
+  ],
+  "go_to_reach": [
+   {
+    "action": "go to the folded trousers",
+    "from_room": "bedroom",
+    "to_room": "bedroom",
+    "ok": true
+   }
+  ],
+  "look_checks": [],
+  "placements": [
+   {
+    "t": 24.884,
+    "stage": "Release folded trousers",
+    "event": "placed_check",
+    "item": "trousers",
+    "target_m": [
+     -0.068,
+     -0.155
+    ],
+    "local_m": [
+     -0.0818,
+     -0.1557,
+     0.0688
+    ],
+    "ok": true
+   }
+  ],
+  "final_lid_angle_deg": -0.0037918320486289942,
+  "final_hardware": {
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": 0.0001,
+   "trolley_level": 0,
+   "zip_closed": 0.094,
+   "tabs": {
+    "a": 0.0,
+    "b": -0.0
+   },
+   "docked": {
+    "a": false,
+    "b": false
+   },
+   "buckle": 0.0004,
+   "buckled": true
+  },
+  "final_suitcase_tilt_deg": 89.99995727267081,
+  "wheel_bottom_heights_m": [
+   0.558997836112976,
+   0.5589977169036865,
+   0.7057949566841125,
+   0.7057670617103576
+  ],
+  "final_suitcase_lie_deg": 4.395898023019351e-05,
+  "last_2s_drift_m": {
+   "suitcase": 8.940696716308594e-08,
+   "trousers": 0.0,
+   "tshirts": 0.0,
+   "sweater_pile": 0.0,
+   "striped_shirts": 0.0,
+   "sweatshirts": 0.0,
+   "towel": 0.0,
+   "towel_stack": 0.0,
+   "gym_clothes": 0.0,
+   "toiletry_bag": 0.0,
+   "bottle": 0.0,
+   "notebook": 0.0,
+   "camera": 0.0
+  },
+  "suitcase_max_displacement_while_packing_m": 8.31579910925777e-05,
+  "suitcase_max_displacement_lid_to_lift_m": 0.026065995747045715,
+  "lift_checks": [
+   {
+    "t": 11.705,
+    "items": [
+     "trousers"
+    ],
+    "rise_m": {
+     "trousers": 0.09504917351059639
+    },
+    "normal_force_N": {
+     "r": 62.08,
+     "l": 62.09
+    }
+   }
+  ],
+  "drops": [],
+  "diagnostics": {
+   "max_penetration": 0.0016732483089545015,
+   "worst_penetration": {
+    "t": 9.4,
+    "stage": "Reach for folded trousers",
+    "geoms": [
+     "5distph_coll_2_l",
+     "dresser_coll"
+    ]
+   },
+   "max_joint_excursion": 0.0034877531925190768,
+   "worst_joint": {
+    "t": 39.14,
+    "stage": "Let the lid fall closed",
+    "joint": "lid_hinge"
+   },
+   "max_carriage_force": 0.0,
+   "max_finger_torque_ratio": 0.0,
+   "hand_item_welds": 0,
+   "max_penetration_soft": 0.001713348549012038,
+   "worst_penetration_soft": {
+    "t": 22.12,
+    "stage": "Lower folded trousers into place",
+    "geoms": [
+     "5distph_coll_2_l",
+     "trousers_geom"
+    ]
+   }
+  },
+  "operator_audit": {
+   "frames": 1377,
+   "max_arm_length_error_m": 0.13792582865300834,
+   "unreachable_arm_frames": 45,
+   "max_hip_to_ankle_m": 0.8610565782541957,
+   "leg_length_m": 0.86,
+   "unreachable_leg_frames": 17,
+   "upper_arm_m": 0.3,
+   "shoulder_width_m": 0.36,
+   "unreachable_arm_stages": [
+    "Swing the lid open"
+   ],
+   "unreachable_leg_stages": [
+    "Swing the lid open"
+   ],
+   "unreachable_arm_times": [
+    53.32,
+    53.72,
+    54.12,
+    54.52,
+    54.92
+   ],
+   "unreachable_leg_times": [
+    54.44,
+    54.84
+   ]
+  },
+  "min_pelvis_to_obstacle_m": {
+   "distance": 0.33793565262939795,
+   "obstacle": "dresser_coll",
+   "t": 14.24
+  }
+ },
+ "sim_seconds": 55.11899999996224,
+ "frames": 1377,
+ "actions": 6,
+ "frame_interval_s": 0.04,
+ "physics_hz": 1000,
+ "control_hz": 500,
+ "trajectory_sha256": "fcde54110cdf24c38982c9705a36f8e6286ed74e5b8262cf51a6e15ba223b810",
+ "mujoco_version": "3.3.7",
+ "code_sha256": {
+  "scene.py": "f150892af3c1f35f4c75a09043cff705466caf05d8472109c80a37ccbc934232",
+  "hands.py": "e3056655b9b6fa4c097ad8224de63a52857c902e7062b0ad2b439594c78ffa76",
+  "build_model.py": "4fea4f2510ea2b36f92e93832897dc2c46bf054ba2496aa7daffe7f0c6bd1f29",
+  "runner.py": "dfbc0a27d6646e98256abf8fb56519dec0224b4c1528691fb432975888c8e78d",
+  "tasks.py": "bf4cab9b931fab17b68e4c0d9377845b56e74defabeba6e1fc6f5c4a6c87102e",
+  "skills_case.py": "35f5578a97913749bfe258f6a1ab1af5425ffe80b9bd0a1be438f713ee49c22f",
+  "skills_hw.py": "350d6b3076acbe329e9f7b87f3e794b6b7cd8eefba8321d1846f0787093f7daa",
+  "packsim.py": "4556581ce5ec582021fbdf2ea2216dc4cc5fcc0419ea365c0abe5af3495c9148",
+  "actionspace.py": "b99e124d4a1eb2466577addcff9477e8365b9e82d87e68a805559554e122daaf",
+  "layout.py": "900d10cc9ac4400b7820855fd805f9a93efecdad5e7e0b6a5832c636a80f1eb9",
+  "rooms.py": "0d6a63f786373fd516c1532250e6e8e8dfa83d84db87f775e3a3b1d59e439e22",
+  "instruct.py": "e766e56834c2821a246f3fdf1ea34d67daaf77243f79d40a8e8588fb81e41b99",
+  "episodes.py": "cc1fc251910f494548a7eb83b2a1485400dac07856f0de1cf2b8568e2d63dd96",
+  "executor.py": "d226dfa220b8c936dbdde4a632a3b7ca6045b942086133fafee5e10b695a3f58",
+  "generate.py": "837ad4dab073357699b2e59a90f4af0b2328adcf01a9990b928e253c5559463a",
+  "operator_model.py": "b938ffe12f1cffe9c2d6e8de10aca0a50177114c3310b53ba5efb9ff153033ce",
+  "export_poses.py": "0690a034e4b23e639913ed05cd88907b0151fe88813bd4a3ac89aef8c1ec68c5",
+  "render_blender.py": "5472c1c45b4765d91fbef6fa34d6efd0c20594f89d57ee959f28b3f7fd15674b",
+  "item_assets.py": "74eaa7cb2417bb8a57172cbdaae54fd44c7f187e2700910f64a4c3e634b79a0c",
+  "prepare_assets.py": "8eccdd65939c53ad029d254062d6c6696ad2c09f1530dfd3cd496b55dacdedd4",
+  "encode.py": "a151fcb6be7c1393c5cd19b333302cc765b370cd89a1e4597697be2dc584b7d8",
+  "verify.py": "aceae766410d2aea5ad97e445fc2bd5fccb20781f86f8be6946349438215f255",
+  "fetch_assets.py": "05dc9d2102a03c2fcbded61129f6148a4e55ab22836c5d14d479fabe51796492"
+ },
+ "scope": "Contact-only grasps (no hand-object welds) with anatomical MyoHand fingers on force-limited wrist carriages; kinematic body solved around the simulated forearms; idealised zipper (hinge range narrowed after a closure check). Goal predicates are evaluated on the symbolic log and cross-checked against final body poses. Not a measured sim-to-real validation."
+}

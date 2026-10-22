@@ -1,30 +1,89 @@
 [
  {
-  "name": "work-trip-wrong-pile-and-omission",
-  "task": "work_trip",
+  "name": "winter-visit-heavy-on-top-and-plan-change",
+  "task": "winter_visit",
   "persona": "brisk",
-  "seed": 10,
+  "seed": 40,
+  "events": [
+   {
+    "type": "heavy_on_top",
+    "recover": true,
+    "channel": "error"
+   },
+   {
+    "type": "plan_change",
+    "recover": true,
+    "channel": "plan_change"
+   }
+  ],
+  "actions": 55,
+  "labels": {
+   "nominal": 51,
+   "error": 1,
+   "recovery": 2,
+   "question": 0,
+   "plan_change": 1
+  },
+  "sim_seconds": 348.0,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": true,
+  "failed_checks": []
+ },
+ {
+  "name": "weekend-trip-heavy-on-top-and-question",
+  "task": "weekend_trip",
+  "persona": "steady",
+  "seed": 41,
+  "events": [
+   {
+    "type": "heavy_on_top",
+    "recover": true,
+    "channel": "error"
+   },
+   {
+    "type": "question",
+    "recover": true,
+    "channel": "question"
+   }
+  ],
+  "actions": 64,
+  "labels": {
+   "nominal": 59,
+   "error": 1,
+   "recovery": 2,
+   "question": 2,
+   "plan_change": 0
+  },
+  "sim_seconds": 414.1,
+  "status": "complete",
+  "goals_satisfied": true,
+  "failed_goals": [],
+  "verified": true,
+  "failed_checks": []
+ },
+ {
+  "name": "winter-visit-wrong-object",
+  "task": "winter_visit",
+  "persona": "deliberate",
+  "seed": 45,
   "events": [
    {
     "type": "wrong_object",
     "recover": true,
     "channel": "error"
-   },
-   {
-    "type": "omission",
-    "recover": true,
-    "channel": "error"
    }
   ],
-  "actions": 30,
+  "actions": 46,
   "labels": {
-   "nominal": 26,
+   "nominal": 43,
    "error": 2,
-   "recovery": 2,
+   "recovery": 1,
    "question": 0,
    "plan_change": 0
   },
-  "sim_seconds": 276.6,
+  "sim_seconds": 351.1,
   "status": "complete",
   "goals_satisfied": true,
   "failed_goals": [],
@@ -32,37 +91,10 @@
   "failed_checks": []
  },
  {
-  "name": "winter-visit-stall",
-  "task": "winter_visit",
+  "name": "gym-weekend-question-and-omission",
+  "task": "gym_weekend",
   "persona": "brisk",
-  "seed": 1,
-  "events": [
-   {
-    "type": "stall",
-    "recover": true,
-    "channel": "error"
-   }
-  ],
-  "actions": 31,
-  "labels": {
-   "nominal": 30,
-   "error": 1,
-   "recovery": 0,
-   "question": 0,
-   "plan_change": 0
-  },
-  "sim_seconds": 277.5,
-  "status": "complete",
-  "goals_satisfied": true,
-  "failed_goals": [],
-  "verified": true,
-  "failed_checks": []
- },
- {
-  "name": "beach-holiday-question-and-plan-change",
-  "task": "beach_holiday",
-  "persona": "deliberate",
-  "seed": 12,
+  "seed": 49,
   "events": [
    {
     "type": "question",
@@ -70,20 +102,20 @@
     "channel": "question"
    },
    {
-    "type": "plan_change",
-    "recover": false,
-    "channel": "plan_change"
+    "type": "omission",
+    "recover": true,
+    "channel": "error"
    }
   ],
-  "actions": 37,
+  "actions": 48,
   "labels": {
-   "nominal": 34,
+   "nominal": 42,
    "error": 0,
-   "recovery": 0,
+   "recovery": 4,
    "question": 2,
-   "plan_change": 1
+   "plan_change": 0
   },
-  "sim_seconds": 383.7,
+  "sim_seconds": 295.3,
   "status": "complete",
   "goals_satisfied": true,
   "failed_goals": [],
@@ -91,104 +123,178 @@
   "failed_checks": []
  },
  {
-  "name": "weekend-trip-early-close",
-  "task": "weekend_trip",
-  "persona": "steady",
-  "seed": 7,
-  "events": [
-   {
-    "type": "premature_close",
-    "recover": true,
-    "channel": "error"
-   }
-  ],
-  "actions": 41,
-  "labels": {
-   "nominal": 38,
-   "error": 2,
-   "recovery": 1,
-   "question": 0,
-   "plan_change": 0
-  },
-  "sim_seconds": 401.7,
-  "status": "complete",
-  "goals_satisfied": true,
-  "failed_goals": [],
-  "verified": false,
-  "failed_checks": [
-   "upper_arm_length_fixed",
-   "no_unreachable_arm_frames",
-   "no_unreachable_leg_frames"
-  ]
- },
- {
-  "name": "beach-holiday-early-close",
+  "name": "beach-holiday-omission-and-stall",
   "task": "beach_holiday",
   "persona": "deliberate",
-  "seed": 13,
+  "seed": 43,
   "events": [
    {
-    "type": "premature_close",
-    "recover": true,
-    "channel": "error"
-   }
-  ],
-  "actions": 33,
-  "labels": {
-   "nominal": 30,
-   "error": 2,
-   "recovery": 1,
-   "question": 0,
-   "plan_change": 0
-  },
-  "sim_seconds": 372.0,
-  "status": "complete",
-  "goals_satisfied": true,
-  "failed_goals": [],
-  "verified": false,
-  "failed_checks": [
-   "upper_arm_length_fixed",
-   "no_unreachable_arm_frames",
-   "no_unreachable_leg_frames"
-  ]
- },
- {
-  "name": "gym-weekend-repeat-and-wrong-room",
-  "task": "gym_weekend",
-  "persona": "steady",
-  "seed": 6,
-  "events": [
-   {
-    "type": "repetition",
+    "type": "omission",
     "recover": false,
     "channel": "error"
    },
    {
-    "type": "nav_deviation",
+    "type": "stall",
     "recover": true,
     "channel": "error"
    }
   ],
-  "actions": 29,
+  "actions": 22,
   "labels": {
-   "nominal": 25,
-   "error": 4,
+   "nominal": 21,
+   "error": 1,
    "recovery": 0,
    "question": 0,
    "plan_change": 0
   },
-  "sim_seconds": 319.2,
-  "status": "failed: case not upright: 53.7 deg",
+  "sim_seconds": 160.5,
+  "status": "failed: striped_shirts did not land at (-0.067, -0.161): [-0.043 -0.085  0.118]",
   "goals_satisfied": false,
   "failed_goals": [
+   "packed(tshirts)",
+   "packed(striped_shirts)",
+   "packed(towel_stack)",
+   "packed(camera)",
+   "lid_closed",
+   "zipped",
    "case_upright"
   ],
   "verified": false,
   "failed_checks": [
    "single_continuous_run",
-   "suitcase_upright_under_5deg",
-   "four_wheels_on_floor",
-   "contact_penetration_under_5mm"
+   "log_matches_physics_for_every_item",
+   "every_scheduled_event_fired",
+   "every_placement_landed_in_its_region",
+   "settled_last_2s_under_2mm"
+  ]
+ },
+ {
+  "name": "gym-weekend-repetition",
+  "task": "gym_weekend",
+  "persona": "steady",
+  "seed": 47,
+  "events": [
+   {
+    "type": "repetition",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 43,
+  "labels": {
+   "nominal": 41,
+   "error": 2,
+   "recovery": 0,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 253.0,
+  "status": "failed: lid not shut: 6.2 deg",
+  "goals_satisfied": false,
+  "failed_goals": [
+   "lid_closed",
+   "zipped",
+   "case_upright"
+  ],
+  "verified": false,
+  "failed_checks": [
+   "single_continuous_run",
+   "lid_open_over_150deg"
+  ]
+ },
+ {
+  "name": "beach-holiday-wrong-object-and-early-close",
+  "task": "beach_holiday",
+  "persona": "brisk",
+  "seed": 51,
+  "events": [
+   {
+    "type": "wrong_object",
+    "recover": false,
+    "channel": "error"
+   },
+   {
+    "type": "premature_close",
+    "recover": true,
+    "channel": "error"
+   }
+  ],
+  "actions": 9,
+  "labels": {
+   "nominal": 3,
+   "error": 6,
+   "recovery": 0,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 66.3,
+  "status": "failed: open_lid: lid only reached -0.0 deg",
+  "goals_satisfied": false,
+  "failed_goals": [
+   "packed(tshirts)",
+   "packed(striped_shirts)",
+   "packed(towel_stack)",
+   "packed(toiletry_bag)",
+   "packed(bottle)",
+   "packed(camera)",
+   "no_extra_items",
+   "zipped",
+   "case_upright"
+  ],
+  "verified": false,
+  "failed_checks": [
+   "single_continuous_run",
+   "zip_matches_log",
+   "upper_arm_length_fixed",
+   "no_unreachable_arm_frames",
+   "no_unreachable_leg_frames"
+  ]
+ },
+ {
+  "name": "work-trip-early-close-and-omission",
+  "task": "work_trip",
+  "persona": "steady",
+  "seed": 52,
+  "events": [
+   {
+    "type": "premature_close",
+    "recover": true,
+    "channel": "error"
+   },
+   {
+    "type": "omission",
+    "recover": false,
+    "channel": "error"
+   }
+  ],
+  "actions": 6,
+  "labels": {
+   "nominal": 4,
+   "error": 2,
+   "recovery": 0,
+   "question": 0,
+   "plan_change": 0
+  },
+  "sim_seconds": 55.1,
+  "status": "failed: open_lid: lid only reached -0.0 deg",
+  "goals_satisfied": false,
+  "failed_goals": [
+   "packed(striped_shirts)",
+   "packed(toiletry_bag)",
+   "packed(notebook)",
+   "packed(bottle)",
+   "zipped",
+   "case_upright",
+   "locked"
+  ],
+  "verified": false,
+  "failed_checks": [
+   "single_continuous_run",
+   "every_scheduled_event_fired",
+   "zip_matches_log",
+   "upper_arm_length_fixed",
+   "no_unreachable_arm_frames",
+   "no_unreachable_leg_frames"
   ]
  }
 ]

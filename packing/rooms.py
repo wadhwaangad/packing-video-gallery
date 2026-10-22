@@ -53,6 +53,16 @@ def nav_path(a, b):
     return path[::-1]
 
 
+def path_length(path):
+    return sum(float(np.hypot(*np.subtract(S.NAV_NODES[u], S.NAV_NODES[v]))) for u, v in zip(path, path[1:]))
+
+
+def entry_node(frm, room):
+    """Where enter(room) ends from walking-graph point `frm`: the point of that room
+    nearest along the walking graph (fixed by the room and where the person is)."""
+    return min((n for n in S.NAV_NODES if NODE_ROOM[n] == room), key=lambda n: (path_length(nav_path(frm, n)), n))
+
+
 def nearest_node(xy):
     return min(S.NAV_NODES, key=lambda n: np.hypot(*np.subtract(S.NAV_NODES[n], xy)))
 
@@ -103,3 +113,19 @@ def line_of_sight(eye, target, end_clear=0.30):
         if _hits(p, q, lo, hi, 0.0, t1):
             return False, name
     return True, ""
+
+
+def room_path(a, b):
+    """Rooms from a to b, each opening off the one before (breadth-first over adjacency)."""
+    prev, todo = {a: None}, [a]
+    while todo:
+        r = todo.pop(0)
+        if r == b:
+            break
+        for n in LABEL:
+            if n not in prev and adjacent(r, n):
+                prev[n] = r; todo.append(n)
+    out, r = [], b
+    while r is not None:
+        out.append(r); r = prev.get(r)
+    return out[::-1] if out[-1] == a else [a]

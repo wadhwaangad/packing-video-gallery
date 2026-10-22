@@ -1,0 +1,50 @@
+{
+ "goals": {
+  "packed(tshirts)": false,
+  "packed(striped_shirts)": false,
+  "packed(towel_stack)": false,
+  "packed(toiletry_bag)": false,
+  "packed(bottle)": false,
+  "packed(camera)": false,
+  "no_extra_items": false,
+  "bottle_upright": true,
+  "lid_closed": true,
+  "zipped": false,
+  "case_upright": false
+ },
+ "satisfied": false,
+ "pack": [
+  "tshirts",
+  "striped_shirts",
+  "towel_stack",
+  "toiletry_bag",
+  "bottle",
+  "camera"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "wrong_object",
+   "channel": "error",
+   "target": "toiletry_bag",
+   "other": "notebook",
+   "after": -1,
+   "recover": false,
+   "text": "",
+   "fired": true,
+   "description": "picks up a pile that is not on the list instead of the intended one"
+  },
+  {
+   "id": "e2",
+   "type": "premature_close",
+   "channel": "error",
+   "target": "",
+   "other": "",
+   "after": 1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "closes the lid before everything is packed"
+  }
+ ]
+}

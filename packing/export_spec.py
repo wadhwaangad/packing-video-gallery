@@ -15,6 +15,7 @@ import episodes as EP
 import actionspace as AS
 import instruct as I
 import rooms as R
+import discrete as D
 
 HERE = Path(__file__).resolve().parent
 
@@ -31,6 +32,8 @@ EXAMPLES = [
     ("grab the clothes", {}),
     ("close the lid halfway", {}),
     ("close the lid. zip it halfway", {}),
+    ("close the lid. zip it to 30%", {}),
+    ("pack the trousers. pack the sweatshirts next to the trousers", {}),
     ("close the lid. zip it. insert the zip pulls. set the lock to 3-7-2. press the lock button", {}),
     ("close the lid. turn the left dial to 7. turn the lock dial to 3", {}),
     ("set the trolley handle to 5", {}),
@@ -43,6 +46,7 @@ EXAMPLES = [
     ("press the lid", {}),
     ("dance around", {}),
     ("pack the bottle", {}),
+    ("press the handle button twice", {}),
     ("go to the kitchen. pick up the bottle on the counter", {}),
     ("go to the water bottle", {"strict": True}),
 ]
@@ -90,6 +94,7 @@ def main():
     sp = AS.spec()
     spec = dict(
         action_space=sp,
+        catalogue=dict(**D.spec(), legal_at_start=D.legal(P.PackSim("weekend_trip"))),
         examples=[run_example(t, **kw) for t, kw in EXAMPLES],
         families={k: v for k, v in S.FAMILIES.items()},
         items=[dict(name=it.name, label=it.label, family=it.family, station=it.station, room=it.room,

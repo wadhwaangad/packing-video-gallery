@@ -1,0 +1,50 @@
+{
+ "goals": {
+  "packed(trousers)": true,
+  "packed(striped_shirts)": false,
+  "packed(toiletry_bag)": false,
+  "packed(notebook)": false,
+  "packed(bottle)": false,
+  "no_extra_items": true,
+  "bottle_upright": true,
+  "heavy_on_floor(trousers)": true,
+  "lid_closed": true,
+  "zipped": false,
+  "case_upright": false,
+  "locked": false
+ },
+ "satisfied": false,
+ "pack": [
+  "trousers",
+  "striped_shirts",
+  "toiletry_bag",
+  "notebook",
+  "bottle"
+ ],
+ "schedule": [
+  {
+   "id": "e1",
+   "type": "premature_close",
+   "channel": "error",
+   "target": "",
+   "other": "",
+   "after": 1,
+   "recover": true,
+   "text": "",
+   "fired": true,
+   "description": "closes the lid before everything is packed"
+  },
+  {
+   "id": "e2",
+   "type": "omission",
+   "channel": "error",
+   "target": "notebook",
+   "other": "",
+   "after": -1,
+   "recover": false,
+   "text": "",
+   "fired": false,
+   "description": "skips an item on the list"
+  }
+ ]
+}

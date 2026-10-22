@@ -1,0 +1,37 @@
+{
+ "status": "failed: open_lid: lid only reached -0.0 deg",
+ "sim_seconds": 66.34699999995274,
+ "wall_seconds": 122.04946208000183,
+ "frames": 1658,
+ "actions": 9,
+ "goals_satisfied": false,
+ "diagnostics": {
+  "max_penetration": 0.0024468714869437277,
+  "worst_penetration": {
+   "t": 17.16,
+   "stage": "Grip leather notebook",
+   "geoms": [
+    "5distph_coll_2_l",
+    "coffee_table_coll"
+   ]
+  },
+  "max_joint_excursion": 0.004121380070234659,
+  "worst_joint": {
+   "t": 17.54,
+   "stage": "Grip leather notebook",
+   "joint": "mcp5_abduction_r"
+  },
+  "max_carriage_force": 0.0,
+  "max_finger_torque_ratio": 0.0,
+  "hand_item_welds": 0,
+  "max_penetration_soft": 0.00022460854272032815,
+  "worst_penetration_soft": {
+   "t": 49.86,
+   "stage": "Let the lid fall closed",
+   "geoms": [
+    "mattress",
+    "sweater_pile_geom"
+   ]
+  }
+ }
+}

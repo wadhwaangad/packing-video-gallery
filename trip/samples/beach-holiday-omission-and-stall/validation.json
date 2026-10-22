@@ -1,0 +1,442 @@
+{
+ "passed": false,
+ "checks": {
+  "single_continuous_run": false,
+  "strictly_increasing_time": true,
+  "gravity_enabled": true,
+  "no_equality_constraints_in_model": true,
+  "finite_poses": true,
+  "log_matches_physics_for_every_item": false,
+  "every_scheduled_event_fired": false,
+  "no_refused_actions": true,
+  "every_placement_landed_in_its_region": false,
+  "every_go_to_target_in_room_or_view": true,
+  "every_looked_for_item_in_sight": true,
+  "every_enter_ends_in_its_room": true,
+  "lid_open_over_150deg": true,
+  "zipper_engaged_only_with_lid_down": true,
+  "zip_matches_log": true,
+  "lock_dials_match_log": true,
+  "zip_pulls_match_log": true,
+  "trolley_stop_matches_log": true,
+  "strap_matches_log": true,
+  "suitcase_lying_on_its_back_under_10deg": true,
+  "settled_last_2s_under_2mm": false,
+  "suitcase_undisturbed_while_packing_under_15mm": true,
+  "suitcase_shift_while_closing_under_60mm": true,
+  "every_pick_lifted_by_contact": true,
+  "no_item_dropped": true,
+  "contact_penetration_under_5mm": true,
+  "soft_pile_penetration_under_10mm": true,
+  "joint_limits_within_2_5deg": 1.0,
+  "upper_arm_length_fixed": true,
+  "no_unreachable_arm_frames": true,
+  "no_unreachable_leg_frames": true,
+  "pelvis_clear_of_walls_and_furniture": 1.0
+ },
+ "detail": {
+  "items": {
+   "trousers": {
+    "local_m": [
+     0.2816,
+     1.9702,
+     0.0956
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "tshirts": {
+    "local_m": [
+     -0.1584,
+     1.9705,
+     0.1018
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "sweater_pile": {
+    "local_m": [
+     0.0596,
+     -0.8296,
+     0.07
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "striped_shirts": {
+    "local_m": [
+     -0.0434,
+     -0.0855,
+     0.1183
+    ],
+    "inside_physically": true,
+    "packed_in_log": false
+   },
+   "sweatshirts": {
+    "local_m": [
+     -1.6606,
+     -1.0984,
+     0.2632
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "towel": {
+    "local_m": [
+     0.1129,
+     3.8403,
+     0.4853
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "towel_stack": {
+    "local_m": [
+     0.9627,
+     3.4697,
+     0.4292
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "gym_clothes": {
+    "local_m": [
+     -0.2862,
+     5.0706,
+     0.464
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "toiletry_bag": {
+    "local_m": [
+     0.1656,
+     0.1176,
+     0.063
+    ],
+    "inside_physically": true,
+    "packed_in_log": true
+   },
+   "bottle": {
+    "local_m": [
+     -0.0056,
+     -0.2231,
+     0.0538
+    ],
+    "inside_physically": true,
+    "packed_in_log": true
+   },
+   "notebook": {
+    "local_m": [
+     -3.5196,
+     0.333,
+     -0.0976
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   },
+   "camera": {
+    "local_m": [
+     -3.5394,
+     0.773,
+     -0.0711
+    ],
+    "inside_physically": false,
+    "packed_in_log": false
+   }
+  },
+  "goals": {
+   "packed(tshirts)": false,
+   "packed(striped_shirts)": false,
+   "packed(towel_stack)": false,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(camera)": false,
+   "no_extra_items": true,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "lid_closed": false,
+   "zipped": false,
+   "case_upright": false
+  },
+  "goals_satisfied": false,
+  "refused_or_rejected": [],
+  "action_retries": [
+   {
+    "t": 154.994,
+    "action": "put the striped shirts in the wheel-end garment column",
+    "reason": "striped_shirts did not land at (-0.068, -0.155): [ 0.178 -0.157  0.612]"
+   },
+   {
+    "t": 154.994,
+    "action": "put the striped shirts in the wheel-end garment column",
+    "reason": "striped_shirts did not land at (-0.066, -0.158): [-0.053 -0.063  0.118]"
+   },
+   {
+    "t": 154.994,
+    "action": "put the striped shirts in the wheel-end garment column",
+    "reason": "striped_shirts did not land at (-0.068, -0.156): [-0.032 -0.083  0.118]"
+   }
+  ],
+  "go_to_reach": [
+   {
+    "action": "go to the toiletry bag",
+    "from_room": "hall",
+    "to_room": "bathroom",
+    "ok": true
+   },
+   {
+    "action": "go to the water bottle",
+    "from_room": "hall",
+    "to_room": "kitchen",
+    "ok": true
+   },
+   {
+    "action": "go to the striped shirts",
+    "from_room": "bedroom",
+    "to_room": "bedroom",
+    "ok": true
+   }
+  ],
+  "look_checks": [
+   {
+    "t": 16.545,
+    "stage": "Look for the toiletry bag",
+    "event": "look_check",
+    "target": "toiletry_bag",
+    "visible": true,
+    "blocked_by": "",
+    "distance_m": 3.0
+   },
+   {
+    "t": 73.556,
+    "stage": "Look for the water bottle",
+    "event": "look_check",
+    "target": "bottle",
+    "visible": true,
+    "blocked_by": "",
+    "distance_m": 2.0618927960918914
+   }
+  ],
+  "placements": [
+   {
+    "t": 54.687,
+    "stage": "Release toiletry bag",
+    "event": "placed_check",
+    "item": "toiletry_bag",
+    "target_m": [
+     0.17,
+     0.12
+    ],
+    "local_m": [
+     0.1655,
+     0.1176,
+     0.063
+    ],
+    "ok": true
+   },
+   {
+    "t": 118.543,
+    "stage": "Release the water bottle",
+    "event": "placed_check",
+    "item": "bottle",
+    "target_m": [
+     0.14,
+     -0.205
+    ],
+    "local_m": [
+     0.1467,
+     -0.1909,
+     0.133
+    ],
+    "ok": true
+   },
+   {
+    "t": 160.494,
+    "stage": "Release striped shirts",
+    "event": "placed_check",
+    "item": "striped_shirts",
+    "target_m": [
+     -0.067,
+     -0.161
+    ],
+    "local_m": [
+     -0.0434,
+     -0.0855,
+     0.1183
+    ],
+    "ok": false
+   }
+  ],
+  "final_lid_angle_deg": 180.00028664827607,
+  "final_hardware": {
+   "dials": [
+    0,
+    0,
+    0
+   ],
+   "trolley": -0.0003,
+   "trolley_level": 0,
+   "zip_closed": 0.0,
+   "tabs": {
+    "a": -0.0,
+    "b": -0.0
+   },
+   "docked": {
+    "a": false,
+    "b": false
+   },
+   "buckle": -0.0003,
+   "buckled": true
+  },
+  "final_suitcase_tilt_deg": 89.99997836218625,
+  "wheel_bottom_heights_m": [
+   0.5589993262290954,
+   0.5589977169036865,
+   0.6147994661331176,
+   0.6147989892959594
+  ],
+  "final_suitcase_lie_deg": 0.00022326466527183936,
+  "last_2s_drift_m": {
+   "suitcase": 0.0004000198224356723,
+   "trousers": 0.0,
+   "tshirts": 0.0,
+   "sweater_pile": 0.0,
+   "striped_shirts": 0.1125585522772608,
+   "sweatshirts": 0.0,
+   "towel": 0.0,
+   "towel_stack": 0.0,
+   "gym_clothes": 0.0,
+   "toiletry_bag": 0.00027777373488322473,
+   "bottle": 0.11121243712990017,
+   "notebook": 0.0,
+   "camera": 0.0
+  },
+  "suitcase_max_displacement_while_packing_m": 0.0004674474049908422,
+  "suitcase_max_displacement_lid_to_lift_m": 0.0,
+  "lift_checks": [
+   {
+    "t": 26.953,
+    "items": [
+     "toiletry_bag"
+    ],
+    "rise_m": {
+     "toiletry_bag": 0.09610787310655289
+    },
+    "normal_force_N": {
+     "r": 24.39,
+     "l": 24.03
+    }
+   },
+   {
+    "t": 84.924,
+    "items": [
+     "bottle"
+    ],
+    "rise_m": {
+     "bottle": 0.11344523549159935
+    },
+    "normal_force_N": {
+     "r": 241.33,
+     "l": 0.0
+    }
+   },
+   {
+    "t": 141.375,
+    "items": [
+     "striped_shirts"
+    ],
+    "rise_m": {
+     "striped_shirts": 0.09572356839738305
+    },
+    "normal_force_N": {
+     "r": 61.74,
+     "l": 61.74
+    }
+   }
+  ],
+  "drops": [],
+  "diagnostics": {
+   "max_penetration": 0.0026511482300301393,
+   "worst_penetration": {
+    "t": 139.26,
+    "stage": "Grip striped shirts",
+    "geoms": [
+     "5distph_coll_2_r",
+     "mattress"
+    ]
+   },
+   "max_joint_excursion": 0.008780373197709135,
+   "worst_joint": {
+    "t": 157.2,
+    "stage": "Lower striped shirts into place",
+    "joint": "mcp3_abduction_r"
+   },
+   "max_carriage_force": 0.0,
+   "max_finger_torque_ratio": 0.0,
+   "hand_item_welds": 0,
+   "max_penetration_soft": 0.004549042232718203,
+   "worst_penetration_soft": {
+    "t": 158.24,
+    "stage": "Release striped shirts",
+    "geoms": [
+     "distal_thumb_coll_l",
+     "striped_shirts_geom"
+    ]
+   }
+  },
+  "operator_audit": {
+   "frames": 4012,
+   "max_arm_length_error_m": 0.00019785456139498336,
+   "unreachable_arm_frames": 0,
+   "max_hip_to_ankle_m": 0.8561048632041308,
+   "leg_length_m": 0.86,
+   "unreachable_leg_frames": 0,
+   "upper_arm_m": 0.3,
+   "shoulder_width_m": 0.36,
+   "unreachable_arm_stages": [],
+   "unreachable_leg_stages": [],
+   "unreachable_arm_times": [],
+   "unreachable_leg_times": []
+  },
+  "min_pelvis_to_obstacle_m": {
+   "distance": 0.25969183216002245,
+   "obstacle": "wall_bed_north_s0",
+   "t": 103.24
+  }
+ },
+ "sim_seconds": 160.49400000040228,
+ "frames": 4012,
+ "actions": 22,
+ "frame_interval_s": 0.04,
+ "physics_hz": 1000,
+ "control_hz": 500,
+ "trajectory_sha256": "3036e6dc29a81bf4fbe66122433ed35036a59fb99d9cb47ff93cd92a3081d3cc",
+ "mujoco_version": "3.3.7",
+ "code_sha256": {
+  "scene.py": "f150892af3c1f35f4c75a09043cff705466caf05d8472109c80a37ccbc934232",
+  "hands.py": "e3056655b9b6fa4c097ad8224de63a52857c902e7062b0ad2b439594c78ffa76",
+  "build_model.py": "4fea4f2510ea2b36f92e93832897dc2c46bf054ba2496aa7daffe7f0c6bd1f29",
+  "runner.py": "dfbc0a27d6646e98256abf8fb56519dec0224b4c1528691fb432975888c8e78d",
+  "tasks.py": "bf4cab9b931fab17b68e4c0d9377845b56e74defabeba6e1fc6f5c4a6c87102e",
+  "skills_case.py": "35f5578a97913749bfe258f6a1ab1af5425ffe80b9bd0a1be438f713ee49c22f",
+  "skills_hw.py": "350d6b3076acbe329e9f7b87f3e794b6b7cd8eefba8321d1846f0787093f7daa",
+  "packsim.py": "4556581ce5ec582021fbdf2ea2216dc4cc5fcc0419ea365c0abe5af3495c9148",
+  "actionspace.py": "b99e124d4a1eb2466577addcff9477e8365b9e82d87e68a805559554e122daaf",
+  "layout.py": "900d10cc9ac4400b7820855fd805f9a93efecdad5e7e0b6a5832c636a80f1eb9",
+  "rooms.py": "0d6a63f786373fd516c1532250e6e8e8dfa83d84db87f775e3a3b1d59e439e22",
+  "instruct.py": "e766e56834c2821a246f3fdf1ea34d67daaf77243f79d40a8e8588fb81e41b99",
+  "episodes.py": "cc1fc251910f494548a7eb83b2a1485400dac07856f0de1cf2b8568e2d63dd96",
+  "executor.py": "d226dfa220b8c936dbdde4a632a3b7ca6045b942086133fafee5e10b695a3f58",
+  "generate.py": "837ad4dab073357699b2e59a90f4af0b2328adcf01a9990b928e253c5559463a",
+  "operator_model.py": "b938ffe12f1cffe9c2d6e8de10aca0a50177114c3310b53ba5efb9ff153033ce",
+  "export_poses.py": "0690a034e4b23e639913ed05cd88907b0151fe88813bd4a3ac89aef8c1ec68c5",
+  "render_blender.py": "5472c1c45b4765d91fbef6fa34d6efd0c20594f89d57ee959f28b3f7fd15674b",
+  "item_assets.py": "74eaa7cb2417bb8a57172cbdaae54fd44c7f187e2700910f64a4c3e634b79a0c",
+  "prepare_assets.py": "8eccdd65939c53ad029d254062d6c6696ad2c09f1530dfd3cd496b55dacdedd4",
+  "encode.py": "a151fcb6be7c1393c5cd19b333302cc765b370cd89a1e4597697be2dc584b7d8",
+  "verify.py": "aceae766410d2aea5ad97e445fc2bd5fccb20781f86f8be6946349438215f255",
+  "fetch_assets.py": "05dc9d2102a03c2fcbded61129f6148a4e55ab22836c5d14d479fabe51796492"
+ },
+ "scope": "Contact-only grasps (no hand-object welds) with anatomical MyoHand fingers on force-limited wrist carriages; kinematic body solved around the simulated forearms; idealised zipper (hinge range narrowed after a closure check). Goal predicates are evaluated on the symbolic log and cross-checked against final body poses. Not a measured sim-to-real validation."
+}

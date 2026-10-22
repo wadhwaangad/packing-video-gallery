@@ -1,0 +1,45 @@
+{
+ "task": "beach_holiday",
+ "seed": 51,
+ "attempt": 0,
+ "persona": "brisk",
+ "events": [
+  {
+   "id": "e1",
+   "type": "wrong_object",
+   "target": "toiletry_bag",
+   "other": "notebook",
+   "after": -1,
+   "recover": false,
+   "text": ""
+  },
+  {
+   "id": "e2",
+   "type": "premature_close",
+   "target": "",
+   "other": "",
+   "after": 1,
+   "recover": true,
+   "text": ""
+  }
+ ],
+ "dry_run": {
+  "valid": true,
+  "actions": 58,
+  "final_goals": {
+   "packed(tshirts)": true,
+   "packed(striped_shirts)": true,
+   "packed(towel_stack)": true,
+   "packed(toiletry_bag)": true,
+   "packed(bottle)": true,
+   "packed(camera)": true,
+   "no_extra_items": false,
+   "bottle_upright": true,
+   "heavy_on_floor(toiletry_bag)": true,
+   "nothing_on(camera)": true,
+   "lid_closed": true,
+   "zipped": true,
+   "case_upright": true
+  }
+ }
+}
