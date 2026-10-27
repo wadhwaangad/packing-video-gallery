@@ -11,7 +11,7 @@
 - **Physics.** Every action runs in MuJoCo with two anatomical MyoHand hands. Grasps are contact-only, with no welds or equality constraints, and the outcome is verified before it is committed.
 - **Photoreal renders.** The garment piles and the suitcase are photo-scanned BlenderKit models. The apartment uses Poly Haven assets. Frames are path-traced with Blender Cycles.
 
-**Try it:** [`play/`](play/index.html) runs the simulated user live in the browser (Pyodide, no GPU). You type as the assistant while they pack. It also holds replays of every event type, with and without an assistant, and rendered physics episodes with the map and conversation synced to the video.
+**Try it:** [`play/`](play/index.html) runs the simulated user live in the browser (Pyodide, no GPU). You type as the assistant while they pack. It also holds replays of every event type, with and without an assistant, and rendered physics episodes with the map and conversation synced to the video. [`play/pack.html`](play/pack.html) turns it round: you are the person packing, in a real-time 3D version of the rendered apartment, working through the task's checklist with the keyboard while an assistant slot (empty for now) is asked for guidance after every action.
 
 Source, pipeline and file formats: [`packing/README.md`](packing/README.md). The reference trajectory's records are in [`trip/`](trip/). [`hands/`](hands/index.html) holds the earlier hand-only lift and turn physics tests.
 

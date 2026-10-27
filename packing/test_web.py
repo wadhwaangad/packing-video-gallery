@@ -5,7 +5,11 @@
   * a Session stepped one action at a time gives the same episode as Harness.run;
   * handle() covers a played episode: guidance said between actions is heard, the
     oracle hint is what the oracle says, and the episode ends with a summary;
-  * the exported files (play/) are consistent with the code.
+  * the exported files (play/) are consistent with the code;
+  * the 3D page's game (game.py): every task can be played to the end through options()
+    and act() alone, options only offer what PackSim allows, mistakes show on the
+    checklist, the assistant slot is empty, and the record is plain JSON;
+  * the 3D page's files (play/pack/) are current and hold no BlenderKit scan.
 Usage: python packing/test_web.py
 """
 import json, shutil, subprocess, sys, tempfile
@@ -33,7 +37,9 @@ def check_closure():
             shutil.copy(HERE / m, Path(d) / m)
         code = ("import sys; sys.modules['mujoco'] = None; sys.modules['bpy'] = None; sys.path.insert(0, sys.argv[1]); "
                 "import web, json; s = web.handle(dict(cmd='new', args=dict(task='gym_weekend', seed=2))); "
-                "r = web.handle(dict(cmd='step', args={})); print(json.dumps(r)[:40])")
+                "r = web.handle(dict(cmd='step', args={})); "
+                "g = web.handle(dict(cmd='game_new', args=dict(task='work_trip'))); "
+                "o = web.handle(dict(cmd='game_options', args=dict(x=1.55, y=0.64, heading=1.57))); print(json.dumps(o)[:40])")
         p = subprocess.run([sys.executable, "-I", "-c", code, d], capture_output=True, text=True, cwd=d)
         check(p.returncode == 0, f"the {len(MODULES)} browser modules run alone" + ("" if p.returncode == 0 else ": " + p.stderr[-400:]))
 
@@ -86,10 +92,78 @@ def check_files():
     check(set(EP.SAMPLED) <= covered, "every sampled event type has a replay")
 
 
+def play(task, order=None, mistakes=()):
+    """Play `task` through game.Game like the page does: stand in front of each item, take
+    the first option that picks it up, stand at the case, take the first place option
+    (or the spot named in `mistakes`), then close, zip, lock, stand up."""
+    import math, packsim as P, scene as S, discrete as D, game
+    g = game.Game(task)
+    t = [0.0]
+    case = (1.55, 0.64, math.pi / 2)
+
+    def do(x, y, hd, prefix):
+        o = g.options(x, y, hd)
+        for q in o["options"]:             # everything offered is allowed from where it is done
+            probe = P.PackSim(task); probe.state = __import__("copy").deepcopy(g.sim.state)
+            probe.state.station, probe.state.facing = q["station"], q["facing"]
+            assert probe.check(D.action(q["id"]))[0], q
+        q = next((q for q in o["options"] if q["id"].startswith(prefix)), None)
+        assert q, (task, prefix, [q["id"] for q in o["options"]])
+        t[0] += 3
+        r = g.act(q["id"], q["station"], q["facing"], t[0], x, y)
+        assert r["ok"], r
+        return r
+    for n in order or P.TASKS[task].pack:
+        it = S.item(n); nx, ny = S.STATIONS[it.station].normal
+        do(it.xy[0] - nx * 0.6, it.xy[1] - ny * 0.6, math.atan2(ny, nx), f"pick_up({n})")
+        do(*case, dict(mistakes).get(n, f"place({n}"))
+    do(*case, "close_lid"); do(*case, "zip_to(100)")
+    if P.TASKS[task].lock:
+        do(*case, "dock_zip_pulls"); do(*case, "turn_dial(dial_1")
+    r = do(*case, "stand_up_case")
+    return g, r["state"]
+
+
+def check_game():
+    import random, packsim as P, usersim as U, game
+    for task in P.TASKS:
+        order = U.pack_order(task, random.Random(1))         # heavy first, as the user model packs
+        g, s = play(task, order)
+        rec = g.record()
+        check(s["done"] and rec["done"] and json.loads(json.dumps(rec)) == rec,
+              f"{task}: played to the end through options/act ({len(rec['actions'])} actions, plain JSON)")
+        check(not [c for c in g.conv if c["speaker"] == "assistant"], f"{task}: the empty assistant slot never spoke")
+    # a heavy item on top of the clothes breaks a rule on the checklist, and the game is not done
+    g, s = play("weekend_trip", ["tshirts", "trousers", "sweatshirts", "towel", "toiletry_bag", "bottle", "notebook", "camera"],
+                mistakes={"trousers": "place(trousers, wheel_end)"})
+    broken = [c["key"] for c in s["checklist"] if not c["done"]]
+    check(not s["done"] and broken == ["heavy_on_floor(trousers)"], f"a mistake stays on the checklist: {broken}")
+    r = g.user_says("is that everything?", 99.0)
+    check(r["said"] == [] and g.conv[-1]["speaker"] == "user", "speaking to the empty slot: heard, no reply")
+
+
+def check_pack_files():
+    from export_web import PACK, world3d
+    w = json.loads((PACK / "world3d.json").read_text())
+    check(w == json.loads(json.dumps(world3d())), "play/pack/world3d.json is up to date")
+    need = [f"assets/models/{a['asset']}/{a['asset']}.gltf" for a in w["assets"]] +            [f"assets/models/{it['asset']}/{it['asset']}.gltf" for it in w["items"].values() if it["asset"]] + [w["hdri"]] +            [f"assets/textures/{t}/{f}.jpg" for t in ("oak_wood_planks", "long_white_tiles", "cotton_jersey", "wool_boucle",
+                                                     "denim_fabric", "scuba_suede", "brown_leather", "painted_plaster_wall")
+            for f in ("diff", "nor_gl", "rough")]
+    missing = [f for f in need if not (PACK / f).exists()]
+    check(not missing, f"the 3D page's {len(need)} model, texture and sky files are there" + (f": missing {missing}" if missing else ""))
+    scans = [f.name for f in PACK.rglob("*") if f.suffix == ".blend" or "blenderkit" in str(f).lower()]
+    check(not scans, "no BlenderKit scan is published")
+    page = (SITE / "pack.js").read_text(encoding="utf-8")
+    check("@0.165.0" in (SITE / "pack.html").read_text(encoding="utf-8") and "game_act" in page and "game_options" in page,
+          "pack.html pins three.js and pack.js uses the game commands")
+
+
 if __name__ == "__main__":
     check_closure()
     check_stepping()
     check_handle()
     check_files()
+    check_game()
+    check_pack_files()
     print("ALL OK" if not fails else f"{len(fails)} FAILED")
     sys.exit(1 if fails else 0)

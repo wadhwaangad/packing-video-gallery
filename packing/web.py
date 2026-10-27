@@ -328,9 +328,13 @@ def handle(msg):
       say   {text}                                    -> the user's reply (no action runs)
       hint  {}                                        -> what the oracle would say now
       world {}                                        -> world()
+      game_* {...}                                    -> game.handle (play/pack.html)
     """
     global SESSION
     cmd, a = msg.get("cmd"), msg.get("args") or {}
+    if cmd and cmd.startswith("game_"):         # the 3D page, where you are the user (game.py)
+        import game
+        return clean(game.handle(cmd, a))
     if cmd == "world":
         return world()
     if cmd == "new":

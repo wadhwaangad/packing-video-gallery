@@ -260,6 +260,7 @@ def build_furniture():
         root, objs = import_gltf(a.asset)
         root.location = Vector(a.pos)
         root.rotation_euler = (0, 0, a.yaw)
+        root.scale = (a.scale,) * 3
 
 
 # ------------------------------------------------------------------ suitcase

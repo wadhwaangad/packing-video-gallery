@@ -1,1 +1,1 @@
-["scene.py","rooms.py","layout.py","actionspace.py","packsim.py","discrete.py","instruct.py","dialogue.py","usersim.py","episodes.py","web.py"]
+["scene.py","rooms.py","layout.py","actionspace.py","packsim.py","discrete.py","instruct.py","dialogue.py","usersim.py","episodes.py","web.py","assistant_template.py","game.py"]

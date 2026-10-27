@@ -1,0 +1,133 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pack It Yourself</title><meta name="description" content="Be the person packing: walk the apartment with the keyboard, pick things up, pack the case and close it, following the task's checklist, in a 3D scene built from the same numbers as the Blender renders and run by the same simulator."><style>
+:root{color-scheme:dark;--bg:#12141a;--panel:rgba(20,23,30,.86);--solid:#1a1e26;--ink:#eef1f6;--muted:#aeb6c4;--faint:#7d8696;--accent:#9fd0ff;--ok:#8fe3a2;--bad:#ff8f8f;--warn:#ffc27a;--line:#2f3542}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+#view{position:fixed;inset:0;display:block;width:100vw;height:100vh;outline:none;touch-action:none}
+a{color:var(--accent)}button,select,input{font:inherit;color:var(--ink)}
+button{border:1px solid #46505f;background:rgba(11,13,18,.6);border-radius:999px;padding:4px 12px;cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:#0b1220;border-color:var(--accent);font-weight:600}
+button.on{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+select,input[type=text]{background:#0b0d12;border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#top{position:fixed;left:12px;right:12px;top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;z-index:5}
+.wordmark{font-weight:700;letter-spacing:.12em;font-size:13px;color:var(--ink);text-decoration:none;margin-right:6px}
+#top .grow{flex:1}
+#clock{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600;min-width:52px;text-align:right}
+#where{color:var(--muted);font-size:13px}
+#checklist{position:fixed;left:12px;top:66px;width:270px;max-height:calc(100vh - 210px);overflow-y:auto;padding:10px 12px;z-index:4}
+h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:600}
+#taskTitle{font-size:16px;font-weight:600;margin:0 0 2px}
+#taskNote{font-size:12px;color:var(--faint);margin:0 0 8px}
+.cl{list-style:none;margin:0 0 6px;padding:0}.cl li{display:flex;gap:7px;align-items:flex-start;padding:2px 0;font-size:13px}
+.cl li .box{flex:0 0 15px;height:15px;margin-top:2px;border:1.5px solid #59657a;border-radius:4px;display:grid;place-items:center;font-size:11px;line-height:1}
+.cl li.done{color:var(--faint)}.cl li.done .box{background:var(--ok);border-color:var(--ok);color:#0b1220}
+.cl li.done .t{text-decoration:line-through}
+.cl li.broken{color:var(--bad)}.cl li.broken .box{border-color:var(--bad)}
+.cl.rules li{font-size:12px}
+#asst{position:fixed;right:12px;top:66px;width:300px;display:flex;flex-direction:column;max-height:calc(100vh - 210px);padding:10px 12px;z-index:4}
+#asst .slot{font-size:12px;color:var(--faint);margin:0 0 8px}
+#conv{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:60px;margin-bottom:8px}
+.msg{max-width:92%;padding:6px 10px;border-radius:11px;font-size:13px;overflow-wrap:anywhere}
+.msg.user{background:#262c37;align-self:flex-end;border-bottom-right-radius:3px}
+.msg.assistant{background:#18324a;align-self:flex-start;border-bottom-left-radius:3px}
+.msg .who{display:block;font-size:10px;color:var(--faint)}
+.empty{font-size:12px;color:var(--faint);font-style:italic}
+#sayForm{display:flex;gap:6px}#sayForm input{flex:1;min-width:0}
+#prompt{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);min-width:320px;max-width:min(640px,calc(100vw - 24px));padding:8px 12px;z-index:5}
+#prompt .head{font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
+.opt{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;border-radius:8px;background:transparent;padding:3px 6px;white-space:normal}
+.opt:hover:not(:disabled){background:rgba(159,208,255,.12)}
+.opt kbd{flex:0 0 auto;min-width:22px;text-align:center;font:600 12px/1 ui-monospace,monospace;border:1px solid #59657a;border-bottom-width:2px;border-radius:5px;padding:3px 5px;color:var(--ink);background:#0b0d12}
+.opt.primary kbd{background:var(--accent);color:#0b1220;border-color:var(--accent)}
+.opt.primary{font-weight:600}
+.blocked{font-size:12px;color:var(--warn);margin-top:3px}
+.hint{font-size:12px;color:var(--faint)}
+#tag{position:fixed;transform:translate(-50%,-100%);pointer-events:none;background:rgba(11,13,18,.85);border:1px solid var(--accent);color:var(--ink);font-size:12px;border-radius:7px;padding:2px 7px;z-index:3;white-space:nowrap}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);padding:7px 14px;z-index:6;font-size:13px;max-width:80vw}
+#toast.bad{border-color:var(--bad)}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(8,10,14,.55);z-index:8;padding:16px}
+.card{max-width:620px;width:100%;background:var(--solid);border:1px solid var(--line);border-radius:16px;padding:22px 24px;max-height:calc(100vh - 32px);overflow-y:auto}
+.card h1{font-size:26px;letter-spacing:-.03em;margin:0 0 8px;line-height:1.15}
+.card p{color:var(--muted);margin:0 0 12px}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:13px;margin:6px 0 14px;align-items:center}
+.keys kbd{font:600 12px/1 ui-monospace,monospace;border:1px solid #59657a;border-bottom-width:2px;border-radius:5px;padding:3px 6px;background:#0b0d12;white-space:nowrap}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar{height:6px;border-radius:3px;background:#2a303b;overflow:hidden;margin:6px 0 4px}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.status{font-size:12px;color:var(--muted)}.status.err{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}.stats div{background:#0b0d12;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stats b{display:block;font-size:20px;color:var(--accent)}
+#pad{position:fixed;left:18px;bottom:18px;width:120px;height:120px;border-radius:50%;border:1px solid var(--line);background:rgba(11,13,18,.45);z-index:5;touch-action:none}
+#pad i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(159,208,255,.35);border:1px solid var(--accent)}
+@media(max-width:900px){#checklist{width:220px}#asst{width:240px}}
+.foldBtn{all:unset;cursor:default;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit}.foldBtn span{color:var(--accent);text-transform:none;letter-spacing:0;margin-left:4px}
+@media(max-width:680px){.foldBtn{cursor:pointer}.panel.fold:not(.open)>:not(h2:first-child){display:none!important}.panel.fold:not(.open) h2{margin:0}.panel.fold:not(.open){padding:6px 10px}#checklist{top:auto;bottom:176px;left:8px;width:min(46vw,220px);max-height:42vh}#asst{top:auto;bottom:176px;right:8px;width:min(46vw,240px);max-height:42vh}#asst code{overflow-wrap:anywhere}#prompt{bottom:8px;min-width:0;width:calc(100vw - 150px);left:auto;right:8px;transform:none}#top{left:8px;right:8px}#where{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
+</head><body>
+<canvas id="view" tabindex="0" aria-label="3D view of the apartment. Use the keyboard to walk and act."></canvas>
+
+<div id="top" class="panel">
+<a class="wordmark" href="../index.html">PACKING / SIMULATOR</a>
+<label class="status">Task <select id="task" aria-label="Task"></select></label>
+<button id="restart" title="Start this task again">Restart</button>
+<span id="where"></span>
+<span class="grow"></span>
+<span id="clock" aria-label="Time">0:00</span>
+<button id="camBtn" title="Camera (C)">Camera: follow</button>
+<button id="qualBtn" title="Image quality">Quality: high</button>
+<button id="helpBtn" title="Keys (H)">Keys</button>
+<a href="index.html" style="font-size:13px">Playground</a>
+</div>
+
+<aside id="checklist" class="panel fold" aria-label="Checklist">
+<h2><button class="foldBtn" aria-expanded="false">Checklist <span id="clCount"></span></button></h2>
+<p id="taskTitle"></p><p id="taskNote"></p>
+<ul class="cl" id="todo"></ul>
+<h2 id="rulesHead" hidden style="margin-top:8px">Packing rules</h2>
+<ul class="cl rules" id="rules"></ul>
+<div id="progress" class="status"></div>
+</aside>
+
+<aside id="asst" class="panel fold" aria-label="Assistant">
+<h2><button class="foldBtn" aria-expanded="false">Assistant <span id="asCount"></span></button></h2>
+<p class="slot">Guidance slot: <code>assistant_template.respond(view)</code>, asked after every action and whenever you speak. It is empty for now, so it stays quiet.</p>
+<div id="conv" aria-live="polite"><div class="empty">No messages yet.</div></div>
+<form id="sayForm" autocomplete="off"><input id="say" type="text" placeholder="Say something (T)" aria-label="Say something to the assistant"><button type="submit">Say</button></form>
+</aside>
+
+<div id="prompt" class="panel" aria-live="polite"><div class="head"><span id="promptHead">Loading…</span><span class="hint" id="promptHint"></span></div><div id="opts"></div><div id="blocked"></div></div>
+<div id="tag" hidden></div>
+<div id="toast" class="panel" hidden role="status"></div>
+<div id="pad" hidden><i></i></div>
+
+<div id="intro" class="overlay">
+<div class="card">
+<h1>Pack it yourself.</h1>
+<p>You are the person packing. Walk around the apartment, pick up everything on the checklist, pack it in the open case on the bed, then close the lid, zip it and stand the case up. The rules are the simulator's: heavy things go on the case floor, the bottle stands upright, nothing goes on the camera. Every action you take goes through the same simulator as the generated episodes, and the run can be downloaded in the same action format.</p>
+<div class="keys">
+<kbd>W A S D</kbd><span>walk (arrow keys too); hold <kbd>Shift</kbd> to hurry</span>
+<kbd>E</kbd> / <kbd>Space</kbd><span>do the highlighted action (pick up, pack, close the lid…)</span>
+<kbd>1</kbd>–<kbd>9</kbd><span>choose another action from the list at the bottom, such as a different spot in the case</span>
+<kbd>Q</kbd> <kbd>R</kbd><span>turn the camera (or drag with the mouse; scroll to zoom)</span>
+<kbd>C</kbd><span>camera: follow, room cameras like the rendered videos, or first person</span>
+<kbd>T</kbd><span>say something to the assistant</span>
+<kbd>H</kbd><span>this help</span>
+</div>
+<div class="bar"><i id="loadBar"></i></div>
+<div class="status" id="loadStatus">Loading the apartment…</div>
+<div class="row" style="margin-top:12px"><button class="primary" id="go" disabled>Loading…</button><span class="status">The simulator (Python, in your browser) takes about a minute the first time. You can walk around while it loads.</span></div>
+</div>
+</div>
+
+<div id="finish" class="overlay" hidden>
+<div class="card">
+<h1 id="finTitle">Packed.</h1>
+<p id="finText"></p>
+<div class="stats"><div><b id="finTime">0:00</b>time</div><div><b id="finActs">0</b>actions</div><div><b id="finGoals">0/0</b>checklist</div></div>
+<div class="row"><button class="primary" id="again">Play again</button><button id="download">Download the episode (JSON)</button><button id="keepLooking">Keep looking around</button></div>
+</div>
+</div>
+
+<script type="module" src="pack.js"></script>
+</body></html>

@@ -26,6 +26,7 @@ python packing/test_grounding.py      # instructions -> actions / rejections, sy
 python packing/test_usersim.py        # guidance -> acts, every event type, consequences, legality
 python packing/export_web.py          # the browser playground's data: play/world.json, replays of every event type
 python packing/export_web.py --physics RUN NAME --assistant oracle --title "..."   # a rendered run -> play/rendered/NAME
+python packing/export_web.py --pack3d                # the 3D page's world and CC0 assets -> play/pack/
 python packing/test_web.py            # the playground's Python side: module closure, stepping == Harness.run, files
 ```
 
@@ -45,6 +46,7 @@ Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pil
 | `dialogue.py` | conversation | Closed speech-act catalogue for the user, guidance acts the user understands, `interpret()` from assistant text |
 | `episodes.py` | cases | Case sampling and validation (silent dry run, oracle check, separated windows), persona variants |
 | `web.py`, `export_web.py` | playground | A steppable session (`Harness.begin / tick / end`), frames (time span, walking path, state, turns, private labels) for the browser, `handle()` for the Pyodide worker, replays and physics runs exported for `play/` |
+| `game.py`, `assistant_template.py` | you as the user | The 3D page's simulator side: what can be done from where you stand, running it through `PackSim`, the checklist, the assistant slot (`respond(view)`, empty), the played record |
 | `executor.py` | grounding | Runs each accepted action with the physical skills, measures the outcome, commits it; per-action snapshots allow rewinding |
 | `runner.py`, `hands.py`, `build_model.py` | physics | MuJoCo model (no equality constraints): the hands, the case with its hardware, the items, the optional cloth; latches and detents (`_mechanisms`), 25 Hz recording with hardware readings |
 | `tasks.py`, `skills_case.py`, `skills_hw.py` | skills | Squeeze pick / carry / place, bottle grip, lid close and open, stand-up; fingertip and pinch skills for the zip sliders, pull tabs, dials, buttons, buckle, handle; rolling; folding |
@@ -126,6 +128,19 @@ Limitations: guidance takes effect between actions, not mid-action (navigation i
 - One renderer draws all three: the top-down map (rooms, walls, furniture, items, the case with its lid, the person walking the graph's route), the inside of the case, the conversation, the goals, the action log and a timeline. *Show what the assistant can't see* adds the schedule with outcomes, step labels and commit points, how each message was read, and the user's beliefs.
 
 The map draws walking along the walking graph between stand points. Physics runs shortcut corners where the way is clear, so the map's route is close to the real one but not identical.
+
+## Pack it yourself (`play/pack.html`)
+
+You are the user. The page is a real-time 3D version of the apartment in the rendered videos (three.js, WebGL), and the simulator decides everything that is not walking:
+
+- **Scene.** `export_web.py --pack3d` writes `play/pack/world3d.json` from `scene.py` (rooms, walls, windows, furniture, items, stations, the case and its hardware, the overview cameras) and copies the CC0 Poly Haven models, textures and sky the renders use. The materials, sun, room panels, sky and AgX tone mapping follow `render_blender.py`. The scanned garment piles and the scanned case are BlenderKit assets that may not be redistributed, so the page builds stand-ins of the same sizes (folded layers in fabric scans; a hard-shell case with lining, zip, lock, wheels and handle). The mannequin is the renders' `Body`, posed by procedural walking and two-bone reaching.
+- **Playing.** Walk with WASD or the arrow keys (collision with walls and furniture). `game.options(x, y, heading)` lists the catalogue actions whose preconditions hold once you are at the station they are done from: pick up what is in front of you, put what you hold in any of the case's named spots, put it back, close the lid, zip, dock the pulls, turn a dial, stand the case up. `E` does the first, `1`–`9` the others. `game.act` records the walk as `go_to` and runs the action through `PackSim`, so the rules are the generator's (a heavy item on top of the clothes shows as a broken rule on the checklist; the lid will not close over a full case).
+- **Checklist.** The task's goal predicates (`PackSim.goals`) in words, ticked as they hold.
+- **Assistant slot.** After every action, and whenever you say something (`T`), `assistant_template.respond(view)` is called with what an assistant may see. It is empty, so it never speaks; filling it in makes the page give guidance.
+- **Record.** *Download the episode* gives the actions as catalogue ids with times, the conversation, the walked trajectory and the goals: the same action format as a generated episode.
+- **Cameras.** Follow (keeps clear of walls), the room cameras of the rendered videos, and first person. Quality drops from high (ambient occlusion, 4k shadows) to medium on its own if frames are slow.
+
+`test_web.py` plays every task through `game.options`/`game.act` and checks the page's files (and that no BlenderKit file is published). It has also been played in headless Chrome by key presses and by its test hooks (`window.PACK`).
 
 ## Checks (`validation.json`)
 

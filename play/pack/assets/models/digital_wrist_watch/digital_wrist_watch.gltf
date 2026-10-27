@@ -1,0 +1,505 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v5.1.20",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "digital_wrist_watch"
+    },
+    {
+      "mesh": 1,
+      "name": "digital_wrist_watch_clasp",
+      "translation": [
+        0.000011146068572998047,
+        0.0008079103427007794,
+        -0.08493387699127197
+      ]
+    },
+    {
+      "mesh": 2,
+      "name": "digital_wrist_watch_strap_a",
+      "translation": [
+        0,
+        0.00010982900857925415,
+        -0.017553195357322693
+      ]
+    },
+    {
+      "mesh": 3,
+      "name": "digital_wrist_watch_strap_b",
+      "translation": [
+        0,
+        0.00010983459651470184,
+        0.0175531804561615
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "digital_wrist_watch",
+      "normalTexture": {
+        "index": 0
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    },
+    {
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "name": "digital_wrist_watch_glass",
+      "normalTexture": {
+        "index": 3
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 4
+        },
+        "metallicRoughnessTexture": {
+          "index": 5
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Plane.008",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        },
+        {
+          "attributes": {
+            "POSITION": 4,
+            "NORMAL": 5,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1
+        }
+      ]
+    },
+    {
+      "name": "Plane.018",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Plane.021",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12,
+            "NORMAL": 13,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "Plane.022",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16,
+            "NORMAL": 17,
+            "TEXCOORD_0": 18
+          },
+          "indices": 19,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/jpeg",
+      "name": "digital_wrist_watch_nor_gl",
+      "uri": "textures/digital_wrist_watch_nor_gl_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "digital_wrist_watch_diff",
+      "uri": "textures/digital_wrist_watch_diff_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "digital_wrist_watch_metal-digital_wrist_watch_rough",
+      "uri": "textures/digital_wrist_watch_arm_1k.jpg"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "name": "digital_wrist_watch_diff-digital_wrist_watch_alpha",
+      "uri": "textures/digital_wrist_watch_diff_1k.jpg"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 1540,
+      "max": [
+        0.018244963139295578,
+        0.005887468345463276,
+        0.01891155354678631
+      ],
+      "min": [
+        -0.018250180408358574,
+        -0.0024576440919190645,
+        -0.01891155354678631
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1540,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1540,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 3984,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 48,
+      "max": [
+        0.014214757829904556,
+        0.005839367862790823,
+        0.013239762745797634
+      ],
+      "min": [
+        -0.014214757829904556,
+        0.005580404307693243,
+        -0.013239762745797634
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 48,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 48,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5123,
+      "count": 84,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 537,
+      "max": [
+        0.006451787892729044,
+        0.0005922290729358792,
+        0.0006488189101219177
+      ],
+      "min": [
+        -0.006451787892729044,
+        -0.0006706113927066326,
+        -0.0044672563672065735
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 537,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 537,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5123,
+      "count": 1422,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 3385,
+      "max": [
+        0.010341650806367397,
+        0.0013879899634048343,
+        0.0013917237520217896
+      ],
+      "min": [
+        -0.010341649875044823,
+        -0.0013404428027570248,
+        -0.06874874234199524
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 3385,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 3385,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5123,
+      "count": 9252,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 5910,
+      "max": [
+        0.010341650806367397,
+        0.0027253415901213884,
+        0.11028710007667542
+      ],
+      "min": [
+        -0.010341649875044823,
+        -0.0013404425699263811,
+        -0.0013917163014411926
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 5910,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 5910,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5123,
+      "count": 16428,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 18480,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 18480,
+      "byteOffset": 18480,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 12320,
+      "byteOffset": 36960,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 7968,
+      "byteOffset": 49280,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 576,
+      "byteOffset": 57248,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 576,
+      "byteOffset": 57824,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 384,
+      "byteOffset": 58400,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 168,
+      "byteOffset": 58784,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6444,
+      "byteOffset": 58952,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6444,
+      "byteOffset": 65396,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4296,
+      "byteOffset": 71840,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2844,
+      "byteOffset": 76136,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 40620,
+      "byteOffset": 78980,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 40620,
+      "byteOffset": 119600,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27080,
+      "byteOffset": 160220,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 18504,
+      "byteOffset": 187300,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 70920,
+      "byteOffset": 205804,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 70920,
+      "byteOffset": 276724,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 47280,
+      "byteOffset": 347644,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 32856,
+      "byteOffset": 394924,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 427780,
+      "uri": "digital_wrist_watch.bin"
+    }
+  ]
+}

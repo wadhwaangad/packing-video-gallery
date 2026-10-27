@@ -27,6 +27,7 @@ class Asset:
     pos: tuple             # floor point under the asset origin
     yaw: float
     collision: list = field(default_factory=list)   # world-frame Boxes
+    scale: float = 1.0     # uniform scale of the model (its collision boxes are already in metres)
 
 
 @dataclass
@@ -130,9 +131,10 @@ def _asset_box(name, center_xy, footprint, height, yaw=0.0):
 
 
 ASSETS = [
-    # Dresser against the east bedroom wall, front faces -x. Height .545, width .858, depth .442
+    # Dresser against the east bedroom wall, front faces -x. Height .545, width .858, depth .442:
+    # the model is 1.715 x 1.091 m, so it is drawn at half size to match (scale).
     Asset("dresser", "vintage_wooden_drawer_01", (3.53, 1.20, 0), -np.pi / 2,
-          [_asset_box("dresser", (3.53, 1.20), (0.858, 0.442), 0.545, -np.pi / 2)]),
+          [_asset_box("dresser", (3.53, 1.20), (0.858, 0.442), 0.545, -np.pi / 2)], scale=0.5),
     Asset("nightstand", "ClassicNightstand_01", (0.36, 2.95, 0), np.pi,
           [_asset_box("nightstand", (0.36, 2.95), (0.568, 0.424), 0.70)]),
     Asset("bed_plant", "potted_plant_02", (0.45, 0.42, 0), 0.0, []),
