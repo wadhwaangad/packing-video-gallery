@@ -86,15 +86,14 @@ def check_catalogue(seeds=range(6)):
     for task in sorted(E.TASKS):
         for seed in seeds:
             case = E.sample_case(task=task, seed=seed)
+            h = E.run(case)
             sim = PackSim(case["task"])
-            events = [E.Event(**{k: v for k, v in x.items() if k in E.Event.__dataclass_fields__}) for x in case["events"]]
-            user = E.User(case["task"], __import__("random").Random(case["seed"]), events)
-            while (nxt := user.next(sim.state)) is not None:
-                a = nxt[0]
+            for r in h.b.records:
+                a = __import__("actionspace").Action.from_dict(r["action"])
                 aid = D.to_id(a)
                 assert aid, a
-                assert aid.startswith(("ask(", "announce(")) or aid in D.legal(sim), (task, seed, aid)
-                assert sim.step(a)[0]
+                assert (aid in D.legal(sim)) == r["ok"], (task, seed, aid)     # refusals: an incomplete zip found out
+                sim.step(a)
                 n += 1
     print(f"catalogue: {len(D.CATALOGUE)} actions, all round-trip; {n} generated actions all listed by legal()")
 

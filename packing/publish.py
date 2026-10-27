@@ -21,7 +21,8 @@ def chapters(actions, schedule, speed):
         if a["event"] and a["event"] not in seen_events:
             seen_events.add(a["event"])
             e = desc[a["event"]]
-            kind = {"error": "Error", "question": "Question", "plan_change": "Plan change"}[e["channel"]]
+            kind = {"error": "Error", "question": "Question", "request": "Request",
+                    "plan_change": "Plan change"}[e["channel"]]
             out.append(dict(title=f"{kind}: {e['description']}", time=round(t / speed, 2), sim_time=t, event=a["event"],
                             channel=e["channel"]))
             continue
@@ -58,7 +59,9 @@ def publish_sample(run, site, name):
     row = dict(name=name, task=case["task"], persona=case["persona"], seed=case["seed"],
                events=[dict(type=e["type"], recover=e["recover"], channel=e["channel"]) for e in goals["schedule"]],
                actions=len(acts), labels={k: sum(a["label"] == k for a in acts) for k in
-                                          ("nominal", "error", "recovery", "question", "plan_change")},
+                                          ("nominal", "error", "recovery", "guided", "listen", "question", "request",
+                                           "plan_change")},
+               outcomes={e["id"]: e.get("outcome", "") for e in goals["schedule"]},
                sim_seconds=round(res["sim_seconds"], 1), status=res["status"], goals_satisfied=goals["satisfied"],
                failed_goals=[k for k, v in goals["goals"].items() if not v], verified=bool(val.get("passed")),
                failed_checks=[k for k, v in val.get("checks", {}).items() if not v])

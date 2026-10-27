@@ -38,7 +38,8 @@ def main():
                 continue
             ev = sched.get(rec["event"], {})
             text = {"error": "SCHEDULED ERROR", "recovery": "RECOVERY", "question": "QUESTION",
-                    "plan_change": "PLAN CHANGE"}[rec["label"]]
+                    "plan_change": "PLAN CHANGE", "guided": "FOLLOWING GUIDANCE", "listen": "LISTENING",
+                    "request": "REQUEST"}.get(rec["label"], rec["label"].upper())
             if ev.get("description") and rec["label"] == "error":
                 text += " · " + ev["description"]
             for i in range(rec["frame_start"], rec["frame_end"] + 1):

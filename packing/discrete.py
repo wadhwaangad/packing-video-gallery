@@ -55,15 +55,8 @@ EXCLUDED = {
 }
 WAIT_S = 2.0
 CLOTH = S.CLOTH["name"]
-
-
-def ask_text(item):
-    return f"Should the {S.item(item).label} go in too?"
-
-
-def announce_text(change, item):
-    return f"I'll take the {S.item(item).label} as well." if change == "add" else \
-        f"Actually, I'll leave the {S.item(item).label} at home."
+# Speech is not in this catalogue: it runs on the conversation channel, with its own
+# closed set of acts (dialogue.py).
 
 
 def _entries():
@@ -126,16 +119,21 @@ def _entries():
         add(f"roll_case({f})", "case", Action("roll", "suitcase", dict(to=f)), f"roll the standing case to {f.replace('_', ' ')}")
     add(f"fold({CLOTH})", "cloth", Action("fold", CLOTH, dict(style="half")), "fold the loose towel in half")
     add("wait", "other", Action("wait", "", dict(seconds=WAIT_S)), f"pause for {WAIT_S:g} s")
-    for n in ITEMS:
-        add(f"ask({n})", "other", Action("say", "", dict(text=ask_text(n))), f'ask "{ask_text(n)}"')
-    for c in ("add", "remove"):
-        for n in ITEMS:
-            add(f"announce({c}, {n})", "other", Action("say", "", dict(text=announce_text(c, n))),
-                f'say "{announce_text(c, n)}"')
     return E
 
 
-CATALOGUE = [dict(id=i, group=g, action=a, does=d) for i, g, a, d in _entries()]
+def effect(a):
+    """What an action changes: 'move' (only where the person is or looks), 'wait'
+    (nothing), or 'state' (the world). The first 'state' step of an error is where it
+    commits; before it, guidance can still prevent the error."""
+    if a.verb in ("go_to", "enter", "look_at"):
+        return "move"
+    if a.verb == "wait":
+        return "wait"
+    return "state"
+
+
+CATALOGUE = [dict(id=i, group=g, action=a, does=d, effect=effect(a)) for i, g, a, d in _entries()]
 BY_ID = {e["id"]: e for e in CATALOGUE}
 assert len(BY_ID) == len(CATALOGUE)
 
@@ -155,7 +153,11 @@ _BY_KEY = {_key(e["action"]): e["id"] for e in CATALOGUE}
 
 
 def to_id(a):
-    """The catalogue id of an Action, or None if it is not exactly a catalogue entry."""
+    """The catalogue id of an Action, or None if it is not exactly a catalogue entry.
+    A `say` of a known utterance maps to its speech-act id (dialogue.py)."""
+    if a.verb == "say":
+        import dialogue
+        return dialogue.user_act_of_text(a.get("text", ""))
     if a.verb == "place" and a.target == "bottle" and "orient" not in a.args:
         a = Action(a.verb, a.target, dict(a.args, orient="upright"))
     if a.verb == "open" and a.target == "main_zip":      # the zip goes to a position, either way
@@ -235,7 +237,7 @@ def canonical(a, st):
     if v == "press":
         return out("press_lock_button")
     if v == "say":
-        return no("speech is one of ask(item) / announce(add|remove, item)")
+        return no("speech is a conversation act (dialogue.USER_ACTS), not a physical action")
     if v == "lay_down":
         return no(f"laying the case down: {EXCLUDED['lay the case down']}")
     if v == "unfold":
@@ -256,8 +258,6 @@ def legal(sim):
             continue
         if a.verb == "fold" and a.target not in st.cloth:
             continue
-        if a.verb == "say":
-            continue                 # speech is always possible; listed separately
         if sim.check(action(e["id"]))[0]:
             ok.append(e["id"])
     return ok
@@ -268,6 +268,7 @@ def spec():
     for e in CATALOGUE:
         groups.setdefault(e["group"], []).append(e["id"])
     return dict(size=len(CATALOGUE), groups={g: len(v) for g, v in groups.items()},
+                effects={k: sum(e["effect"] == k for e in CATALOGUE) for k in ("move", "wait", "state")},
                 templates=_templates(), wait_seconds=WAIT_S, excluded=EXCLUDED)
 
 

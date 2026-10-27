@@ -73,8 +73,11 @@ def main(run):
     instructed = case.get("mode") == "instructions"
     detail["refused_or_rejected"] = [dict(text=a["action"]["text"], feedback=a["feedback"]) for a in actions if not a["ok"]]
     if not instructed:
-        # a sampled case is legal by construction; with instructions, refusals are outputs
-        checks["no_refused_actions"] = all(a["ok"] for a in actions)
+        # a sampled case is legal by construction, except where an error is meant to be found
+        # out by a refusal (an incomplete zip) or the user tried what an assistant told it;
+        # with instructions, refusals are outputs
+        checks["refusals_only_from_events_or_guidance"] = all(
+            a["ok"] or a.get("source") in ("event", "guidance") or a["label"] == "error" for a in actions)
     detail["action_retries"] = [dict(t=e["t"], action=e["action"]["text"], reason=e["reason"]) for e in events
                                 if e["event"] == "action_retry"]
     places = [e for e in events if e["event"] == "placed_check"]

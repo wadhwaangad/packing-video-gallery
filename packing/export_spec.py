@@ -16,6 +16,8 @@ import actionspace as AS
 import instruct as I
 import rooms as R
 import discrete as D
+import dialogue as DL
+import usersim as U
 
 HERE = Path(__file__).resolve().parent
 
@@ -117,8 +119,16 @@ def main():
                        headroom_mm=round(LO.HEADROOM * 1000), lid_margin_mm=round(LO.LID_MARGIN * 1000),
                        palm_strip_mm=round(LO.PALM_STRIP * 1000), bottle_strip_mm=round(LO.BOTTLE_STRIP * 1000)),
         tasks=[dict(name=t.name, title=t.title, pack=[S.item(n).label for n in t.pack]) for t in P.TASKS.values()],
-        events=[dict(type=k, channel=v[0], description=v[1]) for k, v in EP.EVENT_TYPES.items()],
+        events=[dict(type=k, channel=v[0], description=v[1], expected=U.EXPECTED[k],
+                     trigger=U.default_trigger(U.Event("e", k, target="<target>", after=2)),
+                     window_steps=U.WINDOW[v[0]] or "script", sampled=k in EP.SAMPLED)
+                for k, v in EP.EVENT_TYPES.items()],
         personas=[dict(name=k, **v) for k, v in EP.PERSONAS.items()],
+        dialogue=dict(user_acts={k: v for k, v in DL.USER_ACTS.items()}, user_act_ids=len(DL.catalogue()),
+                      guidance=DL.GUIDANCE, durations_s=U.DURATION,
+                      outcomes=["prevented", "corrected", "self_recovered", "unresolved", "answered_correct",
+                                "answered_wrong", "unanswered", "reminded", "reminded_late", "missed", "notified",
+                                "notified_early", "not_notified", "acknowledged", "unacknowledged"]),
         suitcase=dict(outer_cm=[round(x * 100, 1) for x in S.SUITCASE["outer"]],
                       depth_cm=round((S.SUITCASE["base_depth"] + S.SUITCASE["lid_depth"]) * 100, 1),
                       inner_height_cm=round(S.INNER_H * 100, 1), source=f"BlenderKit scan: {S.SUITCASE_SCAN['name']} "
