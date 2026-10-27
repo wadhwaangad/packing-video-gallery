@@ -153,6 +153,15 @@ def check_pack_files():
     check(not missing, f"the 3D page's {len(need)} model, texture and sky files are there" + (f": missing {missing}" if missing else ""))
     scans = [f.name for f in PACK.rglob("*") if f.suffix == ".blend" or "blenderkit" in str(f).lower()]
     check(not scans, "no BlenderKit scan is published")
+    # the baked light: one entry for every box pack.js gives an `lm` name, and nothing else
+    lm = json.loads((PACK / "lightmap.json").read_text())
+    want = {f"floor_{r}" for r in w["rooms"]} | {"ceiling", "basin", "backsplash", "pillow0", "pillow1"}
+    want |= {x["name"] for x in w["walls"]} | {x["name"] + "_base" for x in w["walls"] if x["c"][2] - x["s"][2] / 2 < 1e-6 and x["s"][2] > 0.5}
+    want |= {f"win{i}_frame{k}" for i in range(len(w["windows"])) for k in range(5)} | {f"win{i}_sill" for i in range(len(w["windows"]))}
+    want |= {f"door{i}_{p}" for i in range(2) for p in ("side0", "side1", "top", "leaf")} | {b["name"] for b in w["boxes"]}
+    check(set(lm["objects"]) == want and (PACK / "lightmap.png").exists(),
+          f"lightmap.png and lightmap.json cover the page's {len(want)} baked boxes"
+          + ("" if set(lm["objects"]) == want else f": extra {set(lm['objects']) - want}, missing {want - set(lm['objects'])}"))
     page = (SITE / "pack.js").read_text(encoding="utf-8")
     check("@0.165.0" in (SITE / "pack.html").read_text(encoding="utf-8") and "game_act" in page and "game_options" in page,
           "pack.html pins three.js and pack.js uses the game commands")

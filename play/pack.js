@@ -58,7 +58,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.AgXToneMapping;      // the renders use Blender's AgX view transform
-const TUNE = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => ['exp', 'env', 'area', 'sunI', 'hemi', 'ao'].includes(k)).map(([k, v]) => [k, Number(v)]));
+const TUNE = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => ['exp', 'env', 'area', 'sunI', 'hemi', 'ao', 'lm'].includes(k)).map(([k, v]) => [k, Number(v)]));
 renderer.toneMappingExposure = TUNE.exp ?? 0.56;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fb4c8);
@@ -176,13 +176,66 @@ function mesh(geo, mat, pos, yaw = 0, parent = scene, shadow = true) {
   parent.add(m);
   return m;
 }
-// A textured box at a world position: UVs in world metres, so neighbours line up.
-function tbox(s, mat, c, { bevel = 0, segs = 2, scale = 1, yaw = 0, parent = scene, shadow = true } = {}) {
-  const g = boxGeo(s, bevel, segs);
+// A textured box at a world position: UVs in world metres, so neighbours line up. `lm` names
+// its entry in the baked lightmap (bake_lightmaps.py), if there is one.
+function tbox(s, mat, c, { bevel = 0, segs = 2, scale = 1, yaw = 0, parent = scene, shadow = true, lm = null } = {}) {
+  let g = boxGeo(s, bevel, segs);
+  const e = lm && LM && LM.objects[lm];
+  if (e) g = lightmapUV(g.index ? g.toNonIndexed() : g, e);
   if (mat.map || mat.normalMap) projectUV(g, scale, yaw ? V() : V(c[0], c[1], c[2]));
-  return mesh(g, mat, c, yaw, parent, shadow);
+  return mesh(g, e ? baked(mat) : mat, c, yaw, parent, shadow);
 }
-const occluders = [];                                  // what the follow camera must not pass through
+
+// ------------------------------------------------------------------ the baked light (pack/lightmap.png)
+// Cycles traced the room's light once (bake_lightmaps.py): sky and ceiling panels, direct and
+// bounced, and the sun's bounce. Baked surfaces take all of that from the lightmap and only
+// the sun's direct light live (so moving things still shade them); everything else is lit live.
+let LM = null, lmTex = null;
+async function loadLightmap() {
+  if (new URLSearchParams(location.search).has('nobake')) return;
+  try {
+    const r = await fetch('pack/lightmap.json', { cache: 'no-cache' });
+    if (!r.ok) return;
+    LM = await r.json();
+    lmTex = TL.load('pack/lightmap.png');
+    lmTex.channel = 1; lmTex.colorSpace = THREE.SRGBColorSpace; lmTex.anisotropy = Math.min(4, maxAniso);
+  } catch { LM = null; }
+}
+// uv1: each side of the box has its own rectangle in the atlas; a triangle's side is the
+// axis its normal points along, as in the bake.
+function lightmapUV(geo, e) {
+  const p = geo.attributes.position, uv = new Float32Array(p.count * 2);
+  const a = V(), b = V(), c = V(), n = V();
+  const lo = e.min, ext = e.max.map((v, i) => Math.max(v - lo[i], 1e-6));
+  const AX = [[1, 2], [1, 2], [0, 2], [0, 2], [0, 1], [0, 1]];
+  for (let t = 0; t < p.count; t += 3) {
+    a.fromBufferAttribute(p, t); b.fromBufferAttribute(p, t + 1); c.fromBufferAttribute(p, t + 2);
+    n.subVectors(b, a).cross(c.clone().sub(a));
+    const abs = [Math.abs(n.x), Math.abs(n.y), Math.abs(n.z)], ax = abs.indexOf(Math.max(...abs));
+    const k = 2 * ax + (n.getComponent(ax) >= 0 ? 0 : 1), [ia, ib] = AX[k], [u0, v0, du, dv] = e.rects[k];
+    for (let j = 0; j < 3; j++) {
+      const q = [p.getX(t + j), p.getY(t + j), p.getZ(t + j)];
+      uv[2 * (t + j)] = u0 + clamp((q[ia] - lo[ia]) / ext[ia], 0, 1) * du;
+      uv[2 * (t + j) + 1] = v0 + clamp((q[ib] - lo[ib]) / ext[ib], 0, 1) * dv;
+    }
+  }
+  geo.setAttribute('uv1', new THREE.BufferAttribute(uv, 2));
+  return geo;
+}
+const bakedCache = new Map();
+function baked(mat) {
+  if (bakedCache.has(mat)) return bakedCache.get(mat);
+  const m = mat.clone();
+  m.lightMap = lmTex; m.lightMapIntensity = Math.PI * LM.scale * (TUNE.lm ?? 1);
+  // no live panels, hemisphere or sky irradiance here: the lightmap holds them (sky reflections stay)
+  m.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <lights_fragment_begin>', '#undef RE_Direct_RectArea\n#include <lights_fragment_begin>')
+      .replace('#include <lights_fragment_maps>', 'irradiance = vec3( 0.0 );\n#include <lights_fragment_maps>\niblIrradiance = vec3( 0.0 );');
+  };
+  bakedCache.set(mat, m);
+  return m;
+}
 const walkable = [];                                   // static obstacles (2D boxes) for walking
 
 // ------------------------------------------------------------------ the apartment (render_blender.build_apartment)
@@ -190,38 +243,35 @@ function buildApartment() {
   for (const [name, r] of Object.entries(W.rooms)) {
     const mat = r.floor === 'long_white_tiles' ? M.tiles : M.oak;
     const s = [r.x[1] - r.x[0], r.y[1] - r.y[0], 0.02];
-    tbox(s, mat, [(r.x[0] + r.x[1]) / 2, (r.y[0] + r.y[1]) / 2, -0.01], { scale: mat === M.tiles ? 1.2 : 2.0 });
+    tbox(s, mat, [(r.x[0] + r.x[1]) / 2, (r.y[0] + r.y[1]) / 2, -0.01], { scale: mat === M.tiles ? 1.2 : 2.0, lm: 'floor_' + name });
   }
   for (const w of W.walls) {
-    const m = tbox(w.s, M.plaster, w.c, { scale: 1.5 });
-    occluders.push(m);
+    tbox(w.s, M.plaster, w.c, { scale: 1.5, lm: w.name });
     const z0 = w.c[2] - w.s[2] / 2;
     if (z0 < 1e-6 && w.s[2] > 0.5) {
       const sx = w.s[0], sy = w.s[1];
-      tbox([sx + (sx < sy ? 0.024 : 0), sy + (sy < sx ? 0.024 : 0), 0.085], M.trim, [w.c[0], w.c[1], 0.0425], { bevel: 0.003 });
+      tbox([sx + (sx < sy ? 0.024 : 0), sy + (sy < sx ? 0.024 : 0), 0.085], M.trim, [w.c[0], w.c[1], 0.0425], { bevel: 0.003, lm: w.name + '_base' });
       walkable.push(rect2(w.c, w.s));
     }
   }
-  ceiling = tbox([7.2, 6.6, 0.05], M.ceiling, [3.5, 3.2, W.wall_h + 0.025], { shadow: false });
-  ceiling.visible = false;
-  for (const [wall, s0, s1, z0, z1] of W.windows) {
+  tbox([7.2, 6.6, 0.05], M.ceiling, [3.5, 3.2, W.wall_h + 0.025], { lm: 'ceiling' });   // shades the sun, as in the renders
+  W.windows.forEach(([wall, s0, s1, z0, z1], wi) => {
     const y = wall === 'wall_south' ? 0.0 : 6.4, cx = (s0 + s1) / 2;
     const g = tbox([s1 - s0, 0.01, z1 - z0], M.glass, [cx, y, (z0 + z1) / 2], { shadow: false });
     g.castShadow = false;
-    for (const [sz, c] of [[[s1 - s0 + 0.1, 0.12, 0.05], [cx, y, z0 - 0.02]], [[s1 - s0 + 0.1, 0.12, 0.05], [cx, y, z1 + 0.02]],
+    [[[s1 - s0 + 0.1, 0.12, 0.05], [cx, y, z0 - 0.02]], [[s1 - s0 + 0.1, 0.12, 0.05], [cx, y, z1 + 0.02]],
       [[0.05, 0.12, z1 - z0], [s0, y, (z0 + z1) / 2]], [[0.05, 0.12, z1 - z0], [s1, y, (z0 + z1) / 2]],
-      [[0.04, 0.10, z1 - z0], [cx, y, (z0 + z1) / 2]]]) tbox(sz, M.frame, c, { bevel: 0.004 });
-    tbox([s1 - s0 + 0.2, 0.2, 0.025], M.trim, [cx, y + (wall === 'wall_south' ? 0.08 : -0.08), z0 - 0.05], { bevel: 0.003 });
-  }
+      [[0.04, 0.10, z1 - z0], [cx, y, (z0 + z1) / 2]]].forEach(([sz, c], k) => tbox(sz, M.frame, c, { bevel: 0.004, lm: `win${wi}_frame${k}` }));
+    tbox([s1 - s0 + 0.2, 0.2, 0.025], M.trim, [cx, y + (wall === 'wall_south' ? 0.08 : -0.08), z0 - 0.05], { bevel: 0.003, lm: `win${wi}_sill` });
+  });
   mesh(new THREE.BoxGeometry(60, 60, 0.02), M.lawn, [3.5, 3.2, -3.0], 0, scene, false);
-  for (const [s0, s1, at] of [[2.75, 3.65, 3.4], [4.15, 4.95, 2.2]]) {
-    for (const s of [s0, s1]) tbox([0.07, 0.14, 2.08], M.casing, [s, at, 1.04], { bevel: 0.004 });
-    tbox([s1 - s0 + 0.14, 0.14, 0.07], M.casing, [(s0 + s1) / 2, at, 2.085], { bevel: 0.004 });
-  }
-  tbox([0.84, 0.04, 2.02], M.leaf, [2.75 - 0.43, 3.4 - 0.06, 1.01], { bevel: 0.004 });
-  tbox([0.76, 0.04, 2.02], M.leaf, [4.15 - 0.39, 2.2 - 0.06, 1.01], { bevel: 0.004 });
+  [[2.75, 3.65, 3.4], [4.15, 4.95, 2.2]].forEach(([s0, s1, at], di) => {
+    [s0, s1].forEach((s, j) => tbox([0.07, 0.14, 2.08], M.casing, [s, at, 1.04], { bevel: 0.004, lm: `door${di}_side${j}` }));
+    tbox([s1 - s0 + 0.14, 0.14, 0.07], M.casing, [(s0 + s1) / 2, at, 2.085], { bevel: 0.004, lm: `door${di}_top` });
+  });
+  tbox([0.84, 0.04, 2.02], M.leaf, [2.75 - 0.43, 3.4 - 0.06, 1.01], { bevel: 0.004, lm: 'door0_leaf' });
+  tbox([0.76, 0.04, 2.02], M.leaf, [4.15 - 0.39, 2.2 - 0.06, 1.01], { bevel: 0.004, lm: 'door1_leaf' });
 }
-let ceiling = null;
 const rect2 = (c, s, pad = 0) => ({ x0: c[0] - s[0] / 2 - pad, x1: c[0] + s[0] / 2 + pad, y0: c[1] - s[1] / 2 - pad, y1: c[1] + s[1] / 2 + pad });
 
 // ------------------------------------------------------------------ furniture (build_furniture)
@@ -234,26 +284,24 @@ function buildFurniture() {
     if (b.name.startsWith('kitchen_base')) mat = M.sage;
     if (b.name === 'kitchen_top') mat = M.lightOak;
     const bev = b.name === 'mattress' ? 0.04 : b.name === 'headboard' ? 0.03 : 0.006;
-    const m = tbox(b.s, mat, b.c, { bevel: bev, segs: b.name === 'mattress' ? 5 : 2, scale: texScale[b.name] || texScale[b.m] || 1, yaw: b.yaw });
+    tbox(b.s, mat, b.c, { bevel: bev, segs: b.name === 'mattress' ? 5 : 2, scale: texScale[b.name] || texScale[b.m] || 1, yaw: b.yaw, lm: b.name });
     if (b.solid) walkable.push(rect2(b.c, b.s));
-    if (b.s[2] > 1.0) occluders.push(m);
   }
-  for (const y of [1.35, 2.15]) tbox([0.36, 0.62, 0.14], M.linen, [0.30, y, W.bed.mattress_top + 0.10], { bevel: 0.06, segs: 5, scale: 0.35 });
-  tbox([0.42, 0.32, 0.02], M.ceramic, [4.95, 0.27, 0.872], { bevel: 0.008 });
+  [1.35, 2.15].forEach((y, j) => tbox([0.36, 0.62, 0.14], M.linen, [0.30, y, W.bed.mattress_top + 0.10], { bevel: 0.06, segs: 5, scale: 0.35, lm: `pillow${j}` }));
+  tbox([0.42, 0.32, 0.02], M.ceramic, [4.95, 0.27, 0.872], { bevel: 0.008, lm: 'basin' });
   tbox([0.03, 0.03, 0.16], M.chrome, [4.95, 0.09, 0.95], { bevel: 0.012 });
   tbox([0.82, 0.02, 0.72], M.chrome, [4.70, 0.06, 1.45], { bevel: 0.004 });
   // the mirror reflects the room (rendered only while it is in view)
   const mirror = new Reflector(new THREE.PlaneGeometry(0.78, 0.68), { textureWidth: 512, textureHeight: 448, color: 0xb8bcc0 });
   mirror.position.set(4.70, 0.0715, 1.45); mirror.rotation.x = -Math.PI / 2; mirror.rotation.order = 'ZXY';
   scene.add(mirror);
-  tbox([0.02, 2.04, 0.55], M.tiles, [6.94, 1.10, 1.17], { scale: 0.8 });
+  tbox([0.02, 2.04, 0.55], M.tiles, [6.94, 1.10, 1.17], { scale: 0.8, lm: 'backsplash' });
   for (const a of W.assets) {
     for (const b of a.collision) walkable.push(rect2(b.c, b.s));
     loadModel(a.asset).then(g => {
       const holder = new THREE.Group();
       holder.position.set(...a.pos); holder.rotation.z = a.yaw; holder.scale.setScalar(a.scale ?? 1);
       holder.add(g); scene.add(holder);
-      if (a.name === 'bookshelf') g.traverse(o => { if (o.isMesh) occluders.push(o); });
     });
   }
 }
@@ -611,6 +659,7 @@ class Person {
     const s = clamp(this.speed / 1.4, 0, 1.4);
     this.phase += dt * this.speed * 4.2;
     const bob = s > 0.05 ? 0.018 * s * Math.abs(Math.sin(this.phase)) : 0;
+    this.bob = bob;
     const c = this.crouch;
     const pelvis = V(this.x, this.y, 1.0 - 0.32 * c - bob);       // legs (0.45 + 0.43) nearly straight when standing
     const lean = 0.06 * s + 0.55 * c + this.lean;
@@ -722,72 +771,25 @@ function roomAt(x, y) {
   return 'living';
 }
 
-// ------------------------------------------------------------------ cameras
-const cam = { mode: 'follow', yaw: 0.9, pitch: 0.62, dist: 2.7, egoPitch: -0.25, room: 'bedroom', roomSince: 0, touched: -99 };
-const MODES = ['follow', 'room', 'first person'];
-const ray = new THREE.Raycaster();
+// ------------------------------------------------------------------ the camera: the person's eyes
+const cam = { pitch: -0.42, dir: null, spectate: null };   // spectate: [eye, target, fov], for tests
 function updateCamera(dt) {
   const P = person.pts;
-  const aspect = innerWidth / innerHeight;
-  if (cam.mode === 'room') {
-    const room = roomAt(person.x, person.y);
-    if (room !== cam.room && now() - cam.roomSince > 1.2) { cam.room = room; cam.roomSince = now(); }
-    const [eye, tgt, lens] = W.overview[cam.room];
-    const hfov = 2 * Math.atan(18 / lens);
-    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov / 2) / aspect));
-    camera.position.set(...eye); camera.up.set(0, 0, 1); camera.lookAt(...tgt);
-  } else if (cam.mode === 'first person') {
-    camera.fov = 75;
-    const e = P.eye || V(person.x, person.y, 1.6);
-    camera.position.copy(e);
-    const d = V(Math.cos(person.heading) * Math.cos(cam.egoPitch), Math.sin(person.heading) * Math.cos(cam.egoPitch), Math.sin(cam.egoPitch));
-    camera.up.set(0, 0, 1); camera.lookAt(e.clone().add(d));
-  } else {
-    camera.fov = 55;
-    const tgt = V(person.x, person.y, 1.25 - 0.25 * person.crouch);
-    const dir = V(Math.cos(cam.yaw) * Math.cos(cam.pitch), Math.sin(cam.yaw) * Math.cos(cam.pitch), Math.sin(cam.pitch));
-    // walking: settle in behind the person (unless the player has just turned the camera)
-    if (person.speed > 0.3 && now() - cam.touched > 2.5)
-      cam.yaw += angDiff(cam.yaw, person.heading + Math.PI) * Math.min(1, dt * 0.9);
-    const free = (yaw, pitch = cam.pitch) => {
-      const d = V(Math.cos(yaw) * Math.cos(pitch), Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch));
-      ray.set(tgt, d); ray.far = Math.min(cam.dist, (W.wall_h - 0.12 - tgt.z) / Math.max(Math.sin(pitch), 0.05));
-      const h = ray.intersectObjects(occluders, false)[0];
-      return h ? h.distance : ray.far;
-    };
-    // a wall in the way: look down from higher up first (there is no ceiling), then swing round
-    let want = cam.pitch;
-    for (let p = cam.pitch; p <= 1.3 && free(cam.yaw, p) < Math.min(1.5, cam.dist); p += 0.1) want = Math.min(1.3, p + 0.1);
-    cam.pitchNow = lerp(cam.pitchNow ?? cam.pitch, want, Math.min(1, dt * 4));
-    let dist = free(cam.yaw, cam.pitchNow);
-    // too close to a wall: swing round to where there is room (unless the player is turning it)
-    if (dist < Math.min(1.4, cam.dist) && !drag && !keys.has('q') && !keys.has('r')) {
-      let best = cam.yaw, bestD = dist;
-      for (const off of [0.35, -0.35, 0.7, -0.7, 1.05, -1.05, 1.4, -1.4, 1.9, -1.9, 2.5, -2.5, Math.PI]) {
-        const d = free(cam.yaw + off, cam.pitchNow) - Math.abs(off) * 0.15;
-        if (d > bestD + 0.2) { best = cam.yaw + off; bestD = d; }
-      }
-      cam.yaw += angDiff(cam.yaw, best) * Math.min(1, dt * 2.5);
-      dist = free(cam.yaw, cam.pitchNow);
-    }
-    dist = dist < cam.dist ? Math.max(0.3, dist - 0.12) : dist;
-    cam.close = dist < 0.6;
-    dir.set(Math.cos(cam.yaw) * Math.cos(cam.pitchNow), Math.sin(cam.yaw) * Math.cos(cam.pitchNow), Math.sin(cam.pitchNow));
-    const pos = tgt.clone().add(dir.multiplyScalar(dist));
-    camera.position.lerp(pos, cam.snap ? 1 : 1 - Math.exp(-dt * 12)); cam.snap = false;
-    camera.up.set(0, 0, 1); camera.lookAt(tgt);
-  }
-  camera.aspect = aspect; camera.updateProjectionMatrix();
-  person.setHeadVisible(cam.mode !== 'first person');
-  person.g.visible = !(cam.mode === 'follow' && cam.close);   // the camera squeezed in against the body
-  ceiling.visible = cam.mode === 'first person';
+  camera.fov = 72;
+  const e = P.eye || V(person.x, person.y, 1.6);
+  camera.position.copy(e);
+  let want = V(Math.cos(person.heading) * Math.cos(cam.pitch), Math.sin(person.heading) * Math.cos(cam.pitch), Math.sin(cam.pitch));
+  // during an action the eyes go to what the hands are doing, then come back
+  if (person.look) { const d = person.look.clone().sub(e); if (d.length() > 0.15) want = d.normalize(); }
+  cam.dir = cam.dir && !cam.snap ? cam.dir.lerp(want, 1 - Math.exp(-dt * (person.look || anim ? 6 : 30))).normalize() : want;
+  cam.snap = false;
+  camera.up.set(0, 0, 1); camera.lookAt(e.clone().add(cam.dir));
+  if (cam.spectate) { camera.position.set(...cam.spectate[0]); camera.lookAt(...cam.spectate[1]); camera.fov = cam.spectate[2] || 72; }
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  person.setHeadVisible(!!cam.spectate);
 }
 // direction of "forward" on the floor for the keys
-function camForward() {
-  if (cam.mode === 'first person') return V(Math.cos(person.heading), Math.sin(person.heading), 0);
-  const d = V(); camera.getWorldDirection(d); d.z = 0;
-  return d.lengthSq() < 1e-6 ? V(1, 0, 0) : d.normalize();
-}
+const camForward = () => V(Math.cos(person.heading), Math.sin(person.heading), 0);
 
 // ------------------------------------------------------------------ item and case placement in the world
 function itemHome(name) {
@@ -802,12 +804,12 @@ function itemInCase(name, place) {                     // place: x, y, z (bottom
   return { p, q };
 }
 function carryPose(name) {
-  const it = W.items[name], P = person.pts, { f, l } = person.frame();
+  const it = W.items[name], { f, l } = person.frame(), base = V(person.x, person.y, 0), dz = -0.28 * person.crouch - (person.bob || 0);
   if (it.hands === 1) {
-    const p = P.pelvis.clone().add(f.clone().multiplyScalar(0.30)).add(l.clone().multiplyScalar(-0.17)); p.z = 0.98 - 0.25 * person.crouch;
+    const p = base.add(f.clone().multiplyScalar(0.42)).add(l.clone().multiplyScalar(-0.14)); p.z = 1.27 + dz;
     return { p, q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), person.heading) };
   }
-  const p = P.pelvis.clone().add(f.clone().multiplyScalar(0.34)); p.z = 1.02 + it.size[2] * 0.15 - 0.28 * person.crouch;
+  const p = base.add(f.clone().multiplyScalar(0.44 + it.size[1] * 0.25)); p.z = 1.24 + it.size[2] * 0.5 + dz;
   return { p, q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), person.heading + Math.PI / 2) };
 }
 function setItemPose(name, pose) {
@@ -1074,7 +1076,7 @@ function pyStatus() {
 async function newGame() {
   finished = false; started = false; busy = false; anim = null;
   person.x = 1.55; person.y = 0.64; person.heading = Math.PI / 2; person.crouch = 0; person.handW.r = person.handW.l = 0;
-  cam.yaw = 0.9; cam.snap = true; path.length = 0;
+  cam.pitch = -0.42; cam.snap = true; path.length = 0;
   $('finish').hidden = true;
   if (!py.ready) { renderChecklist(null); return; }
   const r = await call('game_new', { task });
@@ -1092,7 +1094,7 @@ function finish() {
   $('finTime').textContent = fmtTime(finishT);
   call('game_record', {}).then(rec => { $('finActs').textContent = rec.actions.filter(a => !a.walked).length; });
   $('finGoals').textContent = `${cl.filter(c => c.done).length}/${cl.length}`;
-  $('finish').hidden = false;
+  $('finish').hidden = false; freeMouse();
   $('again').focus();
 }
 async function download() {
@@ -1117,27 +1119,26 @@ addEventListener('keydown', e => {
   if (e.repeat) return;
   if (k === 'e' || k === ' ' || k === 'enter') doOption(0);
   else if (/^[1-9]$/.test(k)) doOption(Number(k) === 1 ? 0 : Number(k) - 1);
-  else if (k === 'c') cycleCamera();
-  else if (k === 't') { e.preventDefault(); $('say').focus(); }
+  else if (k === 't') { e.preventDefault(); freeMouse(); $('say').focus(); }
   else if (k === 'h' || k === '?') showHelp();
 });
 addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
+// looking: a click hands the mouse to the view (Esc gives it back); dragging works too, and on touch
 let drag = null;
-canvas.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') { drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); } canvas.focus(); });
+const lookBy = (dx, dy, k) => { if (busy) return; person.heading -= dx * k; cam.pitch = clamp(cam.pitch - dy * k, -1.3, 1.0); };
+canvas.addEventListener('pointerdown', e => {
+  canvas.focus();
+  if (e.pointerType === 'mouse' && !document.pointerLockElement && $('intro').hidden && $('finish').hidden) { try { canvas.requestPointerLock(); } catch { } }
+  drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId);
+});
 canvas.addEventListener('pointermove', e => {
+  if (document.pointerLockElement === canvas) { lookBy(e.movementX, e.movementY, 0.0025); return; }
   if (!drag) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag = { x: e.clientX, y: e.clientY };
-  if (cam.mode === 'first person') { person.heading -= dx * 0.005; cam.egoPitch = clamp(cam.egoPitch - dy * 0.004, -1.2, 1.0); }
-  else { cam.yaw -= dx * 0.006; cam.pitch = clamp(cam.pitch + dy * 0.004, 0.12, 1.25); cam.touched = now(); }
+  lookBy(dx, dy, 0.005);
 });
 canvas.addEventListener('pointerup', () => { drag = null; });
-canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.001), 1.0, 5.5); }, { passive: false });
-function cycleCamera() {
-  cam.mode = MODES[(MODES.indexOf(cam.mode) + 1) % MODES.length]; cam.snap = true;
-  $('camBtn').textContent = 'Camera: ' + cam.mode;
-}
-$('camBtn').onclick = () => { cycleCamera(); canvas.focus(); };
 $('opts').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) { doOption(Number(b.dataset.i)); canvas.focus(); } });
 $('sayForm').addEventListener('submit', e => { e.preventDefault(); const v = $('say').value; $('say').value = ''; $('say').blur(); canvas.focus(); say(v); });
 $('restart').onclick = () => { newGame(); canvas.focus(); };
@@ -1151,7 +1152,8 @@ for (const b of document.querySelectorAll('.foldBtn')) b.onclick = () => {
   const p = b.closest('.panel'), open = !p.classList.contains('open');
   p.classList.toggle('open', open); b.setAttribute('aria-expanded', open);
 };
-function showHelp() { $('intro').hidden = false; $('go').textContent = 'Back to packing'; $('go').disabled = false; $('go').focus(); }
+function freeMouse() { if (document.pointerLockElement) document.exitPointerLock(); }
+function showHelp() { freeMouse(); $('intro').hidden = false; $('go').textContent = 'Back to packing'; $('go').disabled = false; $('go').focus(); }
 $('go').onclick = () => {
   $('intro').hidden = true; canvas.focus();
   if (py.ready && S && !started && !finished) { started = true; startT = now(); }
@@ -1205,27 +1207,24 @@ function tick() {
     const k = s => keys.has(s);
     let a = 0, b = 0;
     if (k('w') || k('arrowup')) a += 1; if (k('s') || k('arrowdown')) a -= 1;
-    if (cam.mode === 'first person') {
-      if (k('a')) b -= 1; if (k('d')) b += 1;
-      if (k('arrowleft') || k('q')) person.heading += dt * 2.2; if (k('arrowright') || k('r')) person.heading -= dt * 2.2;
-    } else {
-      if (k('a') || k('arrowleft')) b -= 1; if (k('d') || k('arrowright')) b += 1;
-      if (k('q')) { cam.yaw += dt * 1.8; cam.touched = now(); } if (k('r')) { cam.yaw -= dt * 1.8; cam.touched = now(); }
-    }
+    if (k('a')) b -= 1; if (k('d')) b += 1;
+    if (k('arrowleft') || k('q')) person.heading += dt * 2.2; if (k('arrowright') || k('r')) person.heading -= dt * 2.2;
     if (pad.on) { a -= pad.y; b += pad.x; }
     const v = fw.clone().multiplyScalar(a).add(rt.multiplyScalar(b));
     if (v.lengthSq() > 1e-4) {
       if (v.length() > 1) v.normalize();
       const sp = keys.has('shift') ? 2.1 : 1.3;
       mx = v.x * sp; my = v.y * sp;
-      if (cam.mode !== 'first person') person.heading += angDiff(person.heading, Math.atan2(v.y, v.x)) * Math.min(1, dt * 10);
       if (S && !started && py.ready && $('intro').hidden) { started = true; startT = now(); }
     }
   }
   const sp = Math.hypot(mx, my);
   if (sp > 0) { const [nx, ny] = collide(person.x + mx * dt, person.y + my * dt); person.speed = Math.hypot(nx - person.x, ny - person.y) / Math.max(dt, 1e-4); person.x = nx; person.y = ny; }
   else person.speed *= Math.exp(-dt * 12);
-  if (!busy) { person.handW.r *= Math.exp(-dt * 10); person.handW.l *= Math.exp(-dt * 10); }
+  if (!busy && S && S.holding) {
+    const gp = graspPoints(S.holding, carryPose(S.holding));
+    person.hand.r = gp.r; person.hand.l = gp.l; person.handW.r = gp.r ? 1 : 0; person.handW.l = gp.l ? 1 : 0;
+  } else if (!busy) { person.handW.r *= Math.exp(-dt * 10); person.handW.l *= Math.exp(-dt * 10); }
   // the action being animated
   if (anim) {
     anim.t += Math.min(real, 0.25); const k = Math.min(1, anim.t / anim.T); anim.step(k);   // real time, even on slow frames
@@ -1262,6 +1261,7 @@ async function main() {
   if (want && W.tasks[want]) task = want;
   $('task').value = task;
   makeMaterials();
+  await loadLightmap();
   buildLights();
   buildApartment();
   buildFurniture();

@@ -35,7 +35,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .msg .who{display:block;font-size:10px;color:var(--faint)}
 .empty{font-size:12px;color:var(--faint);font-style:italic}
 #sayForm{display:flex;gap:6px}#sayForm input{flex:1;min-width:0}
-#prompt{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);min-width:320px;max-width:min(640px,calc(100vw - 24px));padding:8px 12px;z-index:5}
+#prompt{position:fixed;right:14px;bottom:14px;min-width:300px;max-width:min(440px,calc(100vw - 24px));padding:8px 12px;z-index:5}
 #prompt .head{font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
 .opt{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;border-radius:8px;background:transparent;padding:3px 6px;white-space:normal}
 .opt:hover:not(:disabled){background:rgba(159,208,255,.12)}
@@ -74,7 +74,6 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 <span id="where"></span>
 <span class="grow"></span>
 <span id="clock" aria-label="Time">0:00</span>
-<button id="camBtn" title="Camera (C)">Camera: follow</button>
 <button id="qualBtn" title="Image quality">Quality: high</button>
 <button id="helpBtn" title="Keys (H)">Keys</button>
 <a href="index.html" style="font-size:13px">Playground</a>
@@ -106,11 +105,11 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 <h1>Pack it yourself.</h1>
 <p>You are the person packing. Walk around the apartment, pick up everything on the checklist, pack it in the open case on the bed, then close the lid, zip it and stand the case up. The rules are the simulator's: heavy things go on the case floor, the bottle stands upright, nothing goes on the camera. Every action you take goes through the same simulator as the generated episodes, and the run can be downloaded in the same action format.</p>
 <div class="keys">
-<kbd>W A S D</kbd><span>walk (arrow keys too); hold <kbd>Shift</kbd> to hurry</span>
+<kbd>W A S D</kbd><span>walk and step sideways (arrow keys too); hold <kbd>Shift</kbd> to hurry</span>
+<kbd>Mouse</kbd><span>look around: click the view to steer with the mouse (<kbd>Esc</kbd> frees it), or drag</span>
 <kbd>E</kbd> / <kbd>Space</kbd><span>do the highlighted action (pick up, pack, close the lid…)</span>
 <kbd>1</kbd>–<kbd>9</kbd><span>choose another action from the list at the bottom, such as a different spot in the case</span>
-<kbd>Q</kbd> <kbd>R</kbd><span>turn the camera (or drag with the mouse; scroll to zoom)</span>
-<kbd>C</kbd><span>camera: follow, room cameras like the rendered videos, or first person</span>
+<kbd>Q</kbd> <kbd>R</kbd><span>turn left and right (or <kbd>←</kbd> <kbd>→</kbd>)</span>
 <kbd>T</kbd><span>say something to the assistant</span>
 <kbd>H</kbd><span>this help</span>
 </div>
