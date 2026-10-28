@@ -190,6 +190,11 @@ def export_3d():
     (out / "LICENSE.txt").write_text("These files are Poly Haven assets (https://polyhaven.com), CC0 1.0: "
                                      "https://polyhaven.com/license\n")
     dump(PACK / "world3d.json", world3d())
+    try:                                               # the live physics (MuJoCo WebAssembly); needs mujoco (.venv)
+        import build_model
+        (PACK / "physics.xml").write_text(build_model.build_web())
+    except ImportError as e:
+        print("physics.xml not written:", e)
     dump(SITE / "modules.json", MODULES)
     print(f"3D page: {n} asset files, world3d.json")
 

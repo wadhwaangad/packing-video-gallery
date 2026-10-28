@@ -140,6 +140,19 @@ def check_game():
     check(not s["done"] and broken == ["heavy_on_floor(trousers)"], f"a mistake stays on the checklist: {broken}")
     r = g.user_says("is that everything?", 99.0)
     check(r["said"] == [] and g.conv[-1]["speaker"] == "user", "speaking to the empty slot: heard, no reply")
+    # only what is in front, never through a wall; the faced one first
+    import math, scene as S
+    g = game.Game("weekend_trip")
+    ids = lambda x, y, h: [q["id"] for q in g.options(x, y, h)["options"]]
+    tx, ty = S.item("trousers").xy
+    check("pick_up(trousers)" in ids(tx - 0.6, ty, 0.0) and "pick_up(trousers)" not in ids(tx - 0.6, ty, math.pi),
+          "an item is offered when faced, not with your back to it")
+    bx, by = S.item("towel").xy                                     # bathroom shelf, the bedroom wall at x = 3.8 between
+    check(not [i for i in ids(3.6, by, 0.0) if "towel" in i], "nothing is offered through a wall")
+    # the checklist ticks in order: closing an empty case is not "Close the lid"
+    r = g.act("close_lid", "bed_foot", "", 1.0)
+    lid = next(c for c in r["state"]["checklist"] if c["key"] == "lid_closed")
+    check(r["ok"] and not lid["done"], "closing the empty case does not tick 'Close the lid'")
 
 
 def check_pack_files():
@@ -152,7 +165,11 @@ def check_pack_files():
     missing = [f for f in need if not (PACK / f).exists()]
     check(not missing, f"the 3D page's {len(need)} model, texture and sky files are there" + (f": missing {missing}" if missing else ""))
     scans = [f.name for f in PACK.rglob("*") if f.suffix == ".blend" or "blenderkit" in str(f).lower()]
-    check(not scans, "no BlenderKit scan is published")
+    check(not scans, "no BlenderKit scan is published as a file")
+    # the scans travel only inside the encrypted bundle (export_scans.py): no readable model in it
+    sb = (PACK / "scans.bin").read_bytes()
+    check(sb[:4] == b"PKS1" and b"glTF" not in sb and b'"asset"' not in sb and b"JFIF" not in sb,
+          f"scans.bin is sealed ({len(sb) / 1e6:.0f} MB, no plain glTF, JSON or JPEG inside)")
     # the baked light: one entry for every box pack.js gives an `lm` name, and nothing else
     lm = json.loads((PACK / "lightmap.json").read_text())
     want = {f"floor_{r}" for r in w["rooms"]} | {"ceiling", "basin", "backsplash", "pillow0", "pillow1"}
@@ -162,6 +179,20 @@ def check_pack_files():
     check(set(lm["objects"]) == want and (PACK / "lightmap.png").exists(),
           f"lightmap.png and lightmap.json cover the page's {len(want)} baked boxes"
           + ("" if set(lm["objects"]) == want else f": extra {set(lm['objects']) - want}, missing {want - set(lm['objects'])}"))
+    # the videos' hands: skin, skeleton and the controllers' grip shapes
+    hj = json.loads((PACK / "hands.json").read_text())
+    check(set(hj["sides"]) == {"r", "l"} and all(len(hj["sides"][s]["bodies"]) == 28 for s in "rl")
+          and {"squeeze", "wrap_big", "pinch", "point", "bar_fist", "flat", "relaxed"} <= set(hj["shapes"]),
+          "hands.json has both MyoHands (28 bodies each) and the grip shapes the page uses")
+    # the live physics: the videos' model for the browser (build_model.build_web)
+    px = (PACK / "physics.xml").read_text()
+    try:
+        import build_model
+        same = px == build_model.build_web()
+    except ImportError:                      # no mujoco here: check what the page relies on
+        same = all(f'name="hold_{n}"' in px for n in w["items"]) and 'mocap="true"' in px
+    check(same and "@mujoco/mujoco@3.15.0" in (SITE / "pack.html").read_text(encoding="utf-8"),
+          "physics.xml is the current web model and pack.html pins MuJoCo 3.15.0")
     page = (SITE / "pack.js").read_text(encoding="utf-8")
     check("@0.165.0" in (SITE / "pack.html").read_text(encoding="utf-8") and "game_act" in page and "game_options" in page,
           "pack.html pins three.js and pack.js uses the game commands")

@@ -1,0 +1,193 @@
+<mujoco model="Apartment suitcase packing (web)">
+  <compiler angle="radian" autolimits="true" />
+  <option timestep="0.002" integrator="implicitfast" cone="elliptic" iterations="30" ls_iterations="10" gravity="0 0 -9.81" />
+  <size memory="64M" />
+  <worldbody>
+    <geom name="floor" type="plane" size="10 10 .1" pos="3.5 3.2 0" contype="4" conaffinity="2" rgba=".55 .45 .35 1" friction=".8 .01 .001" />
+    <geom name="wall_south_s0" type="box" size="0.6 0.05 1.3" pos="0.6 0 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_below0" type="box" size="0.7 0.05 0.425" pos="1.9 0 0.425" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_above0" type="box" size="0.7 0.05 0.225" pos="1.9 0 2.375" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_s1" type="box" size="1.7 0.05 1.3" pos="4.3 0 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_below1" type="box" size="0.35 0.05 0.5" pos="6.35 0 0.5" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_above1" type="box" size="0.35 0.05 0.3" pos="6.35 0 2.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_south_end" type="box" size="0.15 0.05 1.3" pos="6.85 0 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_s0" type="box" size="0.5 0.05 1.3" pos="0.5 6.4 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_below0" type="box" size="1.1 0.05 0.35" pos="2.1 6.4 0.35" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_above0" type="box" size="1.1 0.05 0.175" pos="2.1 6.4 2.425" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_s1" type="box" size="0.7 0.05 1.3" pos="3.9 6.4 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_below1" type="box" size="0.8 0.05 0.35" pos="5.4 6.4 0.35" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_above1" type="box" size="0.8 0.05 0.175" pos="5.4 6.4 2.425" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_north_end" type="box" size="0.4 0.05 1.3" pos="6.6 6.4 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_west_end" type="box" size="0.05 3.2 1.3" pos="0 3.2 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_east_end" type="box" size="0.05 3.2 1.3" pos="7 3.2 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bed_north_s0" type="box" size="1.375 0.05 1.3" pos="1.375 3.4 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bed_north_above0" type="box" size="0.45 0.05 0.275" pos="3.2 3.4 2.325" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bed_north_end" type="box" size="0.075 0.05 1.3" pos="3.725 3.4 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bed_east_end" type="box" size="0.05 1.7 1.3" pos="3.8 1.7 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bath_north_s0" type="box" size="0.175 0.05 1.3" pos="3.975 2.2 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bath_north_above0" type="box" size="0.4 0.05 0.275" pos="4.55 2.2 2.325" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bath_north_end" type="box" size="0.325 0.05 1.3" pos="5.275 2.2 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="wall_bath_east_end" type="box" size="0.05 1.1 1.3" pos="5.6 1.1 1.3" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="bed_frame" type="box" size="1.05 0.8 0.13" pos="1.1 1.75 0.13" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="mattress" type="box" size="1.02 0.77 0.12" pos="1.11 1.75 0.38" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".9 .01 .001" solref=".03 .9" solimp=".85 .95 .004" />
+    <geom name="headboard" type="box" size="0.03 0.83 0.6" pos="0.08 1.75 0.6" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="vanity" type="box" size="0.55 0.24 0.42" pos="4.7 0.29 0.42" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="vanity_top" type="box" size="0.57 0.26 0.015" pos="4.7 0.29 0.855" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="towel_shelf" type="box" size="0.16 0.3 0.015" pos="5.39 1.15 0.95" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="towel_shelf_lower" type="box" size="0.16 0.3 0.015" pos="5.39 1.15 0.45" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="kitchen_base" type="box" size="0.3 1 0.43" pos="6.68 1.1 0.43" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="kitchen_top" type="box" size="0.32 1.02 0.015" pos="6.67 1.1 0.885" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="dresser_coll" type="box" size="0.221 0.429 0.2725" pos="3.53 1.2 0.2725" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="nightstand_coll" type="box" size="0.284 0.212 0.35" pos="0.36 2.95 0.35" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="sofa_coll" type="box" size="1.3655 0.4625 0.275" pos="2.1 5.9 0.275" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="coffee_table_coll" type="box" size="0.601 0.3 0.195" pos="2.1 4.85 0.195" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="bookshelf_coll" type="box" size="0.2905 0.687 1.03" pos="0.33 4.9 1.03" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <geom name="tv_stand_coll" type="box" size="0.275 0.225 0.275" pos="2.1 3.75 0.275" contype="4" conaffinity="2" group="3" rgba=".7 .7 .7 .3" friction=".7 .01 .001" />
+    <body name="suitcase" pos="1.55 1.26 0.5" quat="0.707107 0 0 -0.707107">
+      <freejoint name="suitcase_free" />
+      <geom name="base_back" type="box" pos="0 0 0.009" size="0.2534 0.3486 0.009" mass="1.2000000000000002" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+      <geom name="base_floor_shadow" type="box" pos="0 0 -0.012" size="0.2414 0.3366 0.03" mass="0.001" contype="0" conaffinity="2" group="3" rgba=".5 .5 .5 .2" solref=".004 1" solimp=".95 .99 .001" friction=".45 .01 .001" />
+      <geom name="base_wall_px" type="box" pos="0.2474 0 0.0749" size="0.006 0.3486 0.0749" mass="0.36" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+      <geom name="base_wall_nx" type="box" pos="-0.2474 0 0.09765" size="0.006 0.3486 0.09765" mass="0.36" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+      <geom name="base_wall_py" type="box" pos="0 0.3426 0.0749" size="0.2414 0.006 0.0749" mass="0.24" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+      <geom name="base_wall_ny" type="box" pos="0 -0.3426 0.0749" size="0.2414 0.006 0.0749" mass="0.24" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+      <body name="trolley" pos="-0.012 0.4327 0.06">
+        <joint name="trolley_slide" type="slide" axis="0 1 0" range="0 0.4" limited="true" damping="15" frictionloss="3.0" armature=".01" solreflimit=".004 1" />
+        <geom name="top_handle" type="capsule" size="0.016" fromto="-0.088 0 0 0.088 0 0" contype="2" conaffinity="2" friction=".8 .01 .001" group="2" rgba=".05 .05 .05 1" mass=".10" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="trolley_post_0" type="box" size="0.011 0.25205 0.011" pos="-0.104 -0.24105 0" contype="0" conaffinity="0" group="2" rgba=".05 .05 .05 1" mass=".08" />
+        <geom name="trolley_post_top_0" type="box" size="0.011 0.03 0.011" pos="-0.104 -0.019 0" mass=".001" rgba=".05 .05 .05 1" friction=".8 .01 .001" contype="0" conaffinity="1" group="2" />
+        <geom name="trolley_post_1" type="box" size="0.011 0.25205 0.011" pos="0.104 -0.24105 0" contype="0" conaffinity="0" group="2" rgba=".05 .05 .05 1" mass=".08" />
+        <geom name="trolley_post_top_1" type="box" size="0.011 0.03 0.011" pos="0.104 -0.019 0" mass=".001" rgba=".05 .05 .05 1" friction=".8 .01 .001" contype="0" conaffinity="1" group="2" />
+        <body name="trolley_btn" pos="0 0.0165 0">
+          <geom name="trolley_button" type="box" size="0.008 0.003 0.006" mass=".005" rgba=".25 .25 .27 1" friction="1 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+      </body>
+      <body name="wheel_base_n_body" pos="-0.21 -0.4006 0.094">
+        <joint name="wheel_base_n_ball" type="ball" damping=".002" frictionloss=".035" armature="2e-4" />
+        <geom name="wheel_base_n" type="sphere" size="0.035" contype="2" conaffinity="2" friction=".9 .01 .001" group="2" rgba=".05 .05 .05 1" mass=".12" />
+      </body>
+      <body name="wheel_base_p_body" pos="0.21 -0.4006 0.094">
+        <joint name="wheel_base_p_ball" type="ball" damping=".002" frictionloss=".035" armature="2e-4" />
+        <geom name="wheel_base_p" type="sphere" size="0.035" contype="2" conaffinity="2" friction=".9 .01 .001" group="2" rgba=".05 .05 .05 1" mass=".12" />
+      </body>
+      <body name="suitcase_lid" pos="-0.2534 0 0.1953">
+        <joint name="lid_hinge" type="hinge" axis="0 -1 0" range="0 3.491592653589793" solreflimit=".004 1" damping=".5" frictionloss=".08" armature=".005" limited="true" />
+        <geom name="lid_panel" type="box" pos="0.2534 0 0.1753" size="0.2534 0.3486 0.02" mass="0.7200000000000001" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_panel_shadow" type="box" pos="0.2534 0 0.1853" size="0.2414 0.3366 0.03" mass="0.001" contype="0" conaffinity="2" group="3" rgba=".5 .5 .5 .2" solref=".004 1" solimp=".95 .99 .001" friction=".45 .01 .001" />
+        <geom name="lid_wall_px" type="box" pos="0.5008 -0.1763 0.0749" size="0.006 0.1723 0.1204" mass="0.11862306368330465" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_px_b" type="box" pos="0.5008 0.2423 0.0749" size="0.006 0.1063 0.1204" mass="0.073184165232358" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_px_lo" type="box" pos="0.5008 0.066 -0.0219" size="0.006 0.07 0.0236" mass="0.009446423568026259" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_px_hi" type="box" pos="0.5008 0.066 0.141" size="0.006 0.07 0.0543" mass="0.02173477965016211" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_px_lock" type="box" pos="0.4899 0.066 0.0442" size="0.002 0.07 0.0425" mass="0.01701156786614898" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_nx" type="box" pos="0.006 0 0.09765" size="0.006 0.3486 0.09765" mass="0.24" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_py" type="box" pos="0.2534 0.3426 0.0749" size="0.2414 0.006 0.1204" mass="0.16000000000000003" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_wall_ny" type="box" pos="0.2534 -0.3426 0.0749" size="0.2414 0.006 0.1204" mass="0.16000000000000003" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <geom name="lid_lip_px" type="box" pos="0.5128 0 -0.0385" size="0.006 0.3486 0.006" mass="0.02" contype="2" conaffinity="2" friction=".45 .01 .001" group="2" rgba="0.03 0.03 0.035 1" solref=".004 1" solimp=".95 .99 .001" solmix="50" />
+        <body name="wheel_lid_n_body" pos="0.0434 -0.4006 0.0455">
+          <joint name="wheel_lid_n_ball" type="ball" damping=".002" frictionloss=".035" armature="2e-4" />
+          <geom name="wheel_lid_n" type="sphere" size="0.035" contype="2" conaffinity="2" friction=".9 .01 .001" group="2" rgba=".05 .05 .05 1" mass=".12" />
+        </body>
+        <body name="wheel_lid_p_body" pos="0.4634 -0.4006 0.0455">
+          <joint name="wheel_lid_p_ball" type="ball" damping=".002" frictionloss=".035" armature="2e-4" />
+          <geom name="wheel_lid_p" type="sphere" size="0.035" contype="2" conaffinity="2" friction=".9 .01 .001" group="2" rgba=".05 .05 .05 1" mass=".12" />
+        </body>
+        <body name="dial_1" pos="0.4884 0.0185 0.0417">
+          <geom name="dial_1_geom" type="cylinder" size="0.008 0.0025" quat="0.707107 0.707107 0 0" mass=".002" rgba=".55 .55 .57 1" friction="1.4 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+        <body name="dial_2" pos="0.4884 0.031 0.0417">
+          <geom name="dial_2_geom" type="cylinder" size="0.008 0.0025" quat="0.707107 0.707107 0 0" mass=".002" rgba=".55 .55 .57 1" friction="1.4 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+        <body name="dial_3" pos="0.4884 0.0435 0.0417">
+          <geom name="dial_3_geom" type="cylinder" size="0.008 0.0025" quat="0.707107 0.707107 0 0" mass=".002" rgba=".55 .55 .57 1" friction="1.4 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+        <body name="lock_btn" pos="0.4949 0.074 0.0417">
+          <geom name="lock_button" type="box" size="0.004 0.015 0.008" mass=".004" rgba=".6 .1 .1 1" friction="1 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+        <geom name="buckle_female" type="box" size="0.028 0.017 0.006" pos="0.2534 0.124 0.2013" mass=".01" rgba=".08 .08 .08 1" friction="1 .01 .001" contype="0" conaffinity="1" group="2" />
+        <body name="buckle_male" pos="0.2534 0.15 0.2003">
+          <geom name="buckle_male_geom" type="box" size="0.021 0.02 0.0045" mass=".008" rgba=".08 .08 .08 1" friction="1.2 .01 .001" contype="0" conaffinity="1" group="2" />
+          <geom name="buckle_tab_0" type="box" size="0.003 0.008 0.004" pos="-0.024 0.004 0" mass=".001" rgba=".08 .08 .08 1" friction="1.4 .01 .001" solref=".012 1" solimp=".8 .95 .004" contype="0" conaffinity="1" group="2" />
+          <geom name="buckle_tab_1" type="box" size="0.003 0.008 0.004" pos="0.024 0.004 0" mass=".001" rgba=".08 .08 .08 1" friction="1.4 .01 .001" solref=".012 1" solimp=".8 .95 .004" contype="0" conaffinity="1" group="2" />
+        </body>
+      </body>
+      <body name="slider_a" pos="0.2594 -0.3 0.139">
+        <geom name="slider_a_geom" type="box" size="0.006 0.012 0.008" mass=".008" rgba=".7 .72 .74 1" friction="1.2 .01 .001" contype="0" conaffinity="1" group="2" />
+        <body name="tab_a" pos="0.0145 0 -0.006">
+          <geom name="tab_a_geom" type="capsule" size="0.0045" fromto="0 0 -0.004 0 0 -0.09" mass=".005" rgba=".1 .1 .1 1" friction="1.2 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+      </body>
+      <body name="slider_b" pos="0.2594 0.296 0.139">
+        <geom name="slider_b_geom" type="box" size="0.006 0.012 0.008" mass=".008" rgba=".7 .72 .74 1" friction="1.2 .01 .001" contype="0" conaffinity="1" group="2" />
+        <body name="tab_b" pos="0.0145 0 -0.006">
+          <geom name="tab_b_geom" type="capsule" size="0.0045" fromto="0 0 -0.004 0 0 -0.09" mass=".005" rgba=".1 .1 .1 1" friction="1.2 .01 .001" contype="0" conaffinity="1" group="2" />
+        </body>
+      </body>
+    </body>
+    <body name="trousers" pos="3.52 0.98 0.59585" quat="0.707107 0 0 0.707107">
+      <freejoint name="trousers_free" />
+      <geom name="trousers_geom" type="box" size="0.1004 0.11425 0.05085" mass="1.2" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="tshirts" pos="3.52 1.42 0.60205" quat="0.707107 0 0 0.707107">
+      <freejoint name="tshirts_free" />
+      <geom name="tshirts_geom" type="box" size="0.0866 0.14275 0.05705" mass="1.0" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="sweater_pile" pos="0.72 1.2 0.57045" quat="6.12323e-17 0 0 1">
+      <freejoint name="sweater_pile_free" />
+      <geom name="sweater_pile_geom" type="box" size="0.10005 0.1219 0.07045" mass="1.2" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="striped_shirts" pos="0.95 2.15 0.56545" quat="1 0 0 0">
+      <freejoint name="striped_shirts_free" />
+      <geom name="striped_shirts_geom" type="box" size="0.10035 0.1381 0.06545" mass="1.0" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="sweatshirts" pos="0.45 2.92 0.7634" quat="-0.707107 0 0 0.707107">
+      <freejoint name="sweatshirts_free" />
+      <geom name="sweatshirts_geom" type="box" size="0.0934 0.1428 0.0634" mass="1.2" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="towel" pos="5.39 1.15 0.9855" quat="0.707107 0 0 0.707107">
+      <freejoint name="towel_free" />
+      <geom name="towel_geom" type="box" size="0.10005 0.11805 0.0205" mass="0.4" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="towel_stack" pos="5.02 0.3 0.9294" quat="1 0 0 0">
+      <freejoint name="towel_stack_free" />
+      <geom name="towel_stack_geom" type="box" size="0.09335 0.14295 0.0594" mass="1.2" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="gym_clothes" pos="6.62 1.55 0.96425" quat="0.707107 0 0 0.707107">
+      <freejoint name="gym_clothes_free" />
+      <geom name="gym_clothes_geom" type="box" size="0.1004 0.1102 0.06425" mass="0.8" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".9 .02 .001" solref=".012 1" solimp=".8 .95 .003" />
+    </body>
+    <body name="toiletry_bag" pos="4.55 0.3 0.915" quat="1 0 0 0">
+      <freejoint name="toiletry_bag_free" />
+      <geom name="toiletry_bag_geom" type="box" size="0.115 0.065 0.045" mass="0.65" rgba="0.12 0.25 0.2 1" contype="2" conaffinity="2" group="2" condim="4" friction=".7 .01 .001" solref=".005 1" solimp=".95 .99 .001" />
+    </body>
+    <body name="bottle" pos="6.62 0.75 1.015" quat="1 0 0 0">
+      <freejoint name="bottle_free" />
+      <geom name="bottle_body" type="cylinder" size="0.036 0.098" pos="0 0 -0.017" mass="0.4675" rgba=".36 .45 .38 1" contype="2" conaffinity="2" group="2" condim="6" friction=".8 .02 .002" solref=".005 1.4" solimp=".95 .99 .001" />
+      <geom name="bottle_base" type="box" size="0.0255 0.0255 0.003" pos="0 0 -0.112" mass="0.027500000000000004" rgba=".3 .3 .3 1" contype="2" conaffinity="2" group="2" condim="6" friction=".8 .02 .002" solref=".005 1.4" solimp=".95 .99 .001" />
+      <geom name="bottle_cap" type="cylinder" size="0.026 0.017" pos="0 0 0.098" mass="0.05500000000000001" rgba=".7 .7 .7 1" contype="2" conaffinity="2" group="2" condim="6" friction=".8 .02 .002" solref=".005 1.4" solimp=".95 .99 .001" />
+    </body>
+    <body name="notebook" pos="1.88 4.78 0.4025" quat="1 0 0 0">
+      <freejoint name="notebook_free" />
+      <geom name="notebook_geom" type="box" size="0.085 0.1 0.0125" mass="0.35" rgba="1 1 1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".7 .01 .001" solref=".005 1" solimp=".95 .99 .001" />
+    </body>
+    <body name="camera" pos="2.32 4.8 0.429" quat="6.12323e-17 0 0 1">
+      <freejoint name="camera_free" />
+      <geom name="camera_body" type="box" size="0.074 0.0175 0.039" mass="0.434" rgba=".1 .1 .1 1" contype="2" conaffinity="2" group="2" condim="4" friction=".7 .01 .001" solref=".005 1" solimp=".95 .99 .001" />
+      <geom name="camera_lens" type="cylinder" size="0.027 0.027" pos="0.012 -0.0445 -0.004" quat="0.707107 0.707107 0 0" mass="0.186" rgba=".2 .2 .2 1" contype="2" conaffinity="2" group="2" condim="4" friction=".7 .01 .001" solref=".005 1" solimp=".95 .99 .001" />
+    </body>
+    <body name="grip" mocap="true" pos="1.55 0.64 1.2" />
+  </worldbody>
+  <equality>
+    <weld name="hold_trousers" body1="grip" body2="trousers" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_tshirts" body1="grip" body2="tshirts" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_sweater_pile" body1="grip" body2="sweater_pile" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_striped_shirts" body1="grip" body2="striped_shirts" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_sweatshirts" body1="grip" body2="sweatshirts" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_towel" body1="grip" body2="towel" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_towel_stack" body1="grip" body2="towel_stack" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_gym_clothes" body1="grip" body2="gym_clothes" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_toiletry_bag" body1="grip" body2="toiletry_bag" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_bottle" body1="grip" body2="bottle" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_notebook" body1="grip" body2="notebook" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+    <weld name="hold_camera" body1="grip" body2="camera" relpose="0 0 0 1 0 0 0" active="false" solref=".01 1" solimp=".9 .95 .002" />
+  </equality>
+</mujoco>

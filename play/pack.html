@@ -63,7 +63,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .foldBtn{all:unset;cursor:default;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit}.foldBtn span{color:var(--accent);text-transform:none;letter-spacing:0;margin-left:4px}
 @media(max-width:680px){.foldBtn{cursor:pointer}.panel.fold:not(.open)>:not(h2:first-child){display:none!important}.panel.fold:not(.open) h2{margin:0}.panel.fold:not(.open){padding:6px 10px}#checklist{top:auto;bottom:176px;left:8px;width:min(46vw,220px);max-height:42vh}#asst{top:auto;bottom:176px;right:8px;width:min(46vw,240px);max-height:42vh}#asst code{overflow-wrap:anywhere}#prompt{bottom:8px;min-width:0;width:calc(100vw - 150px);left:auto;right:8px;transform:none}#top{left:8px;right:8px}#where{display:none}}
 </style>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/","@mujoco/mujoco":"https://cdn.jsdelivr.net/npm/@mujoco/mujoco@3.15.0/mujoco.js"}}</script>
 </head><body>
 <canvas id="view" tabindex="0" aria-label="3D view of the apartment. Use the keyboard to walk and act."></canvas>
 
@@ -105,7 +105,8 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 <h1>Pack it yourself.</h1>
 <p>You are the person packing. Walk around the apartment, pick up everything on the checklist, pack it in the open case on the bed, then close the lid, zip it and stand the case up. The rules are the simulator's: heavy things go on the case floor, the bottle stands upright, nothing goes on the camera. Every action you take goes through the same simulator as the generated episodes, and the run can be downloaded in the same action format.</p>
 <div class="keys">
-<kbd>W A S D</kbd><span>walk and step sideways (arrow keys too); hold <kbd>Shift</kbd> to hurry</span>
+<kbd>W A S D</kbd><span>walk and step sideways; hold <kbd>Shift</kbd> to hurry</span>
+<kbd>↑</kbd> <kbd>↓</kbd><span>look up and down (look down to see into the case at your feet)</span>
 <kbd>Mouse</kbd><span>look around: click the view to steer with the mouse (<kbd>Esc</kbd> frees it), or drag</span>
 <kbd>E</kbd> / <kbd>Space</kbd><span>do the highlighted action (pick up, pack, close the lid…)</span>
 <kbd>1</kbd>–<kbd>9</kbd><span>choose another action from the list at the bottom, such as a different spot in the case</span>

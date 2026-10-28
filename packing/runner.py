@@ -131,8 +131,9 @@ def shape_targets(shape, side):
 
 
 class Runner:
-    def __init__(self, seed=7, with_cloth=False):
-        self.m, self.xml = B.build(with_cloth=with_cloth)
+    def __init__(self, seed=7, with_cloth=False, xml=None):
+        # xml: a model already built (the 3D page ships build()'s output as play/pack/physics_hands.xml)
+        self.m, self.xml = (B.build(with_cloth=with_cloth) if xml is None else (mujoco.MjModel.from_xml_string(xml), None))
         self.with_cloth = with_cloth
         m = self.m
         self.d = mujoco.MjData(m)
@@ -170,6 +171,12 @@ class Runner:
         self.zip_progress = 0.0
         self.zip_locked = False
         self._init_mechanisms()
+        # The 3D page runs this module in Pyodide over MuJoCo's WebAssembly build, whose
+        # stand-in mujoco module offers `batch`: open-loop motions (move, hold, walk, turn)
+        # collect their per-step commands and run as one batch there (play/runner_batch.js
+        # does what step() does), instead of crossing between Python and JavaScript every ms.
+        self._batch = getattr(mujoco, "batch", None)
+        self._plan = None
 
     # ------------------------------------------------------------ wrist kinematics
     WRIST_GRID = np.linspace(-0.75, 0.75, 151)
@@ -245,8 +252,10 @@ class Runner:
         return np.array([r["x"], r["y"], 0.0]), rz(r["yaw"])
 
     # ------------------------------------------------------------ control
-    def _apply(self):
-        m, d = self.m, self.d
+    def _apply_values(self):
+        """The carriage, rotation and finger commands for the current targets."""
+        m = self.m
+        ids, vals, quats = [], [], {}
         for s in "rl":
             p, Rp = self.hand[s]
             prel, Rrel = self.wrist_rel(s, self.finger[s][f"flexion_{s}"])
@@ -254,14 +263,21 @@ class Runner:
             elbow = p - R @ prel
             off = elbow - self.carriage0[s]
             for k, ax in enumerate("xyz"):
-                d.ctrl[self.aid[f"w{s}_{ax}"]] = off[k]
+                ids.append(self.aid[f"w{s}_{ax}"]); vals.append(off[k])
             self.rot_target[s] = R
             xyzw = Rot.from_matrix(R).as_quat()
-            self.rot_target_q[s] = (xyzw[3], xyzw[0], xyzw[1], xyzw[2])
+            quats[s] = (xyzw[3], xyzw[0], xyzw[1], xyzw[2])
             for j, v in self.finger[s].items():
                 a = self.aid[f"{j}_servo"]
                 lo, hi = m.actuator_ctrlrange[a]
-                d.ctrl[a] = np.clip(v, lo, hi)
+                ids.append(a); vals.append(np.clip(v, lo, hi))
+        return ids, vals, quats
+
+    def _apply(self):
+        ids, vals, quats = self._apply_values()
+        for a, v in zip(ids, vals):
+            self.d.ctrl[a] = v
+        self.rot_target_q.update(quats)
 
     def _monitor(self):
         m, d = self.m, self.d
@@ -314,6 +330,13 @@ class Runner:
             d.ctrl[ids[0]] = tx; d.ctrl[ids[1]] = ty; d.ctrl[ids[2]] = tz
 
     def step(self, n=1):
+        if self._plan is not None:                     # batched (3D page): collect, run later in one go
+            for _ in range(n):
+                k = self.step_count + len(self._plan)
+                ctrl = self._apply_values() if k % CTRL_EVERY == 0 else None
+                rec = (dict(self.root), self.gaze.tolist(), self.label) if (k + 1) % FRAME_EVERY == 0 else None
+                self._plan.append((ctrl, rec))
+            return
         m, d = self.m, self.d
         for _ in range(n):
             if self.step_count % CTRL_EVERY == 0:
@@ -523,7 +546,32 @@ class Runner:
     def event(self, kind, **kw):
         self.events.append(dict(t=round(self.d.time, 4), stage=self.label, event=kind, **kw))
 
-    def move(self, T, hands=None, root=None, fingers=None, gaze=None, frame="world", follow=()):
+    def _batched(self, fn, *a, **kw):
+        """Run a motion: stepped here, or collected and run as one batch (see __init__)."""
+        if self._batch is None or self._plan is not None:
+            return fn(*a, **kw)
+        self._plan = []
+        try:
+            out = fn(*a, **kw)
+        finally:
+            plan, self._plan = self._plan, None
+        if plan:
+            self._batch(self, plan)
+        return out
+
+    def move(self, *a, **kw):
+        return self._batched(self._move, *a, **kw)
+
+    def hold(self, T):
+        return self._batched(self.step, int(round(T / PHYS_DT)))
+
+    def walk(self, *a, **kw):
+        return self._batched(self._walk, *a, **kw)
+
+    def turn(self, *a, **kw):
+        return self._batched(self._turn, *a, **kw)
+
+    def _move(self, T, hands=None, root=None, fingers=None, gaze=None, frame="world", follow=()):
         """Min-jerk move of any subset of targets over T seconds.
         hands: {side: (palm_pos, R)} in world (or root frame if frame='root').
         follow: sides without a target that keep their pose relative to the moving root."""
@@ -565,10 +613,7 @@ class Runner:
                 self.gaze = g0 + (np.asarray(gaze) - g0) * u
             self.step()
 
-    def hold(self, T):
-        self.step(int(round(T / PHYS_DT)))
-
-    def walk(self, waypoints, speed=0.85, carry=True, gaze_ahead=True, final_yaw=None, yaw_rate=3.0, yaw_acc=8.0):
+    def _walk(self, waypoints, speed=0.85, carry=True, gaze_ahead=True, final_yaw=None, yaw_rate=3.0, yaw_acc=8.0):
         """Walk the root along a polyline; hands keep their pose in the root frame."""
         pts = [np.array([self.root["x"], self.root["y"]])] + [np.array(p, float) for p in waypoints]
         seg = [np.linalg.norm(b - a) for a, b in zip(pts[:-1], pts[1:])]
@@ -613,9 +658,9 @@ class Runner:
                 self.gaze = np.array([p[0] + 2.0 * np.cos(yaw), p[1] + 2.0 * np.sin(yaw), 0.9])
             self.step()
         if final_yaw is not None:
-            self.turn(final_yaw)
+            self._turn(final_yaw)
 
-    def turn(self, yaw, T=None, direction=None):
+    def _turn(self, yaw, T=None, direction=None):
         """Turn in place, carrying the hands along. direction=+1/-1 forces the way round."""
         y0 = self.root["yaw"]
         dyw = (yaw - y0 + np.pi) % (2 * np.pi) - np.pi

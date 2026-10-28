@@ -307,6 +307,44 @@ def build(start_hands=None, with_cloth=False):
     return mujoco.MjModel.from_xml_path(str(path)), path
 
 
+def build_web():
+    """The model the 3D page runs live (play/pack/physics.xml, MuJoCo WebAssembly): the same
+    apartment, case (shells, hinge, casters, handle, lock, sliders) and items with the same
+    contact parameters, without the anatomical hands, which cannot run at interactive rates.
+    The page carries an item with a mocap 'grip' and a soft weld per item (off until the
+    item is picked up): soft enough that walls and furniture stop what is carried."""
+    root = E.Element("mujoco", model="Apartment suitcase packing (web)")
+    E.SubElement(root, "compiler", angle="radian", autolimits="true")
+    # 2 ms steps and fewer solver iterations than the 1 ms offline runs: the page steps in real time
+    # (impratio 10 keeps the hands' grasps from slipping offline; in the WebAssembly build (3.15)
+    # it sends the case and the bottle flying, and without hands nothing needs it)
+    E.SubElement(root, "option", timestep="0.002", integrator="implicitfast", cone="elliptic",
+                 iterations="30", ls_iterations="10", gravity="0 0 -9.81")
+    E.SubElement(root, "size", memory="64M")
+    world = E.SubElement(root, "worldbody")
+    E.SubElement(world, "geom", name="floor", type="plane", size="10 10 .1", pos="3.5 3.2 0",
+                 contype="4", conaffinity="2", rgba=".55 .45 .35 1", friction=".8 .01 .001")
+    for b in S.all_static_boxes():
+        static_geom(world, b)
+    suitcase(world)
+    # Gram-scale hardware (zip sliders and pulls, dials, buttons, buckle) is unstable at 2 ms
+    # steps and is moved by the page from the game state: fixed in place here, shapes kept.
+    small = ("slider_", "tab_", "dial_", "lock_btn", "buckle_male", "trolley_btn")
+    for b in world.iter("body"):
+        if b.get("name", "").startswith(small):
+            for j in b.findall("joint"):
+                b.remove(j)
+    for it in S.ITEMS:
+        item_body(world, it)
+    E.SubElement(world, "body", name="grip", mocap="true", pos="1.55 0.64 1.2")
+    eq = E.SubElement(root, "equality")
+    for it in S.ITEMS:
+        E.SubElement(eq, "weld", name=f"hold_{it.name}", body1="grip", body2=it.name, relpose="0 0 0 1 0 0 0",
+                     active="false", solref=".01 1", solimp=".9 .95 .002")
+    E.indent(root)
+    return E.tostring(root, encoding="unicode")
+
+
 if __name__ == "__main__":
     m, p = build()
     d = mujoco.MjData(m)

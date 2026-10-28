@@ -237,6 +237,7 @@ function baked(mat) {
   return m;
 }
 const walkable = [];                                   // static obstacles (2D boxes) for walking
+const tall = [];                                       // ...those that reach the height things are carried at
 
 // ------------------------------------------------------------------ the apartment (render_blender.build_apartment)
 function buildApartment() {
@@ -252,6 +253,7 @@ function buildApartment() {
       const sx = w.s[0], sy = w.s[1];
       tbox([sx + (sx < sy ? 0.024 : 0), sy + (sy < sx ? 0.024 : 0), 0.085], M.trim, [w.c[0], w.c[1], 0.0425], { bevel: 0.003, lm: w.name + '_base' });
       walkable.push(rect2(w.c, w.s));
+      if (w.s[2] > 1.0) tall.push(rect2(w.c, w.s));
     }
   }
   tbox([7.2, 6.6, 0.05], M.ceiling, [3.5, 3.2, W.wall_h + 0.025], { lm: 'ceiling' });   // shades the sun, as in the renders
@@ -292,12 +294,12 @@ function buildFurniture() {
   tbox([0.03, 0.03, 0.16], M.chrome, [4.95, 0.09, 0.95], { bevel: 0.012 });
   tbox([0.82, 0.02, 0.72], M.chrome, [4.70, 0.06, 1.45], { bevel: 0.004 });
   // the mirror reflects the room (rendered only while it is in view)
-  const mirror = new Reflector(new THREE.PlaneGeometry(0.78, 0.68), { textureWidth: 512, textureHeight: 448, color: 0xb8bcc0 });
+  mirror = new Reflector(new THREE.PlaneGeometry(0.78, 0.68), { textureWidth: 512, textureHeight: 448, color: 0xb8bcc0 });
   mirror.position.set(4.70, 0.0715, 1.45); mirror.rotation.x = -Math.PI / 2; mirror.rotation.order = 'ZXY';
   scene.add(mirror);
   tbox([0.02, 2.04, 0.55], M.tiles, [6.94, 1.10, 1.17], { scale: 0.8, lm: 'backsplash' });
   for (const a of W.assets) {
-    for (const b of a.collision) walkable.push(rect2(b.c, b.s));
+    for (const b of a.collision) { walkable.push(rect2(b.c, b.s)); if (b.c[2] + b.s[2] / 2 > 1.1) tall.push(rect2(b.c, b.s)); }
     loadModel(a.asset).then(g => {
       const holder = new THREE.Group();
       holder.position.set(...a.pos); holder.rotation.z = a.yaw; holder.scale.setScalar(a.scale ?? 1);
@@ -425,6 +427,53 @@ function buildItems() {
   }
 }
 
+// ------------------------------------------------------------------ the videos' scans (pack/scans.bin)
+// The garment piles and the case of the renders are BlenderKit scans; their licence wants
+// them not directly extractable, so they arrive as one encrypted bundle (export_scans.py)
+// opened here in memory. Without it (or without WebCrypto) the stand-ins above stay.
+const SCAN_KEY = '5f3a9c1e7b2d48a6c0f19e3b7d2a5c8e1f4b6d9a2c7e0b3f5a8d1c4e7b0a3f6d';
+async function loadScans() {
+  if (new URLSearchParams(location.search).has('noscans') || !crypto.subtle) return null;
+  try {
+    const r = await fetch('pack/scans.bin');
+    if (!r.ok) return null;
+    const u8 = new Uint8Array(await r.arrayBuffer());
+    if (String.fromCharCode(...u8.slice(0, 4)) !== 'PKS1') return null;
+    const key = await crypto.subtle.importKey('raw', new Uint8Array(SCAN_KEY.match(/../g).map(h => parseInt(h, 16))), 'AES-GCM', false, ['decrypt']);
+    const plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8.slice(4, 16) }, key, u8.slice(16)));
+    const hl = new DataView(plain.buffer).getUint32(0, true), at = 4 + hl;
+    const head = JSON.parse(new TextDecoder().decode(plain.slice(4, at)));
+    const out = {};
+    await Promise.all(head.map(h => GL.parseAsync(plain.slice(at + h.offset, at + h.offset + h.length).buffer, '').then(g => { out[h.name] = g.scene; })));
+    return out;
+  } catch (e) { console.warn('scans not loaded:', e); return null; }
+}
+function useScans(sc) {
+  const lining = M.liningTop.clone(); lining.side = THREE.DoubleSide;
+  const prep = g => g.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    // the case fabric: box-projected as in the renders (textured(), 6 cm tiles)
+    if (o.material.name === 'lining') { projectUV(o.geometry, 0.06); o.material = lining; }
+  });
+  for (const [name, it] of Object.entries(W.items)) {
+    if (it.kind !== 'pile' || !sc[name]) continue;
+    const g = items[name];
+    g.clear(); prep(sc[name]); g.add(sc[name]);
+  }
+  const c = sc.suitcase;
+  if (!c) return;
+  prep(c);
+  const part = n => c.getObjectByName(n);
+  CASE.proc.forEach(o => { o.visible = false; });
+  CASE.root.add(part('scan_case_base'), part('liner_base'));
+  const lid = new THREE.Group(); lid.rotation.y = Math.PI;       // the scan's lid frame: hinge axis, case closed
+  CASE.pivot.add(lid); lid.add(part('scan_case_lid'), part('liner_lid'));
+  const tr = part('scan_trolley'); tr.position.set(W.case.bar.x, 0, 0); CASE.bar.add(tr);
+  const st = W.case.hardware.strap;
+  CASE.onLid(part('scan_buckle_male'), [st.x, st.y_male, st.z + 0.005]);
+}
+
 // ------------------------------------------------------------------ the case
 // A hard-shell spinner the size of the physics case: base and lid tubs with rounded
 // corners and a rounded back edge, a fabric lining, zip tape and sliders on the front,
@@ -477,24 +526,26 @@ function buildCase() {
   const C = W.case, [w, l] = C.outer, D = C.base_depth, DL = C.lid_depth, h = C.hinge_h, t = C.shell, r = 0.05, rb = 0.03;
   Object.assign(CASE, { w, l, D, DL, h });
   const root = new THREE.Group(); scene.add(root); CASE.root = root;
+  const proc = CASE.proc = [];                          // stand-in parts, hidden when the scan arrives
+  const P_ = o => (proc.push(o), o);
   // base
-  mesh(tubGeo(w, l, D, r, rb), M.shell, null, 0, root);
-  const lb = mesh(projectUV(tubGeo(w - 2 * t, l - 2 * t, D - C.floor - 0.001, r - t, rb * 0.6), 0.08), M.lining, [0, 0, C.floor], 0, root, false);
-  lb.material = M.lining;
-  mesh(ringGeo(w, l, r, t, D), M.shell, null, 0, root);
-  mesh(bandGeo(w, l, r, D - 0.010, D - 0.0005, 0.0012), M.tape, null, 0, root, false);
+  P_(mesh(tubGeo(w, l, D, r, rb), M.shell, null, 0, root));
+  P_(mesh(projectUV(tubGeo(w - 2 * t, l - 2 * t, D - C.floor - 0.001, r - t, rb * 0.6), 0.08), M.lining, [0, 0, C.floor], 0, root, false));
+  P_(mesh(ringGeo(w, l, r, t, D), M.shell, null, 0, root));
+  P_(mesh(bandGeo(w, l, r, D - 0.010, D - 0.0005, 0.0012), M.tape, null, 0, root, false));
   // lid: a group pivoting on the hinge (local -x edge, at mid depth); open = lying beside the base
   const pivot = new THREE.Group(); pivot.position.set(-w / 2, 0, h); root.add(pivot); CASE.pivot = pivot;
   const lid = new THREE.Group(); lid.position.set(-w / 2, 0, -h); pivot.add(lid);
+  P_(lid);
   mesh(tubGeo(w, l, DL, r, rb * 1.4), M.shell, null, 0, lid);
   mesh(projectUV(tubGeo(w - 2 * t - 0.016, l - 2 * t - 0.016, DL - C.lid_floor - 0.001, r - t, rb), 0.08), M.lining, [0, 0, C.lid_floor], 0, lid, false);
   mesh(ringGeo(w, l, r, t + 0.008, DL), M.shell, null, 0, lid);
   mesh(bandGeo(w, l, r, DL - 0.010, DL - 0.0005, 0.0012), M.tape, null, 0, lid, false);
   // things on the closed case, given in the base frame of the closed case, mounted on the lid
-  const onLid = (obj, p) => { obj.position.set(-(p[0] + w / 2), p[1], -(p[2] - h)); obj.rotation.y = Math.PI; pivot.add(obj); return obj; };
+  const onLid = CASE.onLid = (obj, p) => { obj.position.set(-(p[0] + w / 2), p[1], -(p[2] - h)); obj.rotation.y = Math.PI; pivot.add(obj); return obj; };
   const hw = C.hardware;
   const plate = new THREE.Mesh(new RoundedBoxGeometry(0.012, 0.13, 0.05, 2, 0.004), M.alu);
-  plate.castShadow = true; onLid(plate, [hw.dial_x - 0.002, 0.065, hw.dial_z + 0.004]);
+  plate.castShadow = true; P_(onLid(plate, [hw.dial_x - 0.002, 0.065, hw.dial_z + 0.004]));
   CASE.dials = [];
   for (let k = 0; k < 3; k++) {
     const d = new THREE.Mesh(new THREE.CylinderGeometry(hw.dial_r, hw.dial_r, hw.dial_w, 20), digitsMaterial());
@@ -513,17 +564,17 @@ function buildCase() {
     return g;
   };
   for (const sx of [-C.wheel_x, C.wheel_x]) {
-    const a = wheel(); a.position.set(sx, C.wheel_y + 0.01, C.wheel_z_base); root.add(a);
-    const b = wheel(); onLid(b, [sx, C.wheel_y + 0.01, D + DL - C.wheel_z_base]);
+    const a = P_(wheel()); a.position.set(sx, C.wheel_y + 0.01, C.wheel_z_base); root.add(a);
+    P_(onLid(wheel(), [sx, C.wheel_y + 0.01, D + DL - C.wheel_z_base]));
   }
   // telescopic handle at the handle end: two tubes and the grip bar
   const bar = new THREE.Group(); root.add(bar); CASE.bar = bar;
   const grip = new THREE.Mesh(new THREE.CapsuleGeometry(C.bar.r, 2 * C.bar.half, 6, 16), M.shell);
-  grip.rotation.z = Math.PI / 2; grip.position.set(C.bar.x, 0, 0); grip.castShadow = true; bar.add(grip);
+  grip.rotation.z = Math.PI / 2; grip.position.set(C.bar.x, 0, 0); grip.castShadow = true; bar.add(P_(grip));
   CASE.tubes = [];
   for (const sx of [C.bar.x - C.bar.half - 0.016, C.bar.x + C.bar.half + 0.016]) {
     const tb = new THREE.Mesh(new THREE.BoxGeometry(0.016, 1, 0.016), M.alu); tb.castShadow = true; root.add(tb); tb.userData.sx = sx; CASE.tubes.push(tb);
-    const post = new THREE.Mesh(new RoundedBoxGeometry(0.03, 0.06, 0.03, 2, 0.008), M.shell); post.position.set(sx, -0.03, 0); post.castShadow = true; bar.add(post);
+    const post = new THREE.Mesh(new RoundedBoxGeometry(0.03, 0.06, 0.03, 2, 0.008), M.shell); post.position.set(sx, -0.03, 0); post.castShadow = true; bar.add(P_(post));
   }
   // zip sliders and their pulls on the front (+x) wall at the seam
   CASE.sliders = [];
@@ -560,11 +611,11 @@ function uprightPose(at) {
 }
 function setCaseVisual(s) {
   const C = W.case, hw = C.hardware;
-  CASE.lidAngle = s.lid === 'open' ? 0 : Math.PI;
   CASE.zip = s.zip_open;
-  CASE.trolley = [0, 0.2, 0.38][s.trolley] || 0;
+  if (!PH.ok) { CASE.lidAngle = s.lid === 'open' ? 0 : Math.PI; CASE.trolley = [0, 0.2, 0.38][s.trolley] || 0; }
   CASE.dialsV = s.dials.slice();
   CASE.docked = s.pulls === 'docked';
+  if (PH.ok) { CASE.upright = s.case_pose === 'upright_floor'; CASE.at = s.case_at; updateCaseParts(); return; }
   const pose = s.case_pose === 'upright_floor' ? uprightPose(s.case_at) : lyingPose();
   CASE.root.position.copy(pose.p); CASE.root.quaternion.copy(pose.q);
   CASE.upright = s.case_pose === 'upright_floor';
@@ -606,6 +657,7 @@ class Person {
     this.x = 1.55; this.y = 0.64; this.heading = Math.PI / 2;
     this.phase = 0; this.speed = 0; this.crouch = 0; this.lean = 0;
     this.hand = { r: null, l: null }; this.handW = { r: 0, l: 0 };
+    this.handN = { r: null, l: null }; this.shape = { r: 'flat', l: 'flat' };   // palm normal and grip shape at the target
     this.look = null;
     this.g = new THREE.Group(); scene.add(this.g);
     const seg = (r0, r1, mat) => { const geo = new THREE.CylinderGeometry(r1, r0, 1, 28, 1, false); geo.translate(0, 0.5, 0); return this.add(geo, mat); };
@@ -655,6 +707,7 @@ class Person {
   }
   basis(fwd, left, up) { return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, left, up)); }
   update(dt) {
+    this.lastDt = dt;
     const { f, l, u } = this.frame();
     const s = clamp(this.speed / 1.4, 0, 1.4);
     this.phase += dt * this.speed * 4.2;
@@ -697,6 +750,27 @@ class Person {
       const side = k === 'r' ? -1 : 1;
       const sh = pelvis.clone().add(tu.clone().multiplyScalar(0.45)).add(l.clone().multiplyScalar(0.19 * side));
       const swing = -0.16 * Math.min(s, 1) * Math.sin(this.phase + (side > 0 ? 0 : Math.PI));
+      if (MYO) {
+        // the videos' hands: at rest as tasks.rest_targets (palms in, fingers down and forward),
+        // else at the target with its palm normal and grip shape
+        const rest = V(this.x, this.y, 0.86 + (pelvis.z - 1.0)).add(f.clone().multiplyScalar(0.06 + swing)).add(l.clone().multiplyScalar(0.225 * side));
+        const restQ = palmFrame(f.clone().multiplyScalar(0.35).sub(u), l.clone().multiplyScalar(-side));
+        const w = this.hand[k] ? this.handW[k] : 0, shape = this.shape[k] || 'flat';
+        const fwd = f.clone().multiplyScalar(Math.cos(0.49)).sub(u.clone().multiplyScalar(Math.sin(0.49)));   // forearms tilted down 28 deg (tasks.BETA)
+        let palm = { p: rest, q: restQ, shape: 'relaxed' };
+        if (w > 0) {
+          const tq = palmFrame(fwd, this.handN[k] || V(0, 0, -1));
+          const fingers = V(0, -1, 0).applyQuaternion(tq);
+          const tp = this.hand[k].clone().sub(fingers.multiplyScalar(TIP[shape] || 0));
+          palm = { p: rest.clone().lerp(tp, w), q: restQ.clone().slerp(tq, w), shape: w > 0.4 ? shape : 'relaxed' };
+        }
+        const elbow = poseHand(k, palm, this.lastDt || 0.016);
+        Person.place(this.segs['upper_' + k], sh, elbow);
+        this.balls['shoulder_' + k].position.copy(sh); this.balls['elbow_' + k].position.copy(elbow);
+        this.segs['fore_' + k].visible = false; this.hands[i].visible = false;
+        P['wrist_' + k] = palm.p; P['sh_' + k] = sh;
+        return;
+      }
       const rest = sh.clone().add(tu.clone().multiplyScalar(-0.52)).add(f.clone().multiplyScalar(0.06 + swing)).add(l.clone().multiplyScalar(0.03 * side));
       const w = this.handW[k], tgt = this.hand[k] ? rest.clone().lerp(this.hand[k], w) : rest;
       const pole = sh.clone().add(f.clone().multiplyScalar(-0.5)).add(u.clone().multiplyScalar(-0.3)).add(l.clone().multiplyScalar(0.45 * side));
@@ -713,7 +787,95 @@ class Person {
       P['wrist_' + k] = wrist; P['sh_' + k] = sh;
     });
   }
-  setHeadVisible(v) { this.head.visible = v; this.segs.neck.visible = v; }
+  setHeadVisible(v) {                             // first person: no head, chest or upper arms in front of the eyes
+    this.head.visible = v; this.segs.neck.visible = v; this.chest.visible = v; this.segs.waist.visible = v;   // the chest swings under the eyes when you lean in
+    for (const k of ['r', 'l']) { this.segs['upper_' + k].visible = v; this.balls['shoulder_' + k].visible = v; this.balls['elbow_' + k].visible = v; }
+  }
+}
+
+// ------------------------------------------------------------------ the videos' hands (pack/hands.json, export_hands.py)
+// The renders' hand skin (MyoHand capsules remeshed, each vertex bound to its nearest hand
+// bodies) on the MyoHand skeleton, posed here: MuJoCo's forward kinematics from finger joint
+// angles in the grip shapes the video controllers use (runner.SHAPES), the forearm placed
+// from a palm target through the wrist table, as Runner._apply does.
+let MYO = null;
+async function loadHands() {
+  if (new URLSearchParams(location.search).has('oldhands')) return;
+  try {
+    const h = await (await fetch('pack/hands.json', { cache: 'no-cache' })).json();
+    const quat = a => new THREE.Quaternion(a[1], a[2], a[3], a[0]);
+    MYO = { shapes: h.shapes, grid: h.wrist_grid, sides: {} };
+    for (const s of ['r', 'l']) {
+      const H = h.sides[s];
+      const bodies = H.bodies.map(b => ({ parent: b.parent, p: V(...b.pos), q: quat(b.quat),
+                                          joints: b.joints.map(j => ({ name: j.name, pos: V(...j.pos), axis: V(...j.axis) })) }));
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(H.vertices, 3));
+      geo.setIndex(H.faces);
+      const n = H.vertices.length / 3, si = new Uint16Array(4 * n), sw = new Float32Array(4 * n);
+      for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) { si[4 * i + k] = H.skin_body[3 * i + k]; sw[4 * i + k] = H.skin_weight[3 * i + k]; }
+      geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+      geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+      geo.computeVertexNormals();
+      const bones = bodies.map(() => new THREE.Bone()), rig = new THREE.Group();
+      bones.forEach(b => rig.add(b)); scene.add(rig);           // flat: every bone posed in world coordinates
+      const inv = H.bodies.map(b => new THREE.Matrix4().compose(V(...b.bind_pos), quat(b.bind_quat), V(1, 1, 1)).invert());
+      const mesh = new THREE.SkinnedMesh(geo, M.skin);
+      mesh.bind(new THREE.Skeleton(bones, inv), new THREE.Matrix4());
+      mesh.frustumCulled = false; mesh.castShadow = true; mesh.receiveShadow = true;
+      scene.add(mesh);
+      const wp = H.wrist_pos, wr = H.wrist_rot;
+      const table = MYO.grid.map((_, i) => ({ p: V(wp[3 * i], wp[3 * i + 1], wp[3 * i + 2]),
+        R: new THREE.Matrix4().set(wr[9 * i], wr[9 * i + 1], wr[9 * i + 2], 0, wr[9 * i + 3], wr[9 * i + 4], wr[9 * i + 5], 0, wr[9 * i + 6], wr[9 * i + 7], wr[9 * i + 8], 0, 0, 0, 0, 1) }));
+      MYO.sides[s] = { bodies, bones, mesh, table, angles: shapeAngles('relaxed', s) };
+    }
+  } catch (e) { console.warn('hands not loaded:', e); MYO = null; }
+}
+function shapeAngles(name, s) {                              // runner.shape_targets for side s
+  const out = {};
+  for (const [k, v] of Object.entries(MYO.shapes[name] || MYO.shapes.relaxed)) out[k.replace(/_r$/, '_' + s)] = v;
+  return out;
+}
+function wristRel(s, phi) {                                  // Runner.wrist_rel
+  const g = MYO.grid, T = MYO.sides[s].table;
+  let i = 0; while (i < g.length - 2 && g[i + 1] < phi) i++;
+  const u = clamp((phi - g[i]) / (g[i + 1] - g[i]), 0, 1);
+  return { p: T[i].p.clone().lerp(T[i + 1].p, u), R: (u < 0.5 ? T[i] : T[i + 1]).R };
+}
+function palmFrame(forward, normal) {                        // tasks.hand_R: -y along the fingers, -z out of the palm
+  const f = forward.clone().normalize(), n = normal.clone().sub(f.clone().multiplyScalar(normal.dot(f))).normalize();
+  const y = f.clone().negate(), z = n.clone().negate(), x = y.clone().cross(z);
+  return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+}
+function handFK(side, radius) {                              // MuJoCo kinematics of the hand's bodies
+  const out = [], A = side.angles;
+  for (const b of side.bodies) {
+    let p, q;
+    if (b.parent < 0) { p = radius.p.clone(); q = radius.q.clone(); }
+    else { const P = out[b.parent]; p = P.p.clone().add(b.p.clone().applyQuaternion(P.q)); q = P.q.clone().multiply(b.q); }
+    for (const j of b.joints) {
+      const a = A[j.name] || 0;
+      if (!a) continue;
+      const anchor = p.clone().add(j.pos.clone().applyQuaternion(q));
+      const dq = new THREE.Quaternion().setFromAxisAngle(j.axis.clone().applyQuaternion(q).normalize(), a);
+      q = dq.multiply(q); p = anchor.add(p.sub(anchor).applyQuaternion(dq));
+    }
+    out.push({ p, q });
+  }
+  return out;
+}
+// Pose one hand: palm point p, palm frame q (palmFrame), grip shape. Returns the elbow end.
+const TIP = { point: 0.095, point_curl: 0.09, pinch: 0.085 };   // palm centre to the fingertips that touch
+function poseHand(s, palm, dt) {
+  const side = MYO.sides[s], want = shapeAngles(palm.shape, s), k = 1 - Math.exp(-dt * 12);
+  for (const j in want) side.angles[j] = lerp(side.angles[j] ?? want[j], want[j], k);
+  const { p: prel, R: Rrel } = wristRel(s, side.angles['flexion_' + s] || 0);
+  const Rp = new THREE.Matrix4().makeRotationFromQuaternion(palm.q);
+  const Rr = Rp.clone().multiply(Rrel.clone().transpose());            // R = Rp Rrel^T
+  const q = new THREE.Quaternion().setFromRotationMatrix(Rr);
+  const p = palm.p.clone().sub(prel.clone().applyMatrix4(Rr));          // elbow end: p - R prel
+  handFK(side, { p, q }).forEach((w, i) => { side.bones[i].position.copy(w.p); side.bones[i].quaternion.copy(w.q); });
+  return p;
 }
 
 // ------------------------------------------------------------------ lights and sky (render_blender.setup_world)
@@ -772,7 +934,7 @@ function roomAt(x, y) {
 }
 
 // ------------------------------------------------------------------ the camera: the person's eyes
-const cam = { pitch: -0.42, dir: null, spectate: null };   // spectate: [eye, target, fov], for tests
+const cam = { pitch: -0.55, dir: null, spectate: null };   // spectate: [eye, target, fov], for tests
 function updateCamera(dt) {
   const P = person.pts;
   camera.fov = 72;
@@ -791,6 +953,117 @@ function updateCamera(dt) {
 // direction of "forward" on the floor for the keys
 const camForward = () => V(Math.cos(person.heading), Math.sin(person.heading), 0);
 
+// ------------------------------------------------------------------ physics: MuJoCo in the browser
+// The videos' model without the anatomical hands (build_model.build_web -> pack/physics.xml):
+// the same apartment, case and items with the same contact parameters. What you carry hangs
+// on a mocap 'grip' by a soft weld, led on a short leash, so walls and furniture stop it;
+// what you put down drops and settles; the lid and the handle are pushed like a hand would;
+// standing the case up moves it, then it settles on its wheels. Everything is drawn from it.
+const PH = { ok: false, acc: 0, drive: null, lidTarget: null, trolleyTarget: null, casePose: null };
+async function startPhysics() {
+  if (new URLSearchParams(location.search).has('nophysics')) return;
+  try {
+    const [{ default: load }, xml] = await Promise.all([import('@mujoco/mujoco'), fetch('pack/physics.xml', { cache: 'no-cache' }).then(r => r.text())]);
+    const mj = await load({ printErr: msg => console.debug(msg) });   // (its loader notes slow downloads as errors)
+    const m = mj.MjModel.from_xml_string(xml), d = new mj.MjData(m);
+    const id = (t, n) => mj.mj_name2id(m, mj.mjtObj[t].value, n);
+    const jq = n => m.jnt_qposadr[id('mjOBJ_JOINT', n)], jd = n => m.jnt_dofadr[id('mjOBJ_JOINT', n)];
+    const lidJ = id('mjOBJ_JOINT', 'lid_hinge');
+    Object.assign(PH, {
+      mj, m, d, lidJ,
+      items: Object.fromEntries(Object.keys(W.items).map(n => [n, id('mjOBJ_BODY', n)])),
+      weld: Object.fromEntries(Object.keys(W.items).map(n => [n, id('mjOBJ_EQUALITY', 'hold_' + n)])),
+      grip: m.body_mocapid[id('mjOBJ_BODY', 'grip')],
+      caseBody: id('mjOBJ_BODY', 'suitcase'), caseQ: jq('suitcase_free'), caseV: jd('suitcase_free'),
+      lidQ: jq('lid_hinge'), lidV: jd('lid_hinge'),
+      trolleyQ: jq('trolley_slide'), trolleyV: jd('trolley_slide'),
+      lidOpen: m.jnt_range[2 * lidJ + 1],
+    });
+    resetPhysics();
+    PH.ok = true;
+  } catch (e) { console.warn('physics not running:', e); }
+}
+function resetPhysics() {
+  const { mj, m, d } = PH;
+  mj.mj_resetData(m, d);
+  d.qpos[PH.lidQ] = Math.PI;                              // the lid lies open on the bed, as in the runs
+  for (const n in PH.weld) d.eq_active[PH.weld[n]] = 0;
+  PH.drive = null; PH.lidTarget = null; PH.trolleyTarget = null; PH.casePose = null; PH.acc = 0;
+  mj.mj_forward(m, d);
+  PH.good = { qpos: Float64Array.from(d.qpos), t: d.time };
+}
+function bodyPose(b, p = V(), q = new THREE.Quaternion()) {
+  const { d } = PH;
+  p.set(d.xpos[3 * b], d.xpos[3 * b + 1], d.xpos[3 * b + 2]);
+  q.set(d.xquat[4 * b + 1], d.xquat[4 * b + 2], d.xquat[4 * b + 3], d.xquat[4 * b]);
+  return { p, q };
+}
+function physHold(name) {                                 // weld the item to the grip where it is now
+  const { d } = PH, g = PH.grip, { p, q } = bodyPose(PH.items[name]);
+  d.mocap_pos.set([p.x, p.y, p.z], 3 * g); d.mocap_quat.set([q.w, q.x, q.y, q.z], 4 * g);
+  d.eq_active[PH.weld[name]] = 1;
+  PH.drive = { name, pose: { p: p.clone(), q: q.clone() } };
+}
+function physPlace(name, pose) {                         // put a body somewhere at rest
+  const { mj, m, d } = PH, a = m.jnt_qposadr[mj.mj_name2id(m, mj.mjtObj.mjOBJ_JOINT.value, name + '_free')];
+  const v = m.jnt_dofadr[mj.mj_name2id(m, mj.mjtObj.mjOBJ_JOINT.value, name + '_free')];
+  d.qpos.set([pose.p.x, pose.p.y, pose.p.z, pose.q.w, pose.q.x, pose.q.y, pose.q.z], a);
+  for (let k = 0; k < 6; k++) d.qvel[v + k] = 0;
+  mj.mj_forward(m, d);
+}
+function physRelease(name) { PH.d.eq_active[PH.weld[name]] = 0; if (PH.drive && PH.drive.name === name) PH.drive = null; }
+function stepPhysics(real) {
+  const { mj, m, d } = PH, dt = m.opt.timestep;
+  PH.acc = Math.min(PH.acc + real, 0.1);
+  // the zip holds the lid shut (runner: hinge range narrowed once closed)
+  const zipped = S && S.lid === 'closed' && S.zip_open < 0.5 && PH.lidTarget == null;
+  m.jnt_range[2 * PH.lidJ + 1] = zipped ? 0.003 : PH.lidOpen;
+  while (PH.acc >= dt) {
+    PH.acc -= dt;
+    if (PH.drive) {                                       // leash: the grip leads the item by at most 5 cm...
+      const { p, q } = bodyPose(PH.items[PH.drive.name]), t = PH.drive.pose;
+      const off = t.p.clone().sub(p), L = off.length();
+      if (L > 0.05) off.multiplyScalar(0.05 / L);
+      const ang = q.angleTo(t.q), r = ang > 0.02 ? q.clone().rotateTowards(t.q, 0.02) : t.q;   // and turns it 0.02 rad at most
+      const g = PH.grip, w = p.add(off);
+      d.mocap_pos.set([w.x, w.y, w.z], 3 * g); d.mocap_quat.set([r.w, r.x, r.y, r.z], 4 * g);
+    }
+    d.qfrc_applied.fill(0);
+    if (PH.lidTarget != null)                             // a hand on the lid: PD on the hinge
+      d.qfrc_applied[PH.lidV] = 60 * (PH.lidTarget - d.qpos[PH.lidQ]) - 6 * d.qvel[PH.lidV];
+    if (PH.trolleyTarget != null)
+      d.qfrc_applied[PH.trolleyV] = 400 * (PH.trolleyTarget - d.qpos[PH.trolleyQ]) - 20 * d.qvel[PH.trolleyV];
+    if (PH.casePose) {                                    // carried: the case goes where the hands take it
+      const { p, q } = PH.casePose;
+      d.qpos.set([p.x, p.y, p.z, q.w, q.x, q.y, q.z], PH.caseQ);
+      for (let k = 0; k < 6; k++) d.qvel[PH.caseV + k] = 0;
+    }
+    const t0 = d.time;
+    if (PH.debug) { let k = 0; for (let i = 1; i < m.nv; i++) if (Math.abs(d.qvel[i]) > Math.abs(d.qvel[k])) k = i; PH.dbg = `dof ${k} qvel ${d.qvel[k].toFixed(2)} ncon ${d.ncon}`; }
+    mj.mj_step(m, d);
+    if (d.time < t0) {                                    // MuJoCo reset an unstable state: go back to the last good one
+      console.warn('physics: unstable at', t0.toFixed(3), '- restored the last good state', PH.dbg);
+      PH.resets = (PH.resets || 0) + 1;
+      if (PH.good) { d.qpos.set(PH.good.qpos); d.qvel.fill(0); d.time = PH.good.t; }
+      if (PH.drive) d.eq_active[PH.weld[PH.drive.name]] = 1;     // a reset also switches the welds off
+      mj.mj_forward(m, d);
+      PH.acc = 0; break;
+    }
+    if (d.time - (PH.good ? PH.good.t : -1) > 0.25) PH.good = { qpos: Float64Array.from(d.qpos), t: d.time };
+  }
+}
+function syncFromPhysics() {
+  for (const [n, b] of Object.entries(PH.items)) {
+    const g = items[n];
+    if (g.parent !== scene) scene.attach(g);
+    bodyPose(b, g.position, g.quaternion);
+  }
+  bodyPose(PH.caseBody, CASE.root.position, CASE.root.quaternion);
+  CASE.lidAngle = Math.PI - PH.d.qpos[PH.lidQ];
+  CASE.trolley = PH.d.qpos[PH.trolleyQ];
+  updateCaseParts();
+}
+
 // ------------------------------------------------------------------ item and case placement in the world
 function itemHome(name) {
   const it = W.items[name];
@@ -805,29 +1078,47 @@ function itemInCase(name, place) {                     // place: x, y, z (bottom
 }
 function carryPose(name) {
   const it = W.items[name], { f, l } = person.frame(), base = V(person.x, person.y, 0), dz = -0.28 * person.crouch - (person.bob || 0);
+  const r = Math.hypot(it.size[0], it.size[1]) / 2 + 0.02;
+  const reach = (want, side = 0) => {                     // as far out as the walls allow
+    for (let d = want; d > 0.12; d -= 0.02) {
+      const q = base.clone().add(f.clone().multiplyScalar(d)).add(l.clone().multiplyScalar(side));
+      if (!tall.some(b => Math.hypot(q.x - clamp(q.x, b.x0, b.x1), q.y - clamp(q.y, b.y0, b.y1)) < r)) return d;
+    }
+    return 0.12;
+  };
   if (it.hands === 1) {
-    const p = base.add(f.clone().multiplyScalar(0.42)).add(l.clone().multiplyScalar(-0.14)); p.z = 1.27 + dz;
+    const p = base.add(f.clone().multiplyScalar(reach(0.36, -0.16))).add(l.clone().multiplyScalar(-0.16)); p.z = 1.02 + dz;
     return { p, q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), person.heading) };
   }
-  const p = base.add(f.clone().multiplyScalar(0.44 + it.size[1] * 0.25)); p.z = 1.24 + it.size[2] * 0.5 + dz;
+  // in front of the hips, as the videos carry (tasks.carry_pose: 1.0 m up, 0.36 m out)
+  const p = base.add(f.clone().multiplyScalar(reach(0.36 + it.size[1] * 0.2))); p.z = 1.0 + dz;
   return { p, q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), person.heading + Math.PI / 2) };
 }
 function setItemPose(name, pose) {
+  if (PH.ok) { if (PH.drive && PH.drive.name === name) PH.drive.pose = { p: pose.p.clone(), q: pose.q.clone() }; return; }
   const g = items[name];
   if (g.parent !== scene) scene.attach(g);
   g.position.copy(pose.p); g.quaternion.copy(pose.q);
 }
 function graspPoints(name, pose) {                      // where the hands go on an item
   const it = W.items[name];
-  if (it.hands === 1) {
+  if (it.hands === 1) {                                  // the bottle: a wrap from the near side (skills_case)
     const toward = V(person.x, person.y, pose.p.z).sub(pose.p); toward.z = 0; toward.normalize();
-    return { r: pose.p.clone().add(toward.multiplyScalar(0.045)).add(V(0, 0, 0.02)), l: null };
+    return { r: pose.p.clone().add(toward.clone().multiplyScalar(it.size[0] / 2 + 0.02)).add(V(0, 0, 0.02)), l: null,
+             nr: toward.clone().negate(), nl: null, shape: 'wrap_big' };
   }
   const ax = V(1, 0, 0).applyQuaternion(pose.q).multiplyScalar(it.size[0] / 2 + 0.03);
   const a = pose.p.clone().add(ax), b = pose.p.clone().sub(ax);
   const { l } = person.frame();
   const aLeft = a.clone().sub(V(person.x, person.y, 0)).dot(l) > b.clone().sub(V(person.x, person.y, 0)).dot(l);
-  return aLeft ? { l: a, r: b } : { l: b, r: a };
+  const g = aLeft ? { l: a, r: b } : { l: b, r: a };     // a bimanual squeeze: palms on the sides, facing in (tasks.squeeze_palms)
+  g.nl = pose.p.clone().sub(g.l).setZ(0).normalize(); g.nr = pose.p.clone().sub(g.r).setZ(0).normalize();
+  g.shape = 'squeeze';
+  return g;
+}
+function grip(gp) {
+  person.handN.r = gp.nr || null; person.handN.l = gp.nl || null;
+  person.shape.r = person.shape.l = gp.shape || 'flat';
 }
 
 // ------------------------------------------------------------------ game state from the simulator
@@ -841,6 +1132,7 @@ const path = [];
 function applyState(s, { skipItems = [] } = {}) {
   S = s;
   setCaseVisual(s);
+  if (PH.ok) { renderChecklist(s); renderConv(s.conv); return; }      // poses come from the physics
   for (const [name, d] of Object.entries(s.items)) {
     if (skipItems.includes(name)) continue;
     if (d.loc === 'held') continue;                    // posed every frame
@@ -925,7 +1217,6 @@ async function doOption(i) {
 function play(label, T, step) {
   return new Promise(res => { anim = { label, t: 0, T, step, done: res }; renderPrompt(); });
 }
-const turnTo = (p, k) => { const want = Math.atan2(p.y - person.y, p.x - person.x); person.heading += angDiff(person.heading, want) * Math.min(1, k); };
 const crouchFor = z => clamp((1.02 - z) / 0.55, 0, 1);
 function animate(q, ns) {
   const id = q.id, verb = id.split('(')[0];
@@ -935,16 +1226,16 @@ function animate(q, ns) {
     const name = id.slice(8, -1), fromCase = before.items[name].loc === 'case';
     const start = { p: items[name].getWorldPosition(V()), q: items[name].getWorldQuaternion(new THREE.Quaternion()) };
     scene.attach(items[name]);
+    if (PH.ok) physHold(name);
     const cz = crouchFor(start.p.z);
     return play(`Picking up the ${W.items[name].label}`, 1.5, k => {
-      turnTo(start.p, k * 6);
       person.look = start.p;
       const reach = ease(seg(k, 0, 0.35)), lift = ease(seg(k, 0.45, 0.95));
       person.crouch = lerp(0, cz, reach) * (1 - lift);
       const pose = { p: start.p.clone().lerp(carryPose(name).p, lift).add(V(0, 0, 0.08 * Math.sin(Math.PI * lift))), q: start.q.clone().slerp(carryPose(name).q, lift) };
       setItemPose(name, pose);
       const gp = graspPoints(name, pose);
-      person.hand.r = gp.r; person.hand.l = gp.l;
+      person.hand.r = gp.r; person.hand.l = gp.l; grip(gp);
       person.handW.r = gp.r ? Math.max(reach, lift) : 0; person.handW.l = gp.l ? Math.max(reach, lift) : 0;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -958,16 +1249,17 @@ function animate(q, ns) {
     const cz = crouchFor(target.p.z);
     const label = verb === 'place' ? `Packing the ${W.items[name].label}` : `Putting the ${W.items[name].label} back`;
     return play(label, 1.6, k => {
-      turnTo(target.p, k * 6);
       person.look = target.p;
       const move = ease(seg(k, 0.15, 0.75)), back = ease(seg(k, 0.8, 1));
       person.crouch = cz * Math.sin(Math.PI * Math.min(1, move * 0.5 + back * 0.5)) * (move > 0 ? 1 : 0);
       const cp = carryPose(name);
       const p = cp.p.clone().lerp(target.p, move).add(V(0, 0, 0.12 * Math.sin(Math.PI * move)));
       const pose = { p, q: cp.q.clone().slerp(target.q, move) };
-      if (k < 0.8) setItemPose(name, pose); else setItemPose(name, target);
+      // physics: let go only once it is there (it may still be catching up), for up to 3 s
+      if (PH.ok && k >= 0.8 && PH.drive && items[name].position.distanceTo(target.p) > 0.03 && PH.d.time - (anim.waitFrom ??= PH.d.time) < 3) { anim.t = 0.79 * anim.T; return; }
+      if (k < 0.8) setItemPose(name, pose); else if (PH.ok) { if (PH.drive) physRelease(name); } else setItemPose(name, target);
       const gp = graspPoints(name, k < 0.8 ? pose : target);
-      person.hand.r = gp.r; person.hand.l = gp.l;
+      person.hand.r = gp.r; person.hand.l = gp.l; grip(gp);
       person.handW.r = gp.r ? 1 - back : 0; person.handW.l = gp.l ? 1 - back : 0;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -976,13 +1268,14 @@ function animate(q, ns) {
     const a0 = CASE.lidAngle, a1 = id === 'close_lid' ? Math.PI : 0;
     return play(id === 'close_lid' ? 'Closing the lid' : 'Opening the lid', 1.9, k => {
       const m = ease(seg(k, 0.25, 0.85));
-      CASE.lidAngle = lerp(a0, a1, m); updateCaseParts();
+      if (PH.ok) PH.lidTarget = k < 1 ? Math.PI - lerp(a0, a1, m) : null;
+      else { CASE.lidAngle = lerp(a0, a1, m); updateCaseParts(); }
       const edge = dy => CASE.pivot.localToWorld(V(-CASE.w * 0.92, dy, -CASE.h + CASE.DL + 0.01));
       const reach = ease(seg(k, 0, 0.25)) * (1 - ease(seg(k, 0.88, 1)));
       const er = edge(-0.16), el = edge(0.16);
-      turnTo(CASE.root.position, k * 5);
       person.look = er;
       person.hand.r = er; person.hand.l = el; person.handW.r = person.handW.l = reach;
+      grip({ shape: 'flat' });
       person.crouch = 0.35 * reach;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -994,10 +1287,11 @@ function animate(q, ns) {
       CASE.zip = lerp(z0, z1, m); updateCaseParts();
       const reach = ease(seg(k, 0, 0.2)) * (1 - ease(seg(k, 0.88, 1)));
       const a = CASE.sliders[0].getWorldPosition(V()), b = CASE.sliders[1].getWorldPosition(V());
-      turnTo(a.clone().lerp(b, 0.5), k * 5); person.look = a.clone().lerp(b, 0.5);
+      person.look = a.clone().lerp(b, 0.5);
       const { l } = person.frame();
       const aLeft = a.clone().sub(V(person.x, person.y, 0)).dot(l) > b.clone().sub(V(person.x, person.y, 0)).dot(l);
       person.hand.l = aLeft ? a : b; person.hand.r = aLeft ? b : a; person.handW.r = person.handW.l = reach;
+      grip({ shape: 'pinch' });
       person.crouch = 0.45 * reach;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -1011,8 +1305,8 @@ function animate(q, ns) {
       const p = k0 >= 0 ? CASE.dials[k0].getWorldPosition(V()) : CASE.button.getWorldPosition(V());
       if (id === 'dock_zip_pulls' && k > 0.45) { CASE.docked = true; updateCaseParts(); }
       if (k0 >= 0 && k > 0.5) { CASE.dialsV = d1.slice(); updateCaseParts(); }
-      turnTo(p, k * 5); person.look = p;
-      person.hand.r = p; person.handW.r = reach; person.handW.l = 0;
+      person.look = p;
+      person.hand.r = p; person.handW.r = reach; person.handW.l = 0; grip({ shape: 'point' });
       person.crouch = (CASE.upright ? 0.55 : 0.4) * reach;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -1021,10 +1315,11 @@ function animate(q, ns) {
     const e0 = CASE.trolley, e1 = [0, 0.2, 0.38][ns.trolley] || 0;
     return play(e1 > e0 ? 'Pulling out the handle' : 'Pushing the handle in', 1.2, k => {
       const reach = ease(seg(k, 0, 0.3)) * (1 - ease(seg(k, 0.85, 1)));
-      CASE.trolley = lerp(e0, e1, ease(seg(k, 0.3, 0.8))); updateCaseParts();
+      if (PH.ok) PH.trolleyTarget = lerp(e0, e1, ease(seg(k, 0.3, 0.8)));
+      else { CASE.trolley = lerp(e0, e1, ease(seg(k, 0.3, 0.8))); updateCaseParts(); }
       const p = CASE.bar.getWorldPosition(V());
-      turnTo(p, k * 5); person.look = p;
-      person.hand.r = p; person.handW.r = reach; person.handW.l = 0;
+      person.look = p;
+      person.hand.r = p; person.handW.r = reach; person.handW.l = 0; grip({ shape: 'bar_fist' });
       person.crouch = 0.3 * reach;
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
@@ -1035,11 +1330,12 @@ function animate(q, ns) {
     return play(id === 'stand_up_case' ? 'Standing the case up' : 'Rolling the case', 2.2, k => {
       const reach = ease(seg(k, 0, 0.2)) * (1 - ease(seg(k, 0.85, 1)));
       const m = ease(seg(k, 0.2, 0.85));
-      CASE.root.position.copy(p0.clone().lerp(tgt.p, m).add(V(0, 0, (id === 'stand_up_case' ? 0.25 : 0) * Math.sin(Math.PI * m))));
-      CASE.root.quaternion.copy(q0.clone().slerp(tgt.q, m));
+      const cp = p0.clone().lerp(tgt.p, m).add(V(0, 0, (id === 'stand_up_case' ? 0.25 : 0) * Math.sin(Math.PI * m))), cq = q0.clone().slerp(tgt.q, m);
+      if (PH.ok) PH.casePose = k < 1 ? { p: cp.add(V(0, 0, 0.01)), q: cq } : null;      // set down 1 cm up: it settles
+      else { CASE.root.position.copy(cp); CASE.root.quaternion.copy(cq); }
       const p = CASE.bar.getWorldPosition(V());
-      turnTo(p, k * 5); person.look = p;
-      person.hand.r = p; person.hand.l = p.clone().add(V(0, 0, -0.05)); person.handW.r = person.handW.l = reach;
+      person.look = p;
+      person.hand.r = p; person.hand.l = p.clone().add(V(0, 0, -0.05)); person.handW.r = person.handW.l = reach; grip({ shape: 'bar_fist' });
       person.crouch = 0.3 * reach;
       if (k >= 1) { person.crouch = 0; person.look = null; CASE.upright = true; }
     });
@@ -1076,8 +1372,9 @@ function pyStatus() {
 async function newGame() {
   finished = false; started = false; busy = false; anim = null;
   person.x = 1.55; person.y = 0.64; person.heading = Math.PI / 2; person.crouch = 0; person.handW.r = person.handW.l = 0;
-  cam.pitch = -0.42; cam.snap = true; path.length = 0;
+  cam.pitch = -0.55; cam.snap = true; path.length = 0;
   $('finish').hidden = true;
+  if (PH.ok) resetPhysics();
   if (!py.ready) { renderChecklist(null); return; }
   const r = await call('game_new', { task });
   applyState(r.state);
@@ -1126,7 +1423,7 @@ addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
 // looking: a click hands the mouse to the view (Esc gives it back); dragging works too, and on touch
 let drag = null;
-const lookBy = (dx, dy, k) => { if (busy) return; person.heading -= dx * k; cam.pitch = clamp(cam.pitch - dy * k, -1.3, 1.0); };
+const lookBy = (dx, dy, k) => { if (busy) return; person.heading -= dx * k; cam.pitch = clamp(cam.pitch - dy * k, -1.45, 1.0); };
 canvas.addEventListener('pointerdown', e => {
   canvas.focus();
   if (e.pointerType === 'mouse' && !document.pointerLockElement && $('intro').hidden && $('finish').hidden) { try { canvas.requestPointerLock(); } catch { } }
@@ -1195,7 +1492,7 @@ function resize() {
 addEventListener('resize', resize);
 
 // ------------------------------------------------------------------ the loop
-let person = null, last = now(), slow = 0, pathAt = 0;
+let person = null, mirror = null, last = now(), slow = 0, pathAt = 0;
 function tick() {
   requestAnimationFrame(tick);
   const t = now(), real = t - last, dt = Math.min(0.05, real); last = t;
@@ -1206,7 +1503,8 @@ function tick() {
     const fw = camForward(), rt = V(fw.y, -fw.x, 0);
     const k = s => keys.has(s);
     let a = 0, b = 0;
-    if (k('w') || k('arrowup')) a += 1; if (k('s') || k('arrowdown')) a -= 1;
+    if (k('w')) a += 1; if (k('s')) a -= 1;
+    if (k('arrowup')) cam.pitch = Math.min(1.0, cam.pitch + dt * 1.2); if (k('arrowdown')) cam.pitch = Math.max(-1.45, cam.pitch - dt * 1.2);   // look up and down
     if (k('a')) b -= 1; if (k('d')) b += 1;
     if (k('arrowleft') || k('q')) person.heading += dt * 2.2; if (k('arrowright') || k('r')) person.heading -= dt * 2.2;
     if (pad.on) { a -= pad.y; b += pad.x; }
@@ -1222,12 +1520,23 @@ function tick() {
   if (sp > 0) { const [nx, ny] = collide(person.x + mx * dt, person.y + my * dt); person.speed = Math.hypot(nx - person.x, ny - person.y) / Math.max(dt, 1e-4); person.x = nx; person.y = ny; }
   else person.speed *= Math.exp(-dt * 12);
   if (!busy && S && S.holding) {
-    const gp = graspPoints(S.holding, carryPose(S.holding));
-    person.hand.r = gp.r; person.hand.l = gp.l; person.handW.r = gp.r ? 1 : 0; person.handW.l = gp.l ? 1 : 0;
+    const gp = graspPoints(S.holding, PH.ok ? { p: items[S.holding].position, q: items[S.holding].quaternion } : carryPose(S.holding));
+    person.hand.r = gp.r; person.hand.l = gp.l; grip(gp); person.handW.r = gp.r ? 1 : 0; person.handW.l = gp.l ? 1 : 0;
   } else if (!busy) { person.handW.r *= Math.exp(-dt * 10); person.handW.l *= Math.exp(-dt * 10); }
-  // the action being animated
+  // the physics, then the action being animated: on the physics clock when it runs (a slow
+  // machine slows both together), else on real time, even on slow frames
+  let simDt = Math.min(real, 0.25);
+  if (PH.ok) {
+    const t0 = PH.d.time; stepPhysics(real); simDt = Math.max(0, PH.d.time - t0);
+    // a carried thing caught on something (a door frame; behind a wall after a jump) for a
+    // second comes back to the hands, as if you went back for it
+    const dr = PH.drive, far = dr && bodyPose(PH.items[dr.name]).p.distanceTo(dr.pose.p) > 0.6;
+    PH.snag = far ? (PH.snag || 0) + simDt : 0;
+    if (far && PH.snag > 1) { physPlace(dr.name, dr.pose); PH.snag = 0; }
+    syncFromPhysics();
+  }
   if (anim) {
-    anim.t += Math.min(real, 0.25); const k = Math.min(1, anim.t / anim.T); anim.step(k);   // real time, even on slow frames
+    anim.t += simDt; const k = Math.min(1, anim.t / anim.T); anim.step(k);
     if (k >= 1) { const d = anim.done; anim = null; d(); }
   }
   person.update(dt);
@@ -1246,7 +1555,10 @@ function tick() {
     } else tag.hidden = true;
   } else tag.hidden = true;
   $('clock').textContent = fmtTime(gameTime());
-  $('where').textContent = W ? W.rooms[roomAt(person.x, person.y)].label.replace(/^the /, '') : '';
+  const room = roomAt(person.x, person.y);
+  $('where').textContent = W ? W.rooms[room].label.replace(/^the /, '') : '';
+  // the mirror draws the scene again: only where it can be seen (in view through a wall still counts)
+  if (mirror) mirror.visible = room === 'bathroom' || room === 'hall';
   // drop to a lighter setting if frames are slow
   if (quality === 'high' && dt > 0.045) { slow += dt; if (slow > 4) { setQuality('medium'); toast('Switched to medium quality to keep it smooth.'); } } else slow = Math.max(0, slow - dt * 0.5);
   if (quality === 'high' || quality === 'medium') composer.render(dt); else renderer.render(scene, camera);
@@ -1262,12 +1574,15 @@ async function main() {
   $('task').value = task;
   makeMaterials();
   await loadLightmap();
+  await loadHands();
   buildLights();
   buildApartment();
   buildFurniture();
   buildItems();
   buildCase();
   person = new Person();
+  loadScans().then(sc => { if (sc) useScans(sc); });
+  startPhysics();
   setCaseVisual({ lid: 'open', zip_open: 1, trolley: 0, dials: [0, 0, 0], pulls: 'free', case_pose: 'on_bed', case_at: 'bed' });
   for (const n of Object.keys(items)) setItemPose(n, itemHome(n));
   renderChecklist(null); renderConv([]);
@@ -1289,5 +1604,12 @@ window.PACK = {                                          // for tests and the co
     return r.intersectObjects(scene.children, true).slice(0, 4).map(h => `${h.object.name || h.object.parent?.name || h.object.type} ${h.distance.toFixed(2)} ${h.point.toArray().map(v => v.toFixed(2))}`);
   },
   get camPos() { return camera.position.toArray(); },
+  get physics() { return PH.ok; },
+  debugPhys() { PH.debug = true; },
+  get PH() { return PH; },
+  get MYO() { return MYO; },
+  benchPhys(n = 500) { const t = performance.now(); for (let i = 0; i < n; i++) PH.mj.mj_step(PH.m, PH.d); return (performance.now() - t) / n; },
+  get phys() { return PH.ok ? { t: PH.d.time, resets: PH.resets || 0, drive: PH.drive && PH.drive.name, target: PH.drive && PH.drive.pose.p.toArray().map(v => +v.toFixed(3)) } : null; },
+  itemPos(n) { return items[n].position.toArray().map(v => +v.toFixed(3)); },
 };
 main().catch(e => { console.error(e); $('loadStatus').textContent = 'Could not start: ' + e.message; $('loadStatus').className = 'status err'; });

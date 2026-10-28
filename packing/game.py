@@ -26,7 +26,7 @@ import assistant_template
 
 REACH_ITEM = 1.0        # m from the person's centre to an item's centre
 REACH_CASE = 0.8        # m from the person's centre to the edge of the case's footprint
-FRONT = math.radians(80)    # an item must be within this angle of the facing direction
+FRONT = math.radians(40)    # what you act on must be within this angle of where you face (no turning)
 MAX_OPTIONS = 9
 
 
@@ -48,6 +48,29 @@ def dist_to_rect(x, y, cx, cy, hx, hy):
     dx = max(abs(x - cx) - hx, 0.0)
     dy = max(abs(y - cy) - hy, 0.0)
     return math.hypot(dx, dy)
+
+
+# walls that block reaching (full height, or reaching above the hands)
+BLOCKING = [((w.center[0] - w.size[0] / 2, w.center[0] + w.size[0] / 2), (w.center[1] - w.size[1] / 2, w.center[1] + w.size[1] / 2))
+            for w in S.WALLS if w.center[2] - w.size[2] / 2 < 0.5 and w.center[2] + w.size[2] / 2 > 1.0]
+
+
+def clear_line(x0, y0, x1, y1):
+    """No blocking wall between two floor points (slab test per wall box)."""
+    for (ax, bx), (ay, by) in BLOCKING:
+        t0, t1 = 0.0, 1.0
+        for p, d, lo, hi in ((x0, x1 - x0, ax, bx), (y0, y1 - y0, ay, by)):
+            if abs(d) < 1e-9:
+                if p < lo or p > hi:
+                    break
+                continue
+            ta, tb = sorted(((lo - p) / d, (hi - p) / d))
+            t0, t1 = max(t0, ta), min(t1, tb)
+            if t0 > t1:
+                break
+        else:
+            return False
+    return True
 
 
 def angle_to(x, y, heading, tx, ty):
@@ -78,9 +101,17 @@ def checklist(sim):
     pack_order = list(task.pack)
     keys.sort(key=lambda k: (next(i for i, p in enumerate(ORDER) if k.startswith(p)),
                              pack_order.index(k[7:-1]) if k.startswith("packed(") else 0))
-    return [dict(key=k, text=goal_text(k), done=bool(g[k]),
-                 rule=not k.startswith("packed(") and k not in ("lid_closed", "zipped", "case_upright", "locked"))
-            for k in keys]
+    out, before = [], True
+    for k in keys:
+        rule = not k.startswith("packed(") and k not in ("lid_closed", "zipped", "case_upright", "locked")
+        done = bool(g[k])
+        if not rule and not k.startswith("packed("):
+            # a step counts only after the steps before it: closing an empty case is not "Close the lid"
+            done = done and before
+        if not rule:
+            before = before and done
+        out.append(dict(key=k, text=goal_text(k), done=done, rule=rule))
+    return out
 
 
 class Game:
@@ -100,17 +131,23 @@ class Game:
         st = self.sim.state
         out = []
         upright = st.case_pose == "upright_floor"
-        near_case = dist_to_rect(x, y, *case_footprint(st)) <= REACH_CASE
+        fp = case_footprint(st)
+        cx, cy, hx_, hy_ = fp
+        # the case counts as faced if the nearest point of it, or its middle, is in front
+        nx_, ny_ = min(max(x, cx - hx_), cx + hx_), min(max(y, cy - hy_), cy + hy_)
+        case_ang = min(angle_to(x, y, heading, nx_, ny_) if (nx_, ny_) != (x, y) else 0.0, angle_to(x, y, heading, cx, cy))
+        near_case = dist_to_rect(x, y, *fp) <= REACH_CASE and case_ang <= FRONT and clear_line(x, y, cx, cy)
         h = st.holding
         if h:
             if near_case and not upright:
                 best = LO.choose_spot(st.place, h)
                 spots = [best] + [s for s in D.SPOTS if s != best] if isinstance(best, str) else list(D.SPOTS)
-                out.append(("suitcase", "", [f"place({h}, {s})" for s in spots]))
+                out.append((case_ang, "suitcase", "", [f"place({h}, {s})" for s in spots]))
             hx, hy = S.item(h).xy
-            if math.hypot(hx - x, hy - y) <= REACH_ITEM:
-                out.append((S.item(h).station, "", [f"put_back({h})"]))
-            return out
+            a = angle_to(x, y, heading, hx, hy)
+            if math.hypot(hx - x, hy - y) <= REACH_ITEM and a <= FRONT and clear_line(x, y, hx, hy):
+                out.append((a, S.item(h).station, "", [f"put_back({h})"]))
+            return [c[1:] for c in sorted(out, key=lambda c: c[0])]
         # items lying where they belong (or were put back), nearest first
         near = []
         for n in ITEM_NAMES:
@@ -118,24 +155,24 @@ class Game:
             if not loc.startswith("station:"):
                 continue
             ix, iy = S.item(n).xy
-            d = math.hypot(ix - x, iy - y)
-            if d <= REACH_ITEM and angle_to(x, y, heading, ix, iy) <= FRONT:
-                near.append((d, n, loc.split(":", 1)[1]))
-        for d, n, station in sorted(near):
-            out.append((station, n, [f"pick_up({n})"]))
+            d, a = math.hypot(ix - x, iy - y), angle_to(x, y, heading, ix, iy)
+            if d <= REACH_ITEM and a <= FRONT and clear_line(x, y, ix, iy):
+                near.append((a, n, loc.split(":", 1)[1]))
+        for a, n, station in near:
+            out.append((a, station, n, [f"pick_up({n})"]))
         if near_case:
             if upright:
                 ids = ["dock_zip_pulls", "press_lock_button"] + self._dials() + self._handle() + \
                       [f"roll_case({f})" for f in D.FLOOR]
-                out.append(("case_floor", "", ids))
+                out.append((case_ang, "case_floor", "", ids))
             else:
-                out.append(("bed_foot", "", ["close_lid", "open_lid"]))
-                out.append(("suitcase", "", ["zip_to(100)", "zip_to(0)", "dock_zip_pulls", "press_lock_button"]
+                out.append((case_ang, "bed_foot", "", ["close_lid", "open_lid"]))
+                out.append((case_ang, "suitcase", "", ["zip_to(100)", "zip_to(0)", "dock_zip_pulls", "press_lock_button"]
                             + self._dials()))
-                out.append(("bed_foot", "", ["stand_up_case"] + self._handle()))
+                out.append((case_ang, "bed_foot", "", ["stand_up_case"] + self._handle()))
                 # what is packed can come out again (topmost items only pass the check)
-                out.append(("suitcase", "", [f"pick_up({n})" for n in ITEM_NAMES if st.in_case(n)]))
-        return out
+                out.append((case_ang, "suitcase", "", [f"pick_up({n})" for n in ITEM_NAMES if st.in_case(n)]))
+        return [c[1:] for c in sorted(out, key=lambda c: c[0])]          # stable: case actions keep their order
 
     def _dials(self):
         st = self.sim.state
