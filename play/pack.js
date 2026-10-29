@@ -58,8 +58,13 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.AgXToneMapping;      // the renders use Blender's AgX view transform
-const TUNE = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => ['exp', 'env', 'area', 'sunI', 'hemi', 'ao', 'lm'].includes(k)).map(([k, v]) => [k, Number(v)]));
-renderer.toneMappingExposure = TUNE.exp ?? 0.56;
+const TUNE = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => ['exp', 'env', 'area', 'sunI', 'hemi', 'ao', 'lm', 'con'].includes(k)).map(([k, v]) => [k, Number(v)]));
+renderer.toneMappingExposure = TUNE.exp ?? 0.68;   // matched to the room-camera frames with the look below
+// the renders' look is "AgX - Medium High Contrast": contrast 1.2 in AgX log, about middle grey
+THREE.ShaderChunk.tonemapping_pars_fragment = THREE.ShaderChunk.tonemapping_pars_fragment.replace(
+  'color = agxDefaultContrastApprox( color );',
+  `color = clamp( ( color - 0.6060606 ) * ${(TUNE.con ?? 1.2).toFixed(3)} + 0.6060606, 0.0, 1.0 );
+	color = agxDefaultContrastApprox( color );`);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fb4c8);
 const camera = new THREE.PerspectiveCamera(60, 1, 0.03, 120);
@@ -68,7 +73,7 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const gtao = new GTAOPass(scene, camera, 16, 16);
 gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.0, scale: 1.0, samples: 12 });
-gtao.blendIntensity = TUNE.ao ?? 1.0;
+gtao.blendIntensity = TUNE.ao ?? 0.6;
 composer.addPass(gtao);
 composer.addPass(new OutputPass());
 
@@ -652,6 +657,7 @@ function caseObstacle() {
 }
 
 // ------------------------------------------------------------------ the person (render_blender.Body)
+const PELVIS_H = 0.94, TORSO = 0.47, SHOULDER = 0.18;   // operator_model: standing pelvis height, hip to shoulders, half the shoulders
 class Person {
   constructor() {
     this.x = 1.55; this.y = 0.64; this.heading = Math.PI / 2;
@@ -714,8 +720,38 @@ class Person {
     const bob = s > 0.05 ? 0.018 * s * Math.abs(Math.sin(this.phase)) : 0;
     this.bob = bob;
     const c = this.crouch;
-    const pelvis = V(this.x, this.y, 1.0 - 0.32 * c - bob);       // legs (0.45 + 0.43) nearly straight when standing
-    const lean = 0.06 * s + 0.55 * c + this.lean;
+    const pelvis = V(this.x, this.y, PELVIS_H - 0.32 * c - bob);    // operator_model: legs 0.43 + 0.43, ankles 0.075 up
+    // As the renders' operator model does: the forearms go where the hands need them and the
+    // body lowers the pelvis and bends at the hips so each shoulder is one upper arm from its
+    // elbow (operator_model.TorsoSolver's costs, here a grid search over the drop and the lean).
+    const lean0 = 0.06 * s + 0.15 * c + this.lean;
+    let bend = 0, drop = 0;
+    if (MYO) {
+      const want = [];
+      for (const [k, side] of [['r', -1], ['l', 1]]) {
+        const pt = this.hand[k] && this.handW[k] > 0 ? this.palmTarget(k, f, u) : null;
+        if (pt) want.push([myoElbow(k, pt), side, this.handW[k]]);
+      }
+      if (want.length) {
+        // the eyes stay above the work, so the head camera does not dip into the case or furniture
+        const top = Math.max(...want.map(([e]) => e.z)) + 0.3;   // the renders: eyes 0.3 m over the elbows when leaning over the case
+        let best = 1e9;
+        for (let b = 0; b <= 1.2 + 1e-9; b += 0.05) for (let d = 0; d <= 0.3 + 1e-9; d += 0.025) {
+          const L = lean0 + b, t = u.clone().multiplyScalar(Math.cos(L)).add(f.clone().multiplyScalar(Math.sin(L)));
+          const pv = pelvis.clone().sub(f.clone().multiplyScalar(0.2 * Math.sin(b))).setZ(pelvis.z - d);
+          let cost = (0.35 * b) ** 2 + (1.2 * d) ** 2 + (60 * Math.max(0, top - pv.z - Math.cos(L) * (TORSO + 0.2))) ** 2;
+          for (const [e, side, w] of want) {
+            const sh = pv.clone().add(t.clone().multiplyScalar(TORSO)).add(l.clone().multiplyScalar(SHOULDER * side));
+            cost += w * (60 * (sh.distanceTo(e) - UPPER)) ** 2;
+          }
+          if (cost < best) { best = cost; bend = b; drop = d; }
+        }
+      }
+    }
+    const kk = this.bend === undefined || !dt ? 1 : 1 - Math.exp(-dt * 6);
+    this.bend = lerp(this.bend ?? bend, bend, kk); this.drop = lerp(this.drop ?? drop, drop, kk);
+    pelvis.sub(f.clone().multiplyScalar(0.2 * Math.sin(this.bend))); pelvis.z -= this.drop;   // bending at the hips moves the pelvis back
+    const lean = lean0 + this.bend;
     const tu = u.clone().multiplyScalar(Math.cos(lean)).add(f.clone().multiplyScalar(Math.sin(lean)));
     const tf = f.clone().multiplyScalar(Math.cos(lean)).sub(u.clone().multiplyScalar(Math.sin(lean)));
     const P = this.pts;
@@ -723,22 +759,22 @@ class Person {
     this.chest.position.copy(pelvis.clone().add(tu.clone().multiplyScalar(0.31))); this.chest.quaternion.copy(this.basis(tf, l, tu));
     this.hips.position.copy(pelvis.clone().add(u.clone().multiplyScalar(0.02))); this.hips.quaternion.copy(this.basis(f, l, u));
     Person.place(this.segs.waist, pelvis.clone().add(tu.clone().multiplyScalar(0.06)), pelvis.clone().add(tu.clone().multiplyScalar(0.20)));
-    const neckA = pelvis.clone().add(tu.clone().multiplyScalar(0.48)), neckB = pelvis.clone().add(tu.clone().multiplyScalar(0.60));
+    const neckA = pelvis.clone().add(tu.clone().multiplyScalar(TORSO + 0.01)), neckB = pelvis.clone().add(tu.clone().multiplyScalar(TORSO + 0.12));
     Person.place(this.segs.neck, neckA, neckB);
     // head: looks at the target if any
     let hf = tf.clone();
     if (this.look) { const d = this.look.clone().sub(neckB); if (d.length() > 0.1) hf = d.normalize(); }
     const hl = u.clone().cross(hf).normalize(), hu = hf.clone().cross(hl).normalize();
-    P.head = pelvis.clone().add(tu.clone().multiplyScalar(0.71));
+    P.head = pelvis.clone().add(tu.clone().multiplyScalar(TORSO + 0.165));   // neck 0.10, half the head 0.065
     this.head.position.copy(P.head); this.head.quaternion.copy(this.basis(hf, hl, hu));
-    P.eye = P.head.clone().add(hf.clone().multiplyScalar(0.07)).add(hu.clone().multiplyScalar(0.02)); P.hf = hf;
+    P.eye = P.head.clone().add(hf.clone().multiplyScalar(0.085)).add(hu.clone().multiplyScalar(0.03));   // EYE_FWD, EYE_UP P.hf = hf;
     // legs
     for (const [k, side] of [['r', -1], ['l', 1]]) {
-      const hip = pelvis.clone().add(l.clone().multiplyScalar(0.095 * side)).add(V(0, 0, -0.06));
+      const hip = pelvis.clone().add(l.clone().multiplyScalar(0.095 * side)).add(V(0, 0, -0.02));
       const ph = this.phase + (side > 0 ? Math.PI : 0);
       const stride = 0.24 * Math.min(s, 1.2), lift = 0.08 * Math.min(s, 1) * Math.max(0, Math.cos(ph));
       const ankle = V(hip.x, hip.y, 0.075 + lift).add(f.clone().multiplyScalar(stride * Math.sin(ph) + 0.02 - 0.10 * c)).add(l.clone().multiplyScalar(0.01 * side));
-      const { mid: knee, end } = Person.ik(hip, ankle, 0.45, 0.43, hip.clone().add(f.clone().multiplyScalar(1)));
+      const { mid: knee, end } = Person.ik(hip, ankle, 0.43, 0.43, hip.clone().add(f.clone().multiplyScalar(1)));
       Person.place(this.segs['thigh_' + k], hip, knee); Person.place(this.segs['shin_' + k], knee, end.clone().add(V(0, 0, 0.02)));
       this.balls['hip_' + k].position.copy(hip); this.balls['knee_' + k].position.copy(knee);
       const shoe = this.shoes[k === 'r' ? 0 : 1];
@@ -748,25 +784,26 @@ class Person {
     // arms
     ['r', 'l'].forEach((k, i) => {
       const side = k === 'r' ? -1 : 1;
-      const sh = pelvis.clone().add(tu.clone().multiplyScalar(0.45)).add(l.clone().multiplyScalar(0.19 * side));
+      const sh = pelvis.clone().add(tu.clone().multiplyScalar(TORSO)).add(l.clone().multiplyScalar(SHOULDER * side));
       const swing = -0.16 * Math.min(s, 1) * Math.sin(this.phase + (side > 0 ? 0 : Math.PI));
       if (MYO) {
         // the videos' hands: at rest as tasks.rest_targets (palms in, fingers down and forward),
         // else at the target with its palm normal and grip shape
-        const rest = V(this.x, this.y, 0.86 + (pelvis.z - 1.0)).add(f.clone().multiplyScalar(0.06 + swing)).add(l.clone().multiplyScalar(0.225 * side));
+        const rest = V(this.x, this.y, 0.86 + (pelvis.z - PELVIS_H)).add(f.clone().multiplyScalar(0.06 + swing)).add(l.clone().multiplyScalar(0.225 * side));
         const restQ = palmFrame(f.clone().multiplyScalar(0.35).sub(u), l.clone().multiplyScalar(-side));
-        const w = this.hand[k] ? this.handW[k] : 0, shape = this.shape[k] || 'flat';
-        const fwd = f.clone().multiplyScalar(Math.cos(0.49)).sub(u.clone().multiplyScalar(Math.sin(0.49)));   // forearms tilted down 28 deg (tasks.BETA)
+        const w = this.hand[k] ? this.handW[k] : 0;
         let palm = { p: rest, q: restQ, shape: 'relaxed' };
         if (w > 0) {
-          const tq = palmFrame(fwd, this.handN[k] || V(0, 0, -1));
-          const fingers = V(0, -1, 0).applyQuaternion(tq);
-          const tp = this.hand[k].clone().sub(fingers.multiplyScalar(TIP[shape] || 0));
-          palm = { p: rest.clone().lerp(tp, w), q: restQ.clone().slerp(tq, w), shape: w > 0.4 ? shape : 'relaxed' };
+          const t = this.palmTarget(k, f, u);
+          palm = { p: rest.clone().lerp(t.p, w), q: restQ.clone().slerp(t.q, w), shape: w > 0.4 ? t.shape : 'relaxed' };
         }
-        const elbow = poseHand(k, palm, this.lastDt || 0.016);
-        Person.place(this.segs['upper_' + k], sh, elbow);
-        this.balls['shoulder_' + k].position.copy(sh); this.balls['elbow_' + k].position.copy(elbow);
+        const elbow = poseHand(k, palm, this.lastDt || 0.016, sh);
+        // seen from the eyes, the sleeve starts a little down the arm so the shoulder does not fill the view
+        const s0 = this.fp ? sh.clone().lerp(elbow, 0.3) : sh;          // (its end rounded by the shoulder ball)
+        Person.place(this.segs['upper_' + k], s0, elbow);
+        this.balls['shoulder_' + k].position.copy(s0); this.balls['shoulder_' + k].scale.setScalar(this.fp ? 0.9 : 1);
+        this.balls['elbow_' + k].position.copy(elbow);
+        this.balls['elbow_' + k].scale.setScalar(0.85);
         this.segs['fore_' + k].visible = false; this.hands[i].visible = false;
         P['wrist_' + k] = palm.p; P['sh_' + k] = sh;
         return;
@@ -787,9 +824,15 @@ class Person {
       P['wrist_' + k] = wrist; P['sh_' + k] = sh;
     });
   }
-  setHeadVisible(v) {                             // first person: no head, chest or upper arms in front of the eyes
-    this.head.visible = v; this.segs.neck.visible = v; this.chest.visible = v; this.segs.waist.visible = v;   // the chest swings under the eyes when you lean in
-    for (const k of ['r', 'l']) { this.segs['upper_' + k].visible = v; this.balls['shoulder_' + k].visible = v; this.balls['elbow_' + k].visible = v; }
+  palmTarget(k, f, u) {                           // the palm pose at the hand target: forearms tilted down 28 deg (tasks.BETA)
+    const shape = this.shape[k] || 'flat';
+    const fwd = f.clone().multiplyScalar(Math.cos(0.49)).sub(u.clone().multiplyScalar(Math.sin(0.49)));
+    const q = palmFrame(fwd, this.handN[k] || V(0, 0, -1));
+    const fingers = V(0, -1, 0).applyQuaternion(q);
+    return { p: this.hand[k].clone().sub(fingers.multiplyScalar(TIP[shape] || 0)), q, shape };
+  }
+  setHeadVisible(v) {                             // first person: no head (render_blender hides head, hair and neck from the head camera)
+    this.head.visible = v; this.segs.neck.visible = v; this.fp = !v;
   }
 }
 
@@ -864,18 +907,42 @@ function handFK(side, radius) {                              // MuJoCo kinematic
   }
   return out;
 }
-// Pose one hand: palm point p, palm frame q (palmFrame), grip shape. Returns the elbow end.
+// Pose one hand: palm point p, palm frame q (palmFrame), grip shape; the forearm from the wrist
+// table, as Runner._apply does, then turned to meet the upper arm from the shoulder sh.
+// Returns the elbow.
 const TIP = { point: 0.095, point_curl: 0.09, pinch: 0.085 };   // palm centre to the fingertips that touch
-function poseHand(s, palm, dt) {
+const UPPER = 0.30, ELBOW = V(0.01, -0.005, 0.03);            // upper arm length; the forearm skin's elbow end in the radius frame
+function myoElbow(s, palm) {                                 // the forearm's elbow end for a palm pose (no posing)
+  const side = MYO.sides[s], { p: prel, R: Rrel } = wristRel(s, side.angles['flexion_' + s] || 0);
+  const Rr = new THREE.Matrix4().makeRotationFromQuaternion(palm.q).multiply(Rrel.clone().transpose());
+  const q = new THREE.Quaternion().setFromRotationMatrix(Rr);
+  return palm.p.clone().sub(prel.clone().applyMatrix4(Rr)).add(ELBOW.clone().applyQuaternion(q));
+}
+function poseHand(s, palm, dt, sh) {
   const side = MYO.sides[s], want = shapeAngles(palm.shape, s), k = 1 - Math.exp(-dt * 12);
   for (const j in want) side.angles[j] = lerp(side.angles[j] ?? want[j], want[j], k);
   const { p: prel, R: Rrel } = wristRel(s, side.angles['flexion_' + s] || 0);
   const Rp = new THREE.Matrix4().makeRotationFromQuaternion(palm.q);
   const Rr = Rp.clone().multiply(Rrel.clone().transpose());            // R = Rp Rrel^T
   const q = new THREE.Quaternion().setFromRotationMatrix(Rr);
-  const p = palm.p.clone().sub(prel.clone().applyMatrix4(Rr));          // elbow end: p - R prel
-  handFK(side, { p, q }).forEach((w, i) => { side.bones[i].position.copy(w.p); side.bones[i].quaternion.copy(w.q); });
-  return p;
+  const p = palm.p.clone().sub(prel.clone().applyMatrix4(Rr));          // radius origin: p - R prel
+  const fk = handFK(side, { p, q });
+  // forearm and hand turned together about the palm so the elbow meets the upper arm
+  // (two-bone IK, the elbow as near the table's as it can be); no bend at the wrist skin
+  const E0 = p.clone().add(ELBOW.clone().applyQuaternion(q)), pc = palm.p, Lf = E0.distanceTo(pc);
+  const dq = new THREE.Quaternion();
+  if (sh) {
+    const d = pc.clone().sub(sh), dist = d.length();
+    const E = dist >= UPPER + Lf ? pc.clone().sub(d.multiplyScalar(Lf / dist)) : Person.ik(sh, pc, UPPER, Lf, E0).mid;
+    dq.setFromUnitVectors(E0.clone().sub(pc).normalize(), E.sub(pc).normalize());
+    const ang = 2 * Math.acos(Math.min(1, Math.abs(dq.w)));
+    if (ang > 0.6) dq.slerp(new THREE.Quaternion(), 1 - 0.6 / ang);  // at most ~35 degrees off the grip; the upper arm takes up the rest
+  }
+  fk.forEach((w, i) => {
+    side.bones[i].position.copy(w.p.clone().sub(pc).applyQuaternion(dq).add(pc));
+    side.bones[i].quaternion.copy(dq.clone().multiply(w.q));
+  });
+  return E0.sub(pc).applyQuaternion(dq).add(pc);
 }
 
 // ------------------------------------------------------------------ lights and sky (render_blender.setup_world)
@@ -937,7 +1004,8 @@ function roomAt(x, y) {
 const cam = { pitch: -0.55, dir: null, spectate: null };   // spectate: [eye, target, fov], for tests
 function updateCamera(dt) {
   const P = person.pts;
-  camera.fov = 72;
+  // the renders' head camera: a 15 mm lens on a 36 mm wide sensor (100 degrees across)
+  camera.fov = clamp(2 * Math.atan(18 / 15 / (innerWidth / innerHeight)) * 180 / Math.PI, 55, 90);
   const e = P.eye || V(person.x, person.y, 1.6);
   camera.position.copy(e);
   let want = V(Math.cos(person.heading) * Math.cos(cam.pitch), Math.sin(person.heading) * Math.cos(cam.pitch), Math.sin(cam.pitch));
