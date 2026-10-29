@@ -55,6 +55,13 @@ let pyProgress = 'Starting Python…';
 const canvas = $('view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// a busy or out-of-memory GPU can take the context away; the scene would just go black
+canvas.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  toast('The graphics card dropped the 3D view (it may be busy with another program or out of memory). Free it up and reload the page.', true);
+  clearTimeout(toastTimer);                       // keep it up
+
+});
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.AgXToneMapping;      // the renders use Blender's AgX view transform

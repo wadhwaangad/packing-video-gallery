@@ -7,7 +7,15 @@ let py = null;
 const ready = (async () => {
   py = await loadPyodide({ indexURL: PYODIDE });
   postMessage({ progress: 'Loading numpy…' });
-  await py.loadPackage('numpy');
+  // the wheel is 12 MB off the CDN and a dropped download only logs, so check and retry
+  for (let i = 1; ; i++) {
+    await py.loadPackage('numpy');
+    try { py.runPython('import numpy'); break; } catch (e) {
+      if (i === 3) throw new Error('numpy did not download (3 tries); check the connection and reload');
+      postMessage({ progress: 'Loading numpy (retry ' + i + ')…' });
+      await new Promise(r => setTimeout(r, 2000 * i));
+    }
+  }
   const mods = await (await fetch('modules.json', { cache: 'no-cache' })).json();
   py.FS.mkdirTree('/sim');
   for (const m of mods) {

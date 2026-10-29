@@ -129,5 +129,13 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 </div>
 </div>
 
+<script>
+// opened straight from disk the browser blocks pack.js and the worker, so say why instead of hanging
+if (location.protocol === 'file:') {
+  const s = document.getElementById('loadStatus');
+  s.className = 'status err';
+  s.innerHTML = 'This page has to be served, not opened from disk. In the repo folder run <code>python -m http.server 8000</code>, then open <a href="http://localhost:8000/play/pack.html">localhost:8000/play/pack.html</a>.';
+}
+</script>
 <script type="module" src="pack.js"></script>
 </body></html>
