@@ -95,6 +95,12 @@ def _entries():
                         f"put the {S.item(n).label} beside the {S.item(o).label}, on its {sd.replace('_', ' ')} side")
     for n in ITEMS:
         add(f"put_back({n})", "manipulate", Action("put_back", n), f"put the {S.item(n).label} back where it was")
+    for n in ITEMS:
+        for s in S.SURFACES:
+            if s != S.item(n).station:          # its own top is put_back
+                args = dict(rel="in", dest=s, **({"orient": "upright"} if n == "bottle" else {}))
+                add(f"put_down({n}, {s})", "manipulate", Action("place", n, args),
+                    f"set the {S.item(n).label} down on {S.STATIONS[s].label}")
     add("open_lid", "case", Action("open", "lid", dict(to=1.0)), "swing the lid fully open")
     add("close_lid", "case", Action("close", "lid", dict(to=0.0)), "swing the lid shut")
     for c in ZIP_CLOSED:
@@ -202,9 +208,12 @@ def canonical(a, st):
                   f"{100 * (1 - float(a.get('to'))):.0f} % is between them")
     if v == "place":
         rel, dest, at = a.get("rel", "in"), a.get("dest", "suitcase"), a.get("at")
-        if rel == "in" and dest in S.STATIONS and dest != "suitcase":
-            return out(f"put_back({t or st.holding})") if dest == S.item(t or st.holding).station else \
-                no(f"an item goes back only to where it came from (put_back)")
+        if rel in ("in", "on") and dest in S.STATIONS and dest != "suitcase":
+            item = t or st.holding
+            if dest == S.item(item).station:
+                return out(f"put_back({item})")
+            return out(f"put_down({item}, {dest})") if dest in S.SURFACES else \
+                no(f"things are set down only on {', '.join(S.STATIONS[s].label for s in S.SURFACES)}")
         if a.get("orient") == "lying":
             return no(f"laying the bottle down: {EXCLUDED['lay the bottle down']}")
         if a.get("yaw") is not None:

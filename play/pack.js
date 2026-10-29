@@ -1144,6 +1144,10 @@ function itemHome(name) {
   const it = W.items[name];
   return { p: V(it.xy[0], it.xy[1], it.top + it.size[2] / 2), q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), it.yaw) };
 }
+function itemOnTop(name, d) {                          // home, or where it was set down (d.at: centre and yaw)
+  if (!d || !d.at) return itemHome(name);
+  return { p: V(d.at.x, d.at.y, d.at.z), q: new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), d.at.yaw) };
+}
 function itemInCase(name, place) {                     // place: x, y, z (bottom), yaw in the base frame
   const it = W.items[name];
   const local = V(place.x, place.y, place.z + it.size[2] / 2);
@@ -1216,7 +1220,7 @@ function applyState(s, { skipItems = [] } = {}) {
       CASE.root.attach(g);
       g.position.set(d.place.x, d.place.y, d.place.z + W.items[name].size[2] / 2);
       g.quaternion.setFromAxisAngle(V(0, 0, 1), d.place.yaw);
-    } else setItemPose(name, itemHome(name));
+    } else setItemPose(name, itemOnTop(name, d));
   }
   renderChecklist(s); renderConv(s.conv);
 }
@@ -1259,7 +1263,7 @@ function renderPrompt() {
   if (!py.ready) { head.textContent = py.error ? 'The simulator could not load: ' + py.error : `Simulator loading (${pyProgress}) — you can walk around.`; list.innerHTML = ''; bl.innerHTML = ''; return; }
   if (busy) { head.textContent = anim ? anim.label : '…'; list.innerHTML = ''; bl.innerHTML = ''; return; }
   const o = opts.options;
-  head.textContent = o.length ? (S.holding ? `Holding the ${W.items[S.holding].label}` : 'Within reach') : (S && S.holding ? `Holding the ${W.items[S.holding].label}: walk to the case to pack it, or back to where it belongs` : 'Walk up to something on the checklist');
+  head.textContent = o.length ? (S.holding ? `Holding the ${W.items[S.holding].label}` : 'Within reach') : (S && S.holding ? `Holding the ${W.items[S.holding].label}: walk to the case to pack it, back to where it belongs, or to a table or shelf to set it down` : 'Walk up to something on the checklist');
   $('promptHint').textContent = opts.where ? 'in ' + opts.where.replace(/^the /, '') : '';
   list.innerHTML = o.map((q, i) => `<button class="opt ${i ? '' : 'primary'}" data-i="${i}"><kbd>${i ? i + 1 : 'E'}</kbd><span>${esc(q.text)}</span></button>`).join('');
   bl.innerHTML = (opts.blocked || []).map(b => `<div class="blocked">${esc(b.text.replace(/^./, c => c.toUpperCase()))}: ${esc(b.why)}</div>`).join('');
@@ -1267,7 +1271,7 @@ function renderPrompt() {
 function targetPoint(q) {
   if (!q) return null;
   if (q.facing && items[q.facing]) return items[q.facing].getWorldPosition(V()).add(V(0, 0, 0.12));
-  const m = q.id.match(/^(?:pick_up|put_back)\((\w+)\)/);
+  const m = q.id.match(/^(?:pick_up|put_back|put_down)\((\w+)/);
   if (m && items[m[1]]) return items[m[1]].getWorldPosition(V()).add(V(0, 0, 0.12));
   return CASE.root.localToWorld(V(0, 0, CASE.D + 0.1));
 }
@@ -1315,14 +1319,15 @@ function animate(q, ns) {
       if (k >= 1) { person.crouch = 0; person.look = null; }
     });
   }
-  if (verb === 'place' || verb === 'put_back') {
+  if (verb === 'place' || verb === 'put_back' || verb === 'put_down') {
     const name = S.holding;
     const d = ns.items[name];
     let target;
-    if (d.loc === 'case') { const tmp = d.place; target = itemInCase(name, tmp); } else target = itemHome(name);
+    if (d.loc === 'case') { const tmp = d.place; target = itemInCase(name, tmp); } else target = itemOnTop(name, d);
     const start = carryPose(name);
     const cz = crouchFor(target.p.z);
-    const label = verb === 'place' ? `Packing the ${W.items[name].label}` : `Putting the ${W.items[name].label} back`;
+    const label = verb === 'place' ? `Packing the ${W.items[name].label}` : verb === 'put_down' ? `Setting the ${W.items[name].label} down`
+      : `Putting the ${W.items[name].label} back`;
     return play(label, 1.6, k => {
       person.look = target.p;
       const move = ease(seg(k, 0.15, 0.75)), back = ease(seg(k, 0.8, 1));

@@ -5,6 +5,7 @@ Poly Haven glTF assets are y-up; Blender's importer converts them to z-up with
 the asset front facing -y. `yaw` below rotates that front about +z.
 """
 from dataclasses import dataclass, field
+from functools import lru_cache
 import numpy as np
 
 WALL_T, WALL_H = 0.10, 2.60
@@ -401,6 +402,85 @@ def all_static_boxes():
 
 def item(name):
     return next(i for i in ITEMS if i.name == name)
+
+
+# ---------------------------------------------------------------- setting things down
+# Anything carried can be set down on a furniture top (put_down), on one of a few fixed
+# spots, tried in order. A spot takes an item only if it stays on the top, clear of the
+# decor and the open case, with room for the hands beside it and beside everything lying
+# there now. Where an item was is free once it is gone, so something set down there
+# keeps it from being put back until it is moved.
+SURFACES = ("dresser", "bed", "bed_far", "nightstand", "vanity", "towel_shelf", "kitchen_counter", "coffee_table")
+SET_DOWN = {
+    # chosen by scanning each top for where the most items fit; the last ones are home
+    # spots, free once their item is gone. The person stands a standoff in front of a
+    # spot, so none puts them against the west wall, the nightstand or onto the bed.
+    "dresser": [(3.34, 1.16), (3.72, 1.20), (3.52, 0.98), (3.52, 1.42)],
+    "bed": [(1.00, 1.15), (0.92, 1.25), (0.72, 1.20)],
+    "bed_far": [(1.30, 2.31), (1.64, 2.31), (1.98, 2.31)],
+    "nightstand": [(0.13, 2.93), (0.45, 2.92)],
+    "vanity": [(4.20, 0.42), (4.22, 0.16), (4.55, 0.30), (5.02, 0.30)],
+    "towel_shelf": [(5.26, 0.88), (5.26, 1.42), (5.39, 1.15)],
+    "kitchen_counter": [(6.48, 1.11), (6.78, 1.11), (6.48, 0.47)],
+    "coffee_table": [(1.91, 5.02), (1.59, 5.02), (2.23, 4.66), (1.88, 4.78), (2.32, 4.80)],
+}
+_TOP_BOX = dict(dresser="dresser_coll", bed="mattress", bed_far="mattress", nightstand="nightstand_coll",
+                vanity="vanity_top", towel_shelf="towel_shelf", kitchen_counter="kitchen_top", coffee_table="coffee_table_coll")
+# (x0, x1, y0, y1) kept clear: the alarm clock, the open binder, the open case and its lid
+_CASE_OPEN = (1.17, 1.93, 0.98, 2.05)
+KEEP_OUT = dict(nightstand=[(0.09, 0.25, 2.98, 3.14)], coffee_table=[(2.17, 2.59, 4.86, 5.14)],
+                bed=[_CASE_OPEN], bed_far=[_CASE_OPEN])
+
+
+@lru_cache(maxsize=None)
+def surface_rect(station):
+    b = next(b for b in all_static_boxes() if b.name == _TOP_BOX[station])
+    return (b.center[0] - b.size[0] / 2, b.center[0] + b.size[0] / 2, b.center[1] - b.size[1] / 2, b.center[1] + b.size[1] / 2)
+
+
+def set_down_yaw(name, station):
+    """Set down the way it is picked up there: short side across the station normal."""
+    if name == "bottle":
+        return 0.0
+    n = STATIONS[station].normal
+    return float(np.arctan2(n[1], n[0]) + np.pi / 2)
+
+
+GRIP = 0.12      # room each hand needs beside an item along its squeeze axis (a 9 cm gap fails in physics)
+
+
+def footprint(name, xy, yaw, grip=0.0):
+    """(x0, x1, y0, y1) of an item lying at xy turned by yaw (a multiple of 90 deg); with
+    `grip`, widened by that much each side along the squeeze axis, where the hands go."""
+    hx, hy = item(name).size[0] / 2 + grip, item(name).size[1] / 2
+    if abs(np.sin(yaw)) > 0.7:
+        hx, hy = hy, hx
+    return (xy[0] - hx, xy[0] + hx, xy[1] - hy, xy[1] + hy)
+
+
+def _overlap(a, b, gap=0.01):
+    return a[0] < b[1] + gap and b[0] < a[1] + gap and a[2] < b[3] + gap and b[2] < a[3] + gap
+
+
+def room_at(name, xy, yaw, station, lying=(), keep_out=True):
+    """Whether `name` can lie at xy on `station` next to `lying` ((name, xy, yaw) of what
+    lies there now): on the top, clear of the decor, and neither item's hands meeting the
+    other (the hands squeeze from both sides, to set it down and to pick either up).
+    keep_out=False checks only against `lying` (a home spot is on its top by design)."""
+    x0, x1, y0, y1 = surface_rect(station)
+    f, fg = footprint(name, xy, yaw), footprint(name, xy, yaw, GRIP)
+    if keep_out and not (f[0] >= x0 - 0.02 and f[1] <= x1 + 0.02 and f[2] >= y0 - 0.02 and f[3] <= y1 + 0.02):
+        return False
+    if keep_out and any(_overlap(fg, t) for t in KEEP_OUT.get(station, [])):
+        return False
+    return not any(_overlap(fg, footprint(o, oxy, oyaw)) or _overlap(f, footprint(o, oxy, oyaw, GRIP))
+                   for o, oxy, oyaw in lying)
+
+
+def set_down_spot(name, station, lying=()):
+    """Index of the first spot on `station` with room for `name` (None: no room)."""
+    yaw = set_down_yaw(name, station)
+    return next((k for k, xy in enumerate(SET_DOWN[station]) if room_at(name, xy, yaw, station, lying)), None)
 
 
 # ---------------------------------------------------------------- suitcase hardware

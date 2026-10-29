@@ -61,9 +61,9 @@ Install: Python 3.11, then `pip install mujoco==3.3.* bpy==4.5.* numpy scipy pil
 
 ## Action space
 
-The action space is a closed catalogue (`discrete.py`, 833 physical actions) of fully specified ids, plus a closed set of speech acts on the conversation channel (`dialogue.py`, see User simulation):
+The action space is a closed catalogue (`discrete.py`, 917 physical actions) of fully specified ids, plus a closed set of speech acts on the conversation channel (`dialogue.py`, see User simulation):
 - navigation: `enter(room)`, `go_to(station | item)`, `look_at(item)`
-- handling items: `pick_up(item)`, `place(item, spot)` with spot one of `wheel_end, handle_end, front_strip, bottle_corner, centre`, `place_on(item, other)`, `place_beside(item, other, side)`, `put_back(item)`
+- handling items: `pick_up(item)`, `place(item, spot)` with spot one of `wheel_end, handle_end, front_strip, bottle_corner, centre`, `place_on(item, other)`, `place_beside(item, other, side)`, `put_back(item)`, `put_down(item, surface)` (set it down on another furniture top: dresser, bed, far side of the bed, nightstand, vanity, towel shelf, kitchen counter or coffee table, on the first of its fixed spots where it fits clear of every home spot)
 - the case: `open_lid`, `close_lid`, `zip_to(0|25|50|75|100)` (% closed, either way), `dock_zip_pulls`, `press_lock_button`, `turn_dial(dial_k, digit)`, `press_handle_button`, `fasten_strap`, `unfasten_strap`, `set_handle(0|1|2)`, `stand_up_case`, `roll_case(bed_foot | bedroom_door)`
 - other: `fold(beach_towel)`, `wait` (2 s)
 

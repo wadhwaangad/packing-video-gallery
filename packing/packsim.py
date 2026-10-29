@@ -52,6 +52,7 @@ class State:
     facing: str = ""                                  # item the person stands in front of
     holding: str = ""
     loc: dict = field(default_factory=dict)           # item -> "station:<name>" | "held" | "case"
+    spot: dict = field(default_factory=dict)          # item set down away from home -> its spot (scene.SET_DOWN)
     place: dict = field(default_factory=dict)         # item in the case -> x, y, yaw, z, orient, on
     orient: dict = field(default_factory=dict)        # bottle -> upright | lying
     lid: str = "open"
@@ -97,6 +98,45 @@ def initial_state(task):
 
 def _home(n):
     return S.item(n).station
+
+
+def item_station(st, n):
+    """The station an item lies on (None if held or in the case)."""
+    return st.loc[n].split(":", 1)[1] if st.loc[n].startswith("station:") else None
+
+
+def item_pose(st, n):
+    """(x, y, z of its centre, yaw) of an item lying on a station: its home spot, or the
+    spot it was set down on."""
+    stn, it = item_station(st, n), S.item(n)
+    if n not in st.spot:
+        return (*it.start, it.start_yaw)
+    x, y = S.SET_DOWN[stn][st.spot[n]]
+    return (x, y, S.STATIONS[stn].top + it.size[2] / 2, S.set_down_yaw(n, stn))
+
+
+def lying_on(st, station, but=""):
+    """(name, xy, yaw) of every item lying on `station` now."""
+    out = []
+    for o in ITEM_NAMES:
+        if o != but and item_station(st, o) == station:
+            x, y, _, yaw = item_pose(st, o)
+            out.append((o, (x, y), yaw))
+    return out
+
+
+def set_down_spot(st, n, station):
+    """Where on `station` the item would be set down now (None: no room)."""
+    return S.set_down_spot(n, station, lying_on(st, station, but=n))
+
+
+def home_blocked_by(st, n):
+    """What was set down where `n` goes back (or beside it, in the way of the hands): None if nothing."""
+    it = S.item(n)
+    for o, xy, yaw in lying_on(st, it.station, but=n):
+        if o in st.spot and not S.room_at(n, it.xy, it.start_yaw, it.station, [(o, xy, yaw)], keep_out=False):
+            return o
+    return None
 
 
 class PackSim:
@@ -222,9 +262,12 @@ class PackSim:
             if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
                 if st.station != dest:
                     return False, f"you are not at {S.STATIONS[dest].label}"
-                if dest != _home(item):
-                    return False, f"there is no free spot for the {lab(item)} on {S.STATIONS[dest].label}; " \
-                                  f"it can go back on {S.STATIONS[_home(item)].label}"
+                if dest == _home(item):
+                    return True, ""
+                if dest not in S.SURFACES:
+                    return False, f"nothing can be set down at {S.STATIONS[dest].label}"
+                if set_down_spot(st, item, dest) is None:
+                    return False, f"there is no room for the {lab(item)} on {S.STATIONS[dest].label}"
                 return True, ""
             if st.station != "suitcase":
                 return False, "you are not at the suitcase"
@@ -242,6 +285,9 @@ class PackSim:
             home = _home(st.holding)
             if st.station != home:
                 return False, f"the {lab(st.holding)} belongs at {S.STATIONS[home].label}"
+            o = home_blocked_by(st, st.holding)
+            if o:
+                return False, f"the {lab(o)} is in the way where the {lab(st.holding)} goes back: move it first"
             return True, ""
         if v in ("wait", "say"):
             return True, ""
@@ -401,12 +447,17 @@ class PackSim:
         elif v == "pick_up":
             if st.in_case(t):
                 st.place.pop(t, None)
+            st.spot.pop(t, None)
             st.loc[t] = "held"; st.holding = t
         elif v == "place":
             item = st.holding
             dest = a.get("dest", "suitcase")
             if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
+                if dest != _home(item):
+                    st.spot[item] = set_down_spot(st, item, dest)
                 st.loc[item] = f"station:{dest}"
+                if item == "bottle":
+                    st.orient["bottle"] = "upright"
                 st.facing = item
             else:
                 if pose is None:
@@ -420,6 +471,7 @@ class PackSim:
             st.holding = ""
         elif v == "put_back":
             st.loc[st.holding] = f"station:{_home(st.holding)}"
+            st.spot.pop(st.holding, None)
             if st.holding == "bottle":
                 st.orient["bottle"] = "upright"
             st.facing = st.holding; st.holding = ""
@@ -579,7 +631,7 @@ def target_point(st, t):
     if t in ITEM_NAMES:
         if st.loc[t] == "held":
             return None
-        return np.array(S.item(t).start, float)
+        return np.array(item_pose(st, t)[:3], float)
     stn = S.STATIONS[t]
     return np.array([*stn.stand, 0.0]) + np.array([*stn.normal, 0.0]) * 0.6 + np.array([0, 0, max(stn.top, 0.5)])
 
@@ -592,7 +644,7 @@ def target_access(st, t):
             return R.nearest_node(FLOOR_SPOTS[st.case_at]["beside"])
         return S.STATIONS["suitcase"].access
     if t in ITEM_NAMES:
-        return S.STATIONS[S.item(t).station].access
+        return S.STATIONS[item_station(st, t) or _home(t)].access
     return S.STATIONS[t].access
 
 

@@ -21,7 +21,7 @@ import scene as S
 import layout as LO
 import discrete as D
 import dialogue as DL
-from packsim import PackSim, TASKS, ITEM_NAMES, FLOOR_SPOTS
+from packsim import PackSim, TASKS, ITEM_NAMES, FLOOR_SPOTS, item_pose, set_down_spot
 import assistant_template
 
 REACH_ITEM = 1.0        # m from the person's centre to an item's centre
@@ -147,6 +147,15 @@ class Game:
             a = angle_to(x, y, heading, hx, hy)
             if math.hypot(hx - x, hy - y) <= REACH_ITEM and a <= FRONT and clear_line(x, y, hx, hy):
                 out.append((a, S.item(h).station, "", [f"put_back({h})"]))
+            # or set it down on whatever top is in front, on the spot it would take
+            for s in S.SURFACES:
+                k = set_down_spot(st, h, s) if s != S.item(h).station else None
+                if k is None:
+                    continue
+                sx, sy = S.SET_DOWN[s][k]
+                a = angle_to(x, y, heading, sx, sy)
+                if math.hypot(sx - x, sy - y) <= REACH_ITEM and a <= FRONT and clear_line(x, y, sx, sy):
+                    out.append((a + 0.01, s, "", [f"put_down({h}, {s})"]))
             return [c[1:] for c in sorted(out, key=lambda c: c[0])]
         # items lying where they belong (or were put back), nearest first
         near = []
@@ -154,7 +163,7 @@ class Game:
             loc = st.loc[n]
             if not loc.startswith("station:"):
                 continue
-            ix, iy = S.item(n).xy
+            ix, iy = item_pose(st, n)[:2]
             d, a = math.hypot(ix - x, iy - y), angle_to(x, y, heading, ix, iy)
             if d <= REACH_ITEM and a <= FRONT and clear_line(x, y, ix, iy):
                 near.append((a, n, loc.split(":", 1)[1]))
@@ -282,6 +291,9 @@ class Game:
                 dx, dy, dz = LO.dims(n, p.get("orient", ""))
                 d["place"] = dict(x=_r(p["x"]), y=_r(p["y"]), z=_r(p["z"]), yaw=_r(p["yaw"]),
                                   orient=p.get("orient", ""), dims=[_r(dx), _r(dy), _r(dz)], on=p.get("on"))
+            if n in st.spot:            # set down away from home: where it lies (centre)
+                ax, ay, az, ayaw = item_pose(st, n)
+                d["at"] = dict(x=_r(ax), y=_r(ay), z=_r(az), yaw=_r(ayaw))
             items[n] = d
         cl = checklist(self.sim)
         return dict(items=items, holding=st.holding, station=st.station, facing=st.facing, lid=st.lid,

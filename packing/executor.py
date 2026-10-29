@@ -19,7 +19,7 @@ import skills_hw as H
 import rooms as R
 from rooms import nav_path
 from runner import rz
-from packsim import Action, ITEM_NAMES, FLOOR_SPOTS, access_node
+from packsim import Action, ITEM_NAMES, FLOOR_SPOTS, access_node, item_station, set_down_spot
 
 
 class ActionFailed(RuntimeError):
@@ -54,7 +54,7 @@ class Executor:
             if st.in_case(target):
                 target = "suitcase"
             else:
-                station = S.item(target).station
+                station = item_station(st, target)
                 p, _ = self.r.body_pose(target)
                 stn = S.STATIONS[station]
                 xy = np.array(p[:2]) - np.array(stn.normal) * stn.standoff
@@ -64,6 +64,10 @@ class Executor:
             # carrying something back: stand in front of its home spot
             it = S.item(st.holding)
             xy = np.array(it.xy) - np.array(stn.normal) * stn.standoff
+            return target, tuple(xy), self.yaw_of(target)
+        if st.holding and target in S.SURFACES and set_down_spot(st, st.holding, target) is not None:
+            # carrying something to set down: stand in front of the spot it will take
+            xy = np.array(S.SET_DOWN[target][set_down_spot(st, st.holding, target)]) - np.array(stn.normal) * stn.standoff
             return target, tuple(xy), self.yaw_of(target)
         return target, tuple(stn.stand), self.yaw_of(target)
 
@@ -245,7 +249,7 @@ class Executor:
     def pick_up(self, a, from_case=False):
         st = self.sim.state
         it = S.item(a.target)
-        stn = S.STATIONS["suitcase" if from_case else it.station]
+        stn = S.STATIONS["suitcase" if from_case else item_station(st, a.target)]
         z0 = self.r.body_pose(a.target)[0][2]
         self.at_rest = False
         if it.family == "bottle":
@@ -271,7 +275,10 @@ class Executor:
         item = st.holding
         dest = a.get("dest", "suitcase")
         if a.get("rel", "in") == "in" and dest in S.STATIONS and dest != "suitcase":
-            self.put_back(a)
+            if dest == S.item(item).station:
+                self.put_back(a)
+            else:
+                self.put_down(a, dest)
             return None
         r, msg, code = self.sim.place_pose(a)
         if r is None:
@@ -326,6 +333,26 @@ class Executor:
         self.r.event("put_back_check", item=item, offset_m=float(d))
         if d > 0.08:
             raise ActionFailed(f"{item} not back in place ({d:.3f} m)")
+
+    def put_down(self, a, station):
+        """Set the held item down on another furniture top, on the spot the sim gives it."""
+        st = self.sim.state
+        item = st.holding
+        it, stn = S.item(item), S.STATIONS[station]
+        k = set_down_spot(st, item, station)
+        if k is None:
+            raise ActionFailed(f"no room for {item} on {station}")
+        xy = S.SET_DOWN[station][k]
+        p = np.array([xy[0], xy[1], stn.top + it.size[2] / 2])
+        if item == "bottle":
+            C.place_upright(self.r, item, p, side="r")
+        else:
+            T.place_item(self.r, [item], (p, rz(S.set_down_yaw(item, station))), crouch_h=stn.crouch, where=stn.label)
+        self.at_rest = False
+        d = np.linalg.norm(self.r.body_pose(item)[0][:2] - np.array(xy))
+        self.r.event("put_down_check", item=item, station=station, offset_m=float(d))
+        if d > 0.08:
+            raise ActionFailed(f"{item} not set down on {station} ({d:.3f} m)")
 
     def side_step(self, stand):
         r = self.r

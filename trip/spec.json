@@ -897,13 +897,18 @@
   ]
  },
  "catalogue": {
-  "size": 869,
+  "size": 917,
   "groups": {
    "navigate": 39,
-   "manipulate": 744,
+   "manipulate": 828,
    "case": 48,
    "cloth": 1,
-   "other": 37
+   "other": 1
+  },
+  "effects": {
+   "move": 39,
+   "wait": 1,
+   "state": 877
   },
   "templates": [
    {
@@ -1754,6 +1759,98 @@
     "example": "put the folded trousers back where it was"
    },
    {
+    "family": "put_down",
+    "group": "manipulate",
+    "count": 84,
+    "ids": [
+     "put_down(trousers, bed)",
+     "put_down(trousers, bed_far)",
+     "put_down(trousers, nightstand)",
+     "put_down(trousers, vanity)",
+     "put_down(trousers, towel_shelf)",
+     "put_down(trousers, kitchen_counter)",
+     "put_down(trousers, coffee_table)",
+     "put_down(tshirts, bed)",
+     "put_down(tshirts, bed_far)",
+     "put_down(tshirts, nightstand)",
+     "put_down(tshirts, vanity)",
+     "put_down(tshirts, towel_shelf)",
+     "put_down(tshirts, kitchen_counter)",
+     "put_down(tshirts, coffee_table)",
+     "put_down(sweater_pile, dresser)",
+     "put_down(sweater_pile, bed_far)",
+     "put_down(sweater_pile, nightstand)",
+     "put_down(sweater_pile, vanity)",
+     "put_down(sweater_pile, towel_shelf)",
+     "put_down(sweater_pile, kitchen_counter)",
+     "put_down(sweater_pile, coffee_table)",
+     "put_down(striped_shirts, dresser)",
+     "put_down(striped_shirts, bed)",
+     "put_down(striped_shirts, nightstand)",
+     "put_down(striped_shirts, vanity)",
+     "put_down(striped_shirts, towel_shelf)",
+     "put_down(striped_shirts, kitchen_counter)",
+     "put_down(striped_shirts, coffee_table)",
+     "put_down(sweatshirts, dresser)",
+     "put_down(sweatshirts, bed)",
+     "put_down(sweatshirts, bed_far)",
+     "put_down(sweatshirts, vanity)",
+     "put_down(sweatshirts, towel_shelf)",
+     "put_down(sweatshirts, kitchen_counter)",
+     "put_down(sweatshirts, coffee_table)",
+     "put_down(towel, dresser)",
+     "put_down(towel, bed)",
+     "put_down(towel, bed_far)",
+     "put_down(towel, nightstand)",
+     "put_down(towel, vanity)",
+     "put_down(towel, kitchen_counter)",
+     "put_down(towel, coffee_table)",
+     "put_down(towel_stack, dresser)",
+     "put_down(towel_stack, bed)",
+     "put_down(towel_stack, bed_far)",
+     "put_down(towel_stack, nightstand)",
+     "put_down(towel_stack, towel_shelf)",
+     "put_down(towel_stack, kitchen_counter)",
+     "put_down(towel_stack, coffee_table)",
+     "put_down(gym_clothes, dresser)",
+     "put_down(gym_clothes, bed)",
+     "put_down(gym_clothes, bed_far)",
+     "put_down(gym_clothes, nightstand)",
+     "put_down(gym_clothes, vanity)",
+     "put_down(gym_clothes, towel_shelf)",
+     "put_down(gym_clothes, coffee_table)",
+     "put_down(toiletry_bag, dresser)",
+     "put_down(toiletry_bag, bed)",
+     "put_down(toiletry_bag, bed_far)",
+     "put_down(toiletry_bag, nightstand)",
+     "put_down(toiletry_bag, towel_shelf)",
+     "put_down(toiletry_bag, kitchen_counter)",
+     "put_down(toiletry_bag, coffee_table)",
+     "put_down(bottle, dresser)",
+     "put_down(bottle, bed)",
+     "put_down(bottle, bed_far)",
+     "put_down(bottle, nightstand)",
+     "put_down(bottle, vanity)",
+     "put_down(bottle, towel_shelf)",
+     "put_down(bottle, coffee_table)",
+     "put_down(notebook, dresser)",
+     "put_down(notebook, bed)",
+     "put_down(notebook, bed_far)",
+     "put_down(notebook, nightstand)",
+     "put_down(notebook, vanity)",
+     "put_down(notebook, towel_shelf)",
+     "put_down(notebook, kitchen_counter)",
+     "put_down(camera, dresser)",
+     "put_down(camera, bed)",
+     "put_down(camera, bed_far)",
+     "put_down(camera, nightstand)",
+     "put_down(camera, vanity)",
+     "put_down(camera, towel_shelf)",
+     "put_down(camera, kitchen_counter)"
+    ],
+    "example": "set the folded trousers down on the bed"
+   },
+   {
     "family": "open_lid",
     "group": "case",
     "count": 1,
@@ -1914,58 +2011,6 @@
      "wait"
     ],
     "example": "pause for 2 s"
-   },
-   {
-    "family": "ask",
-    "group": "other",
-    "count": 12,
-    "ids": [
-     "ask(trousers)",
-     "ask(tshirts)",
-     "ask(sweater_pile)",
-     "ask(striped_shirts)",
-     "ask(sweatshirts)",
-     "ask(towel)",
-     "ask(towel_stack)",
-     "ask(gym_clothes)",
-     "ask(toiletry_bag)",
-     "ask(bottle)",
-     "ask(notebook)",
-     "ask(camera)"
-    ],
-    "example": "ask \"Should the folded trousers go in too?\""
-   },
-   {
-    "family": "announce",
-    "group": "other",
-    "count": 24,
-    "ids": [
-     "announce(add, trousers)",
-     "announce(add, tshirts)",
-     "announce(add, sweater_pile)",
-     "announce(add, striped_shirts)",
-     "announce(add, sweatshirts)",
-     "announce(add, towel)",
-     "announce(add, towel_stack)",
-     "announce(add, gym_clothes)",
-     "announce(add, toiletry_bag)",
-     "announce(add, bottle)",
-     "announce(add, notebook)",
-     "announce(add, camera)",
-     "announce(remove, trousers)",
-     "announce(remove, tshirts)",
-     "announce(remove, sweater_pile)",
-     "announce(remove, striped_shirts)",
-     "announce(remove, sweatshirts)",
-     "announce(remove, towel)",
-     "announce(remove, towel_stack)",
-     "announce(remove, gym_clothes)",
-     "announce(remove, toiletry_bag)",
-     "announce(remove, bottle)",
-     "announce(remove, notebook)",
-     "announce(remove, camera)"
-    ],
-    "example": "say \"I'll take the folded trousers as well.\""
    }
   ],
   "wait_seconds": 2.0,
@@ -4472,52 +4517,341 @@
   {
    "type": "wrong_object",
    "channel": "error",
-   "description": "picks up a pile that is not on the list instead of the intended one"
+   "description": "picks up a pile that is not on the list instead of the intended one",
+   "expected": {
+    "act": "not_on_list",
+    "about": "other",
+    "by": "commit"
+   },
+   "trigger": {
+    "next": [
+     "go_to",
+     "<target>"
+    ],
+    "hands": "free"
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "omission",
    "channel": "error",
-   "description": "skips an item on the list"
+   "description": "skips an item on the list",
+   "expected": {
+    "act": "not_packed",
+    "about": "target",
+    "by": "commit"
+   },
+   "trigger": {
+    "next": [
+     "go_to",
+     "<target>"
+    ]
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "repetition",
    "channel": "error",
-   "description": "walks back for an item that is already packed"
+   "description": "walks back for an item that is already packed",
+   "expected": {
+    "act": "packed",
+    "about": "target",
+    "by": "commit"
+   },
+   "trigger": {
+    "in_case": "<target>",
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "at": "suitcase"
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "nav_deviation",
    "channel": "error",
-   "description": "heads to the wrong room first"
+   "description": "heads to the wrong place first",
+   "expected": {
+    "act": "where",
+    "about": "target",
+    "by": "commit"
+   },
+   "trigger": {
+    "next": [
+     "go_to",
+     "<target>"
+    ],
+    "hands": "free"
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "heavy_on_top",
    "channel": "error",
-   "description": "puts the heavy toiletry bag on top of a clothes pile"
-  },
-  {
-   "type": "bottle_lying",
-   "channel": "error",
-   "description": "lays the water bottle down instead of standing it up (not sampled by default yet: the lying placement is not reliable with the scanned case)"
+   "description": "puts the heavy toiletry bag on top of a clothes pile",
+   "expected": {
+    "act": "on_floor",
+    "about": "target",
+    "by": "commit"
+   },
+   "trigger": {
+    "hands": "<target>",
+    "next": [
+     "go_to",
+     "suitcase"
+    ],
+    "column_above_floor": "<target>"
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "premature_close",
    "channel": "error",
-   "description": "closes the lid before everything is packed"
+   "description": "closes the lid before everything is packed",
+   "expected": {
+    "act": "not_packed",
+    "about": "remaining",
+    "by": "commit"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": 14,
+   "sampled": true
+  },
+  {
+   "type": "incomplete_zip",
+   "channel": "error",
+   "description": "stops zipping three quarters of the way and moves on",
+   "expected": {
+    "act": "zip_open",
+    "by": "window"
+   },
+   "trigger": {
+    "next": [
+     "close",
+     "main_zip"
+    ]
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
    "type": "stall",
    "channel": "error",
-   "description": "stops making progress for several seconds"
+   "description": "stops making progress for several seconds",
+   "expected": {
+    "act": "next",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": 14,
+   "sampled": true
   },
   {
-   "type": "question",
+   "type": "bottle_lying",
+   "channel": "error",
+   "description": "lays the water bottle down instead of standing it up (not sampled: the lying placement is not reliable with the scanned case)",
+   "expected": {
+    "act": "do",
+    "about": "target",
+    "by": "commit"
+   },
+   "trigger": {
+    "hands": "bottle",
+    "next": [
+     "go_to",
+     "suitcase"
+    ]
+   },
+   "window_steps": 14,
+   "sampled": false
+  },
+  {
+   "type": "ask_should_pack",
    "channel": "question",
-   "description": "asks a question about the task"
+   "description": "asks whether an item belongs in the case",
+   "expected": {
+    "act": "answer",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "ask_packed",
+   "channel": "question",
+   "description": "asks whether an item is already packed",
+   "expected": {
+    "act": "answer",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "ask_left",
+   "channel": "question",
+   "description": "asks what is left to pack",
+   "expected": {
+    "act": "answer",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "ask_since",
+   "channel": "question",
+   "description": "asks how long ago an item was packed (temporal)",
+   "expected": {
+    "act": "answer",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open",
+    "in_case": "<target>"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "ask_elapsed",
+   "channel": "question",
+   "description": "asks how long the packing has taken so far (temporal)",
+   "expected": {
+    "act": "answer",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "request_remind",
+   "channel": "request",
+   "description": "asks to be reminded about an item before the lid is closed, then forgets it",
+   "expected": {
+    "act": "not_packed",
+    "about": "target",
+    "by": "commit",
+    "due": "closing"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open",
+    "not_in_case": "<target>"
+   },
+   "window_steps": "script",
+   "sampled": true
+  },
+  {
+   "type": "request_notify_done",
+   "channel": "request",
+   "description": "asks to be told when the list is done, and waits for it before closing",
+   "expected": {
+    "act": "all_packed",
+    "by": "window",
+    "due": "all packed"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": "script",
+   "sampled": true
   },
   {
    "type": "plan_change",
    "channel": "plan_change",
-   "description": "announces a legitimate change to the packing list"
+   "description": "announces a legitimate change to the packing list",
+   "expected": {
+    "act": "ack",
+    "by": "window"
+   },
+   "trigger": {
+    "packed_at_least": 2,
+    "next": [
+     "go_to",
+     "*"
+    ],
+    "hands": "free",
+    "lid": "open"
+   },
+   "window_steps": 4,
+   "sampled": true
   }
  ],
  "personas": [
@@ -4525,21 +4859,280 @@
    "name": "brisk",
    "walk": 1.05,
    "pause": 0.0,
-   "label": "walks quickly, no pauses"
+   "label": "hurried: walks quickly, no pauses, terse, often needs telling twice",
+   "style": "terse",
+   "compliance": 0.6,
+   "gullibility": 0.15,
+   "patience": 1,
+   "narrate": false,
+   "clarify": false
   },
   {
    "name": "steady",
    "walk": 0.9,
    "pause": 0.4,
-   "label": "even pace, short pause after each step"
+   "label": "cooperative: even pace, chatty, takes advice readily",
+   "style": "chatty",
+   "compliance": 1.0,
+   "gullibility": 0.35,
+   "patience": 3,
+   "narrate": true,
+   "clarify": true
   },
   {
    "name": "deliberate",
    "walk": 0.75,
    "pause": 1.0,
-   "label": "slow walker, pauses to look after each step"
+   "label": "careful: slow, checks advice against the list, asks when unsure",
+   "style": "chatty",
+   "compliance": 0.85,
+   "gullibility": 0.0,
+   "patience": 4,
+   "narrate": true,
+   "clarify": true
   }
  ],
+ "dialogue": {
+  "user_acts": {
+   "state_task": {
+    "terse": [
+     "Packing for {title}: {items}."
+    ],
+    "chatty": [
+     "Hi! I'm packing for {title}. I need {items}.",
+     "Okay, {title}. On my list: {items}."
+    ]
+   },
+   "state_pref": {
+    "terse": [
+     "{Item} {go} at the {spot}."
+    ],
+    "chatty": [
+     "I like the {item} at the {spot} of the case.",
+     "I'd like the {item} at the {spot}."
+    ]
+   },
+   "ask_should_pack": {
+    "terse": [
+     "{Do} the {item} go in?"
+    ],
+    "chatty": [
+     "Should the {item} go in too?",
+     "Do I need the {item} as well?"
+    ]
+   },
+   "ask_packed": {
+    "terse": [
+     "Did I pack the {item}?"
+    ],
+    "chatty": [
+     "Did I already put the {item} in?",
+     "{Be} the {item} in the case already?"
+    ]
+   },
+   "ask_left": {
+    "terse": [
+     "What's left?"
+    ],
+    "chatty": [
+     "What do I still need to pack?",
+     "What's left on my list?"
+    ]
+   },
+   "ask_since": {
+    "terse": [
+     "When did the {item} go in?"
+    ],
+    "chatty": [
+     "How long ago did I put the {item} in?",
+     "When did I pack the {item}?"
+    ]
+   },
+   "ask_elapsed": {
+    "terse": [
+     "How long have I been at this?"
+    ],
+    "chatty": [
+     "How long have I been packing now?",
+     "How long has this taken so far?"
+    ]
+   },
+   "request_remind": {
+    "terse": [
+     "Remind me about the {item} before I close the lid."
+    ],
+    "chatty": [
+     "Can you remind me to pack the {item} before I close the lid? I'll grab it last.",
+     "Remind me about the {item} before I shut the case, okay?"
+    ]
+   },
+   "request_notify_done": {
+    "terse": [
+     "Tell me when everything's in."
+    ],
+    "chatty": [
+     "Let me know when everything on my list is in, then I'll close up.",
+     "Can you tell me once everything is packed?"
+    ]
+   },
+   "announce_add": {
+    "terse": [
+     "Taking the {item} too."
+    ],
+    "chatty": [
+     "I'll take the {item} as well.",
+     "Actually, I want the {item} too."
+    ]
+   },
+   "announce_remove": {
+    "terse": [
+     "Not taking the {item}."
+    ],
+    "chatty": [
+     "Actually, I'll leave the {item} at home.",
+     "Change of plan, the {item} stays here."
+    ]
+   },
+   "accept": {
+    "terse": [
+     "Right.",
+     "Okay."
+    ],
+    "chatty": [
+     "Oh, right, thanks!",
+     "Good catch, thanks.",
+     "Ah, okay, will do."
+    ]
+   },
+   "decline": {
+    "terse": [
+     "No, I'm fine.",
+     "I'll keep going."
+    ],
+    "chatty": [
+     "Hmm, I don't think so. I'll do it my way.",
+     "No, I'm pretty sure that's right."
+    ]
+   },
+   "already_done": {
+    "terse": [
+     "Already did."
+    ],
+    "chatty": [
+     "I already did that.",
+     "That's done already."
+    ]
+   },
+   "not_yet": {
+    "terse": [
+     "Not yet, there's more."
+    ],
+    "chatty": [
+     "Not yet, I think there's still something left."
+    ]
+   },
+   "clarify": {
+    "terse": [
+     "What?"
+    ],
+    "chatty": [
+     "Sorry, what do you mean?",
+     "Sorry, I didn't get that."
+    ]
+   },
+   "report_problem": {
+    "terse": [
+     "Can't: {feedback}."
+    ],
+    "chatty": [
+     "Hmm, that didn't work: {feedback}.",
+     "I can't, {feedback}."
+    ]
+   },
+   "remember": {
+    "terse": [
+     "The {item}!"
+    ],
+    "chatty": [
+     "Oh wait, I forgot the {item}!",
+     "Oh, the {item}, nearly forgot."
+    ]
+   },
+   "self_correct": {
+    "terse": [
+     "Oops."
+    ],
+    "chatty": [
+     "Oops, not that one.",
+     "Wait, that's not right."
+    ]
+   },
+   "thanks": {
+    "terse": [
+     "Thanks."
+    ],
+    "chatty": [
+     "Thanks!",
+     "Great, thanks."
+    ]
+   }
+  },
+  "user_act_ids": 97,
+  "guidance": {
+   "stop": "stop or wait: the user pauses for one step and listens",
+   "dont": "do not do <verb> (to <item>): cancels a queued action of that kind",
+   "do": "an instruction (requests grounded by the instruction grounder and canonical())",
+   "next": "suggests the next item to fetch",
+   "not_on_list": "<item> is not on the packing list",
+   "on_list": "<item> is on the packing list",
+   "packed": "<item> is already in the case",
+   "not_packed": "<item> still has to be packed (also: a reminder)",
+   "on_floor": "<item> belongs on the floor of the case, not on top of others",
+   "where": "where <item> is (a room or station)",
+   "zip_open": "the zip is not fully closed",
+   "all_packed": "everything on the list is in the case",
+   "answer": "an answer to the user's pending question: yes | no | items | seconds",
+   "ack": "an acknowledgement",
+   "unclear": "nothing the user can act on"
+  },
+  "durations_s": {
+   "go_to": 6.3,
+   "enter": 5.4,
+   "look_at": 1.4,
+   "pick_up": 6.5,
+   "place": 5.9,
+   "put_back": 6.2,
+   "lid": 17.0,
+   "zip": 16.7,
+   "stand_up": 29.3,
+   "insert": 8.0,
+   "turn": 3.0,
+   "press": 2.5,
+   "set": 6.0,
+   "fasten": 8.0,
+   "unfasten": 6.0,
+   "roll": 12.0,
+   "fold": 25.0,
+   "refused": 0.5
+  },
+  "outcomes": [
+   "prevented",
+   "corrected",
+   "self_recovered",
+   "unresolved",
+   "answered_correct",
+   "answered_wrong",
+   "unanswered",
+   "reminded",
+   "reminded_late",
+   "missed",
+   "notified",
+   "notified_early",
+   "not_notified",
+   "acknowledged",
+   "unacknowledged"
+  ]
+ },
  "suitcase": {
   "outer_cm": [
    50.7,
